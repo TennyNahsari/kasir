@@ -10,10 +10,25 @@ export const useProductStore = defineStore('product', () => {
   const fetchProducts = async (params = {}) => {
     loading.value = true
     try {
-      const response = await api.get('/products', { params })
-      products.value = response.data.data
+      // If location_id is provided, use the new endpoint for inventory stocks
+      const endpoint = params.location_id ? '/products-by-location' : '/products'
+      console.log('Fetching products from:', endpoint, 'with params:', params)
+      const response = await api.get(endpoint, { params })
+      console.log('Products API response:', response.data)
+      
+      // Handle response with debug info
+      if (response.data && typeof response.data === 'object' && 'data' in response.data) {
+        products.value = response.data.data || []
+        return response.data // Return full response including debug info
+      } else {
+        products.value = params.location_id ? response.data : response.data.data
+      }
+      
+      console.log('Products stored:', products.value.length, 'items')
       return response.data
     } catch (error) {
+      console.error('Error fetching products:', error)
+      console.error('Error response:', error.response?.data)
       throw error
     } finally {
       loading.value = false

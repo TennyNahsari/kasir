@@ -39,6 +39,12 @@ class ProductController extends Controller
                   ->where('track_stock', true);
         }
 
+        // Default ordering: by created_at descending (newest first)
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortOrder = $request->get('sort_order', 'desc');
+        
+        $query->orderBy($sortBy, $sortOrder);
+
         $products = $query->paginate($request->per_page ?? 50);
 
         return response()->json($products);
@@ -166,5 +172,92 @@ class ProductController extends Controller
             'barcode' => $barcode,
             'product' => $product,
         ]);
+    }
+
+    public function getByLocation(Request $request)
+    {
+        $locationId = $request->query('location_id'); // Now receiving actual location_id from inventory
+        
+        if (!$locationId) {
+            return response()->json(['message' => 'location_id is required'], 400);
+        }
+
+        \Log::info('getByLocation called', ['location_id' => $locationId]);
+
+        // Get location info for debugging
+        $location = \App\Models\Location::find($locationId);
+        
+        \Log::info('Location lookup', [
+            'location_id' => $locationId,
+            'location_found' => $location ? true : false,
+            'location_name' => $location?->name,
+            'location_type' => $location?->type
+        ]);
+        
+        if (!$location) {
+            return response()->json([
+                'message' => 'Location not found.',
+                'location_id' => $locationId
+            ], 404);
+        }
+
+        $query = Product::with(['category'])
+            ->join('inventory_stocks', 'products.id', '=', 'inventory_stocks.product_id')
+            ->where('inventory_stocks.location_id', $locationId)
+            ->where('products.is_active', true)
+            ->select('products.*', 'inventory_stocks.quantity as stock', 'inventory_stocks.reserved_quantity');
+
+        \Log::info('Query inventory_stocks', ['location_id' => $locationId]);
+
+        // Search
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('products.name', 'like', "%{$search}%")
+                  ->orWhere('products.sku', 'like', "%{$search}%")
+                  ->orWhere('products.barcode', 'like', "%{$search}%");
+            });
+        }
+
+        // Filter by category
+        if ($request->has('category_id')) {
+            $query->where('products.category_id', $request->category_id);
+        }
+
+        $query->orderBy('products.name', 'asc');
+
+        $products = $query->get()->map(function($product) {
+            $product->available_stock = $product->stock - $product->reserved_quantity;
+            return $product;
+        });
+
+        \Log::info('Products retrieved', [
+            'count' => $products->count(),
+            'location_id' => $locationId,
+            'location_name' => $location->name
+        ]);
+
+        // Add debug info if no products found
+        if ($products->isEmpty()) {
+            $stockCount = \App\Models\InventoryStock::where('location_id', $locationId)->count();
+            $activeProductCount = Product::where('is_active', true)->count();
+            
+            return response()->json([
+                'message' => 'No products found',
+                'data' => [],
+                'debug' => [
+                    'location_id' => $locationId,
+                    'location_name' => $location->name,
+                    'location_type' => $location->type,
+                    'inventory_stocks_count' => $stockCount,
+                    'active_products_count' => $activeProductCount,
+                    'hint' => $stockCount === 0 
+                        ? 'No inventory stocks found for this location. Please add stock in inventory app.'
+                        : 'Location has inventory stocks but no active products matched.'
+                ]
+            ]);
+        }
+
+        return response()->json($products);
     }
 }

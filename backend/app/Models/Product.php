@@ -16,10 +16,18 @@ class Product extends Model
         'name',
         'description',
         'category_id',
+        'item_type',
+        'uom',
+        'track_inventory',
         'cost_price',
         'selling_price',
         'stock',
         'min_stock',
+        'min_stock_level',
+        'max_stock_level',
+        'reorder_level',
+        'last_purchase_price',
+        'average_cost',
         'track_stock',
         'image',
         'is_active',
@@ -28,7 +36,13 @@ class Product extends Model
     protected $casts = [
         'cost_price' => 'decimal:2',
         'selling_price' => 'decimal:2',
+        'last_purchase_price' => 'decimal:2',
+        'average_cost' => 'decimal:2',
+        'min_stock_level' => 'decimal:4',
+        'max_stock_level' => 'decimal:4',
+        'reorder_level' => 'decimal:4',
         'track_stock' => 'boolean',
+        'track_inventory' => 'boolean',
         'is_active' => 'boolean',
     ];
 
@@ -41,6 +55,31 @@ class Product extends Model
     public function transactionItems()
     {
         return $this->hasMany(TransactionItem::class);
+    }
+
+    public function inventoryStocks()
+    {
+        return $this->hasMany(InventoryStock::class);
+    }
+
+    public function inventoryLedgers()
+    {
+        return $this->hasMany(InventoryLedger::class);
+    }
+
+    public function purchaseRequestItems()
+    {
+        return $this->hasMany(PurchaseRequestItem::class);
+    }
+
+    public function purchaseOrderItems()
+    {
+        return $this->hasMany(PurchaseOrderItem::class);
+    }
+
+    public function goodsReceiptItems()
+    {
+        return $this->hasMany(GoodsReceiptItem::class);
     }
 
     // Helpers

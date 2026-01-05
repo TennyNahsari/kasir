@@ -109,11 +109,6 @@ const navigation = computed(() => {
     { name: 'Transaksi', path: '/transactions' }
   ]
 
-  // Outlets menu only for owner
-  if (authStore.isOwner()) {
-    items.push({ name: 'Outlet', path: '/outlets' })
-  }
-
   // Reports for owner and supervisor
   if (authStore.isOwner() || authStore.isSupervisor()) {
     items.push({ name: 'Laporan', path: '/reports' })

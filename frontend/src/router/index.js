@@ -38,12 +38,6 @@ const router = createRouter({
           component: () => import('@/views/ProductsView.vue')
         },
         {
-          path: 'outlets',
-          name: 'Outlets',
-          component: () => import('@/views/OutletsView.vue'),
-          meta: { roles: ['owner'] }
-        },
-        {
           path: 'transactions',
           name: 'Transactions',
           component: () => import('@/views/TransactionsView.vue')
@@ -63,7 +57,7 @@ router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
   
   // Initialize auth on first navigation only
-  if (!authStore.initialized && !authStore.loading) {
+  if (!authStore.initialized) {
     await authStore.initAuth()
   }
   

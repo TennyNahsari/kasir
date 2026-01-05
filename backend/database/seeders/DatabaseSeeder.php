@@ -166,6 +166,9 @@ class DatabaseSeeder extends Seeder
                 'status' => 'available',
             ]);
         }
+        
+        // Seed inventory & procurement data
+        $this->seedInventoryData();
     }
 
     private function generateEAN13($productId): string
@@ -179,5 +182,15 @@ class DatabaseSeeder extends Seeder
         $checkDigit = (10 - ($sum % 10)) % 10;
         
         return $code . $checkDigit;
+    }
+    
+    // Seed inventory & procurement data
+    private function seedInventoryData(): void
+    {
+        $this->call([
+            LocationSeeder::class,
+            VendorSeeder::class,
+            ProductInventorySeeder::class,
+        ]);
     }
 }

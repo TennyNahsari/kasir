@@ -58,30 +58,47 @@ export const useCartStore = defineStore('cart', () => {
     tax.value = amount
   }
 
-  const clear = () => {
+  const clearCart = () => {
     items.value = []
     discount.value = 0
     tax.value = 0
   }
 
-  const checkout = async (paymentData) => {
+  const checkout = async (paymentData, locationId = null) => {
     const authStore = useAuthStore()
     
-    // Get outlet_id from user, or use default outlet if Owner (outlet_id is null)
-    const outletId = authStore.user.outlet_id || 1 // Default to first outlet
+    // Use provided locationId, or fall back to user's outlet_id
+    const finalId = locationId || authStore.user.outlet_id
+    
+    if (!finalId) {
+      throw new Error('Location/Outlet ID tidak tersedia. Silakan pilih outlet terlebih dahulu.')
+    }
+    
+    console.log('Checkout with ID:', finalId, 'Type:', locationId ? 'location_id' : 'outlet_id')
     
     try {
-      const response = await api.post('/transactions', {
-        outlet_id: outletId,
+      // Send location_id if provided, otherwise outlet_id
+      const requestData = {
         items: items.value,
         discount: discount.value,
         tax: tax.value,
         ...paymentData
-      })
+      }
       
-      clear()
+      if (locationId) {
+        requestData.location_id = finalId
+      } else {
+        requestData.outlet_id = finalId
+      }
+      
+      console.log('Transaction request data:', requestData)
+      
+      const response = await api.post('/transactions', requestData)
+      
+      clearCart()
       return response.data
     } catch (error) {
+      console.error('Checkout error:', error.response?.data)
       throw error
     }
   }
@@ -98,7 +115,7 @@ export const useCartStore = defineStore('cart', () => {
     removeItem,
     setDiscount,
     setTax,
-    clear,
+    clearCart,
     checkout
   }
 })

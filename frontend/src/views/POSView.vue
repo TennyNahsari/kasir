@@ -1,9 +1,20 @@
 <template>
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- Product Selection (Left) -->
-    <div class="lg:col-span-2 space-y-4">
-      <!-- Search & Scanner -->
-      <div class="card">
+  <div class="space-y-4">
+    <!-- Outlet Selector for All Users -->
+    <OutletSelector @outlet-changed="handleOutletChange" />
+
+    <!-- No Outlet Warning -->
+    <div v-if="showNoOutletWarning" class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+      <p class="text-yellow-800 text-sm">
+        ⚠️ <strong>Silakan pilih outlet terlebih dahulu</strong>
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Product Selection (Left) -->
+      <div class="lg:col-span-2 space-y-4">
+        <!-- Search & Scanner -->
+        <div class="card">
         <div class="flex gap-3">
           <input
             ref="barcodeInput"
@@ -63,14 +74,27 @@
           <p class="text-primary-600 font-semibold">
             {{ formatCurrency(product.selling_price) }}
           </p>
-          <p v-if="product.track_stock" class="text-xs text-gray-500">
-            Stok: {{ product.stock }}
+          <p v-if="product.track_stock" class="text-xs" :class="getAvailableStock(product) <= 0 ? 'text-red-500' : 'text-gray-500'">
+            Stok: {{ getAvailableStock(product) }}
+            <span v-if="product.reserved_quantity > 0" class="text-orange-500"> ({{ product.reserved_quantity }} reserved)</span>
           </p>
         </div>
       </div>
 
       <div v-if="loading" class="text-center py-8">
         <p class="text-gray-500">Loading products...</p>
+      </div>
+
+      <div v-if="!loading && products.length === 0 && currentOutletId" class="text-center py-8">
+        <p class="text-gray-500 mb-2">⚠️ Tidak ada produk tersedia</p>
+        <p class="text-xs text-gray-400">Pastikan outlet sudah terdaftar di inventory dan memiliki stock produk</p>
+        <div v-if="debugInfo" class="mt-4 p-4 bg-gray-50 rounded text-left text-xs">
+          <p class="font-bold mb-2">Debug Info:</p>
+          <p>Location: {{ debugInfo.location_name }} (ID: {{ debugInfo.location_id }})</p>
+          <p>Inventory Stocks: {{ debugInfo.inventory_stocks_count }}</p>
+          <p>Active Products: {{ debugInfo.active_products_count }}</p>
+          <p class="text-orange-600 mt-2">{{ debugInfo.hint }}</p>
+        </div>
       </div>
     </div>
 
@@ -203,16 +227,21 @@
         </button>
       </div>
     </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import OutletSelector from '@/components/OutletSelector.vue'
 import { useProductStore } from '@/stores/product'
 import { useCartStore } from '@/stores/cart'
+import { useAuthStore } from '@/stores/auth'
+import api from '@/services/api'
 
 const productStore = useProductStore()
 const cartStore = useCartStore()
+const authStore = useAuthStore()
 
 const searchQuery = ref('')
 const selectedCategory = ref(null)
@@ -223,6 +252,10 @@ const loading = ref(false)
 const showSuccess = ref(false)
 const successMessage = ref('')
 const barcodeInput = ref(null)
+const currentOutletId = ref(null)
+const debugInfo = ref(null)
+
+const showNoOutletWarning = computed(() => !currentOutletId.value && !loading.value)
 
 const categories = computed(() => productStore.categories)
 const products = computed(() => productStore.products)
@@ -257,11 +290,26 @@ const formatCurrency = (amount) => {
   }).format(amount)
 }
 
+const getAvailableStock = (product) => {
+  return product.available_stock ?? (product.stock - (product.reserved_quantity || 0))
+}
+
 const addToCart = (product) => {
-  if (product.track_stock && product.stock <= 0) {
+  // Check available stock (quantity - reserved_quantity)
+  const availableStock = product.available_stock ?? (product.stock - (product.reserved_quantity || 0))
+  
+  if (product.track_stock && availableStock <= 0) {
     alert('Stok habis!')
     return
   }
+  
+  // Check if adding one more would exceed available stock
+  const currentCartQuantity = cartStore.items.find(item => item.product_id === product.id)?.quantity || 0
+  if (product.track_stock && currentCartQuantity >= availableStock) {
+    alert(`Stok tidak cukup! Stok tersedia: ${availableStock}`)
+    return
+  }
+  
   cartStore.addItem(product)
   searchQuery.value = ''
   barcodeInput.value?.focus()
@@ -293,11 +341,18 @@ const processCheckout = async () => {
     return
   }
 
+  if (!currentOutletId.value) {
+    alert('Silakan pilih outlet terlebih dahulu!')
+    return
+  }
+
+  console.log('Processing checkout with location_id:', currentOutletId.value)
+
   try {
     const transaction = await cartStore.checkout({
       payment_method: paymentMethod.value,
       paid_amount: paidAmount.value
-    })
+    }, currentOutletId.value)
 
     successMessage.value = `No. Transaksi: ${transaction.transaction_no}`
     showSuccess.value = true
@@ -319,16 +374,59 @@ const closeSuccess = () => {
   barcodeInput.value?.focus()
 }
 
-onMounted(async () => {
+const loadProductsForOutlet = async (outletId) => {
+  if (!outletId) return
+  
   loading.value = true
+  debugInfo.value = null
   try {
-    await Promise.all([
-      productStore.fetchProducts({ is_active: true }),
+    console.log('Loading products for outlet:', outletId)
+    const [productsResponse] = await Promise.all([
+      productStore.fetchProducts({ location_id: outletId, is_active: true }),
       productStore.fetchCategories()
     ])
+    
+    console.log('Products loaded:', products.value.length)
+    console.log('Products data:', products.value)
+    
+    // Extract debug info if available
+    if (productsResponse && productsResponse.debug) {
+      debugInfo.value = productsResponse.debug
+      console.log('Debug info:', debugInfo.value)
+    }
   } catch (error) {
     console.error('Failed to load data:', error)
+    console.error('Error details:', error.response?.data)
+    
+    // Extract debug info from error response
+    if (error.response?.data?.debug) {
+      debugInfo.value = error.response.data.debug
+    }
+    
+    alert('Gagal load data: ' + (error.response?.data?.message || error.message))
   } finally {
+    loading.value = false
+  }
+}
+
+const handleOutletChange = (locationId) => {
+  console.log('handleOutletChange called with locationId:', locationId)
+  currentOutletId.value = locationId
+  if (locationId) {
+    // Clear cart when switching outlet
+    cartStore.clearCart()
+    loadProductsForOutlet(locationId)
+  }
+}
+
+onMounted(async () => {
+  // Check if there's a saved location from previous session
+  const savedLocation = localStorage.getItem('owner_selected_location')
+  if (savedLocation) {
+    console.log('Loading saved location:', savedLocation)
+    currentOutletId.value = savedLocation
+    await loadProductsForOutlet(savedLocation)
+  } else {
     loading.value = false
   }
 })

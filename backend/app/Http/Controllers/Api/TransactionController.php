@@ -8,6 +8,7 @@ use App\Models\CashFlow;
 use App\Models\Product;
 use App\Models\Transaction;
 use App\Models\TransactionItem;
+use App\Models\InventoryStock;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -77,7 +78,8 @@ class TransactionController extends Controller
     {
         try {
             $validated = $request->validate([
-                'outlet_id' => 'required|exists:outlets,id',
+                'outlet_id' => 'sometimes|exists:outlets,id',
+                'location_id' => 'sometimes|exists:locations,id',
                 'items' => 'required|array|min:1',
                 'items.*.product_id' => 'required|exists:products,id',
                 'items.*.quantity' => 'required|integer|min:1',
@@ -93,6 +95,29 @@ class TransactionController extends Controller
                 'notes' => 'nullable|string',
                 'table_id' => 'nullable|exists:tables,id',
             ]);
+            
+            // If location_id is provided, convert to outlet_id
+            if (isset($validated['location_id']) && !isset($validated['outlet_id'])) {
+                $location = \App\Models\Location::find($validated['location_id']);
+                if (!$location || !$location->outlet_id) {
+                    return response()->json([
+                        'message' => 'Location does not have an associated outlet',
+                        'location_id' => $validated['location_id']
+                    ], 422);
+                }
+                $validated['outlet_id'] = $location->outlet_id;
+                \Log::info('Converted location_id to outlet_id', [
+                    'location_id' => $validated['location_id'],
+                    'outlet_id' => $validated['outlet_id']
+                ]);
+            }
+            
+            // Ensure outlet_id is set
+            if (!isset($validated['outlet_id'])) {
+                return response()->json([
+                    'message' => 'Either outlet_id or location_id must be provided'
+                ], 422);
+            }
         } catch (\Illuminate\Validation\ValidationException $e) {
             \Log::error('Validation failed:', [
                 'errors' => $e->errors(),
@@ -162,8 +187,43 @@ class TransactionController extends Controller
                     'notes' => $item['notes'] ?? null,
                 ]);
 
-                // Decrease stock
-                $product->decreaseStock($item['quantity']);
+                // Decrease inventory stock for the location
+                // Use location_id from request if available, otherwise lookup location for outlet
+                $locationId = $validated['location_id'] ?? null;
+                
+                if (!$locationId) {
+                    // Find location for this outlet
+                    $location = \App\Models\Location::where('outlet_id', $validated['outlet_id'])
+                        ->where('type', 'OUTLET')
+                        ->first();
+                    $locationId = $location?->id;
+                }
+                
+                if ($locationId) {
+                    $inventoryStock = InventoryStock::where('product_id', $product->id)
+                        ->where('location_id', $locationId)
+                        ->first();
+                    
+                    if ($inventoryStock) {
+                        $inventoryStock->decrement('quantity', $item['quantity']);
+                        $inventoryStock->update(['last_stock_out' => now()]);
+                        
+                        \Log::info('Inventory stock updated', [
+                            'product_id' => $product->id,
+                            'location_id' => $locationId,
+                            'quantity_reduced' => $item['quantity']
+                        ]);
+                    } else {
+                        \Log::warning('Inventory stock not found for product', [
+                            'product_id' => $product->id,
+                            'location_id' => $locationId
+                        ]);
+                    }
+                } else {
+                    \Log::error('No location_id found for outlet', [
+                        'outlet_id' => $validated['outlet_id']
+                    ]);
+                }
             }
 
             // Record cash flow
@@ -199,9 +259,16 @@ class TransactionController extends Controller
         }
 
         return DB::transaction(function () use ($transaction) {
-            // Restore stock
+            // Restore inventory stock
             foreach ($transaction->items as $item) {
-                $item->product->increaseStock($item->quantity);
+                $inventoryStock = InventoryStock::where('product_id', $item->product_id)
+                    ->where('location_id', $transaction->outlet_id)
+                    ->first();
+                
+                if ($inventoryStock) {
+                    $inventoryStock->increment('quantity', $item->quantity);
+                    $inventoryStock->update(['last_stock_in' => now()]);
+                }
             }
 
             // Update transaction status
