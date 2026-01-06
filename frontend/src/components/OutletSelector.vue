@@ -1,7 +1,7 @@
 <template>
   <div v-if="showSelector" class="mb-4">
     <label class="block text-sm font-medium text-gray-700 mb-2">
-      <span class="text-primary-600">🏪</span> Pilih Outlet
+      <span class="text-primary-600">👤 Owner Mode:</span> Pilih Outlet
     </label>
     <select 
       v-model="selectedLocationId" 
@@ -33,9 +33,9 @@ const authStore = useAuthStore()
 const outlets = ref([])
 const selectedLocationId = ref('')
 
-// Show selector for all authenticated users
+// Show selector only for owner without outlet_id
 const showSelector = computed(() => {
-  return !!authStore.user
+  return authStore.user?.role === 'owner' && !authStore.user?.outlet_id
 })
 
 const handleOutletChange = () => {

@@ -43,6 +43,12 @@ class InventoryStockController extends Controller
             });
         }
 
+        if ($request->has('category_id')) {
+            $query->whereHas('product', function ($q) use ($request) {
+                $q->where('category_id', $request->category_id);
+            });
+        }
+
         $stocks = $query->orderBy('product_id')->paginate($request->per_page ?? 20);
 
         // Transform paginated data

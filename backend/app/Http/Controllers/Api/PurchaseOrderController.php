@@ -20,6 +20,8 @@ class PurchaseOrderController extends Controller
 
     public function index(Request $request)
     {
+        $user = auth()->user();
+        
         $query = PurchaseOrder::with([
             'vendor',
             'location',
@@ -27,6 +29,23 @@ class PurchaseOrderController extends Controller
             'createdBy',
             'approvedBy',
         ]);
+
+        // Filter PO based on user role
+        if ($user->role === 'owner') {
+            // Owner can see all POs
+        } elseif ($user->role === 'kasir') {
+            // Kasir users see only POs created by kasir role users
+            $query->whereHas('createdBy', function($q) {
+                $q->where('role', 'kasir');
+            });
+        } elseif ($this->isProcurementUser($user)) {
+            // Procurement users can see all POs
+        } else {
+            // Other staff can only see POs from their own department
+            if ($user->location_id) {
+                $query->where('location_id', $user->location_id);
+            }
+        }
 
         if ($request->has('status')) {
             $query->where('status', $request->status);
@@ -47,6 +66,15 @@ class PurchaseOrderController extends Controller
 
     public function store(Request $request)
     {
+        $user = auth()->user();
+        
+        // Rule 4: Only owner and procurement users can create PO
+        if ($user->role !== 'owner' && !$this->isProcurementUser($user)) {
+            return response()->json([
+                'message' => 'Only Owner and Procurement Department users can create Purchase Orders'
+            ], 403);
+        }
+        
         $validator = Validator::make($request->all(), [
             'vendor_id' => 'required|exists:vendors,id',
             'order_date' => 'nullable|date',
@@ -75,6 +103,14 @@ class PurchaseOrderController extends Controller
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         }
+    }
+    
+    private function isProcurementUser($user)
+    {
+        if (!$user->location) return false;
+        
+        return $user->location->type === 'DEPARTMENT' && 
+               stripos($user->location->name, 'procurement') !== false;
     }
 
     public function show(PurchaseOrder $purchaseOrder)
@@ -147,6 +183,15 @@ class PurchaseOrderController extends Controller
 
     public function approve(PurchaseOrder $purchaseOrder)
     {
+        $user = auth()->user();
+        
+        // Rule 5: Only owner can approve PO
+        if ($user->role !== 'owner') {
+            return response()->json([
+                'message' => 'Only Owner can approve Purchase Orders'
+            ], 403);
+        }
+        
         try {
             $po = $this->poService->approvePO($purchaseOrder->id, auth()->id());
             return response()->json($po);
@@ -157,6 +202,15 @@ class PurchaseOrderController extends Controller
 
     public function send(PurchaseOrder $purchaseOrder)
     {
+        $user = auth()->user();
+        
+        // Rule 6: Only owner and procurement users can send PO
+        if ($user->role !== 'owner' && !$this->isProcurementUser($user)) {
+            return response()->json([
+                'message' => 'Only Owner and Procurement Department users can send Purchase Orders'
+            ], 403);
+        }
+        
         try {
             $po = $this->poService->sendPO($purchaseOrder->id);
             return response()->json($po);

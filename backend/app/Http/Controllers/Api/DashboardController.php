@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Transaction;
 use App\Models\Product;
 use App\Models\CashFlow;
+use App\Models\PurchaseRequest;
+use App\Models\PurchaseOrder;
+use App\Models\GoodsReceipt;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -187,5 +190,140 @@ class DashboardController extends Controller
         ->get();
 
         return response()->json($report);
+    }
+    
+    public function procurementStats(Request $request)
+    {
+        $user = auth()->user()->load('location');
+        
+        // Build queries with role-based filters
+        $prQuery = PurchaseRequest::query();
+        $poQuery = PurchaseOrder::query();
+        $grnQuery = GoodsReceipt::query();
+        
+        // Apply filters based on user role and location
+        if ($user->role === 'owner') {
+            // Owner can see all
+        } elseif ($user->role === 'kasir') {
+            // Kasir only sees items created by kasir users
+            $prQuery->whereHas('requestedBy', function($q) {
+                $q->where('role', 'kasir');
+            });
+            $poQuery->whereHas('createdBy', function($q) {
+                $q->where('role', 'kasir');
+            });
+            // GRN doesn't filter by kasir (kasir don't create GRN)
+            $grnQuery->whereRaw('1 = 0'); // Return 0 results
+        } elseif ($this->isProcurementUser($user)) {
+            // Procurement users can see all
+        } else {
+            // Other users only see items from their department
+            if ($user->location_id) {
+                $prQuery->where('location_id', $user->location_id);
+                $poQuery->where('location_id', $user->location_id);
+                $grnQuery->where('location_id', $user->location_id);
+            }
+        }
+        
+        // Count pending PRs (PENDING_APPROVAL status, not SUBMITTED)
+        $pendingPR = $prQuery->where('status', 'PENDING_APPROVAL')->count();
+        
+        // Count active POs (APPROVED and SENT status)
+        $activePO = $poQuery->whereIn('status', ['APPROVED', 'SENT'])->count();
+        
+        // Count pending GRNs (DRAFT and QUALITY_CHECK status)
+        $pendingGRN = $grnQuery->whereIn('status', ['DRAFT', 'QUALITY_CHECK'])->count();
+        
+        return response()->json([
+            'pendingPR' => $pendingPR,
+            'activePO' => $activePO,
+            'pendingGRN' => $pendingGRN,
+        ]);
+    }
+    
+    private function isProcurementUser($user)
+    {
+        if (!$user->location) return false;
+        
+        return $user->location->type === 'DEPARTMENT' && 
+               stripos($user->location->name, 'procurement') !== false;
+    }
+    
+    public function expectedDeliveries(Request $request)
+    {
+        $user = auth()->user()->load('location');
+        
+        $query = PurchaseOrder::with(['vendor', 'location', 'items.product', 'goodsReceipts'])
+            ->where('status', 'SENT')
+            ->where('expected_delivery_date', '<=', now()->toDateString())
+            ->whereDoesntHave('goodsReceipts', function($q) {
+                $q->where('is_posted', true);
+            });
+        
+        // Apply role-based filtering
+        if ($user->role === 'owner') {
+            // Owner can see all
+        } elseif ($this->isProcurementUser($user)) {
+            // Procurement department users can see all
+        } else {
+            // Staff/Supervisor from other departments (including kasir) see only their department POs
+            if ($user->location_id) {
+                $query->where('location_id', $user->location_id);
+            }
+        }
+        
+        $deliveries = $query->orderBy('expected_delivery_date', 'asc')->get()->map(function($po) {
+            $expectedDate = \Carbon\Carbon::parse($po->expected_delivery_date);
+            $daysOverdue = now()->startOfDay()->diffInDays($expectedDate->startOfDay(), false);
+            
+            return [
+                'id' => $po->id,
+                'po_number' => $po->po_number,
+                'vendor_name' => $po->vendor?->name,
+                'location_name' => $po->location?->name,
+                'expected_delivery_date' => $po->expected_delivery_date,
+                'days_overdue' => $daysOverdue,
+                'priority' => $daysOverdue < 0 ? 'overdue' : 'today',
+                'total_amount' => $po->total_amount,
+                'items_count' => $po->items->count(),
+                'grn_status' => $po->goodsReceipts->first()?->status,
+                'has_grn' => $po->goodsReceipts->isNotEmpty(),
+            ];
+        });
+        
+        return response()->json($deliveries);
+    }
+    
+    public function recentPurchaseRequests(Request $request)
+    {
+        $user = auth()->user()->load('location');
+        $perPage = $request->input('per_page', 10);
+        
+        $query = PurchaseRequest::with([
+            'location',
+            'items.product',
+            'requestedBy',
+            'approvedBy',
+        ])
+        ->whereDate('request_date', '<=', now()->toDateString())
+        ->whereNotIn('status', ['APPROVED', 'FULLY_ORDERED', 'CANCELLED']);
+        
+        // Apply role-based filtering
+        if ($user->role === 'owner') {
+            // Owner can see all PRs
+        } elseif ($this->isProcurementUser($user)) {
+            // Procurement department users can see all PRs
+        } else {
+            // Staff/Supervisor from other departments (including kasir) see only their department PRs
+            if ($user->location_id) {
+                $query->where('location_id', $user->location_id);
+            }
+        }
+        
+        $prs = $query->orderBy('request_date', 'desc')
+                     ->orderBy('created_at', 'desc')
+                     ->paginate($perPage);
+        
+        return response()->json($prs);
     }
 }

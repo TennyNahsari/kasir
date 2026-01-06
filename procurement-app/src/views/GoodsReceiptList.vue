@@ -5,7 +5,7 @@
         <h1 class="text-3xl font-bold text-gray-800">Goods Receipt Notes</h1>
         <p class="text-gray-600">Receive goods from vendors</p>
       </div>
-      <button @click="$router.push('/procurement/goods-receipts/create')" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+      <button v-if="canCreateGRN" @click="$router.push('/procurement/goods-receipts/create')" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
         Create GRN
       </button>
     </div>
@@ -85,50 +85,20 @@
           </tbody>
         </table>
       </div>
-      
-      <!-- Pagination -->
-      <div class="px-6 py-4 flex items-center justify-between border-t border-gray-200">
-        <div class="flex-1 flex justify-between sm:hidden">
-          <button @click="goToPage(pagination.current_page - 1)" :disabled="!pagination.prev_page_url" :class="{'opacity-50 cursor-not-allowed': !pagination.prev_page_url}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Previous</button>
-          <button @click="goToPage(pagination.current_page + 1)" :disabled="!pagination.next_page_url" :class="{'opacity-50 cursor-not-allowed': !pagination.next_page_url}" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Next</button>
-        </div>
-        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-          <div>
-            <p class="text-sm text-gray-700">
-              Showing <span class="font-medium">{{ pagination.from || 0 }}</span> to <span class="font-medium">{{ pagination.to || 0 }}</span> of <span class="font-medium">{{ pagination.total || 0 }}</span> results
-            </p>
-          </div>
-          <div>
-            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-              <button @click="goToPage(pagination.current_page - 1)" :disabled="!pagination.prev_page_url" :class="{'opacity-50 cursor-not-allowed': !pagination.prev_page_url}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">Previous</button>
-              <button v-for="page in visiblePages" :key="page" @click="goToPage(page)" :class="page === pagination.current_page ? 'bg-blue-50 border-blue-500 text-blue-600 z-10' : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'" class="relative inline-flex items-center px-4 py-2 border text-sm font-medium">{{ page }}</button>
-              <button @click="goToPage(pagination.current_page + 1)" :disabled="!pagination.next_page_url" :class="{'opacity-50 cursor-not-allowed': !pagination.next_page_url}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">Next</button>
-            </nav>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/services/api'
+import { useProcurementPermissions } from '@/composables/useProcurementPermissions'
 
 const router = useRouter()
+const { canCreateGRN } = useProcurementPermissions()
 
 const grns = ref([])
-const pagination = ref({
-  current_page: 1,
-  last_page: 1,
-  per_page: 15,
-  total: 0,
-  from: 0,
-  to: 0,
-  prev_page_url: null,
-  next_page_url: null
-})
 
 const filters = ref({
   status: '',
@@ -141,9 +111,9 @@ onMounted(async () => {
   await loadGRNs()
 })
 
-const loadGRNs = async (page = 1) => {
+const loadGRNs = async () => {
   try {
-    const params = { page }
+    const params = {}
     if (filters.value.status) params.status = filters.value.status
     if (filters.value.po_number) params.po_number = filters.value.po_number
     if (filters.value.from_date) params.from_date = filters.value.from_date
@@ -151,21 +121,7 @@ const loadGRNs = async (page = 1) => {
 
     const { data } = await api.get('/goods-receipts', { params })
     // Handle Laravel pagination response
-    if (data.data) {
-      grns.value = data.data
-      pagination.value = {
-        current_page: data.current_page,
-        last_page: data.last_page,
-        per_page: data.per_page,
-        total: data.total,
-        from: data.from,
-        to: data.to,
-        prev_page_url: data.prev_page_url,
-        next_page_url: data.next_page_url
-      }
-    } else {
-      grns.value = data || []
-    }
+    grns.value = data.data || data || []
   } catch (error) {
     console.error('Failed to load GRNs:', error)
     grns.value = []
@@ -194,37 +150,4 @@ const formatDate = (dateString) => {
 const viewGRN = (grn) => {
   router.push(`/procurement/goods-receipts/${grn.id}`)
 }
-
-const goToPage = (page) => {
-  if (page < 1 || page > pagination.value.last_page) return
-  loadGRNs(page)
-}
-
-const visiblePages = computed(() => {
-  const pages = []
-  const current = pagination.value.current_page
-  const last = pagination.value.last_page
-  
-  if (last <= 7) {
-    for (let i = 1; i <= last; i++) pages.push(i)
-  } else {
-    if (current <= 4) {
-      for (let i = 1; i <= 5; i++) pages.push(i)
-      pages.push('...')
-      pages.push(last)
-    } else if (current >= last - 3) {
-      pages.push(1)
-      pages.push('...')
-      for (let i = last - 4; i <= last; i++) pages.push(i)
-    } else {
-      pages.push(1)
-      pages.push('...')
-      for (let i = current - 1; i <= current + 1; i++) pages.push(i)
-      pages.push('...')
-      pages.push(last)
-    }
-  }
-  
-  return pages.filter(p => p !== '...' || typeof p === 'string')
-})
 </script>

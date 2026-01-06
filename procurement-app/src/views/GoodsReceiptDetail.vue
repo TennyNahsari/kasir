@@ -132,16 +132,16 @@
         <div class="bg-white rounded-lg shadow p-6">
           <h3 class="text-lg font-semibold mb-4">Actions</h3>
           <div class="space-y-2">
-            <button v-if="grn.status === 'DRAFT'" @click="submitGRN" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+            <button v-if="grn.status === 'DRAFT' && canSubmitQC" @click="submitGRN" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
               Submit for Quality Check
             </button>
-            <button v-if="grn.status === 'QUALITY_CHECK'" @click="approveQC" class="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+            <button v-if="grn.status === 'QUALITY_CHECK' && canApproveQC" @click="approveQC" class="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
               Approve Quality Check
             </button>
-            <button v-if="grn.status === 'QUALITY_CHECK'" @click="rejectQC" class="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">
+            <button v-if="grn.status === 'QUALITY_CHECK' && canApproveQC" @click="rejectQC" class="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">
               Reject Quality Check
             </button>
-            <button v-if="grn.status === 'APPROVED'" @click="postToInventory" class="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+            <button v-if="grn.status === 'APPROVED' && canPostGRN" @click="postToInventory" class="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
               Post to Inventory
             </button>
           </div>
@@ -210,9 +210,12 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import api from '@/services/api'
+import { useProcurementPermissions } from '@/composables/useProcurementPermissions'
 
 const router = useRouter()
 const route = useRoute()
+
+const { canPostGRN, canSubmitQC, canApproveQC } = useProcurementPermissions()
 
 const grn = ref({
   items: []

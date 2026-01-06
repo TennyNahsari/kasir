@@ -85,6 +85,19 @@ router.beforeEach(async (to, from, next) => {
     return next('/login')
   }
   
+  // Procurement App Access Control: Only owner and users with location type DEPARTMENT or OUTLET
+  if (requiresAuth && isAuthenticated) {
+    const user = authStore.user
+    const isOwner = user?.role === 'owner'
+    const hasValidLocation = ['DEPARTMENT', 'OUTLET'].includes(user?.location?.type)
+    
+    if (!isOwner && !hasValidLocation) {
+      alert('Access Denied: Only Owner, Department, and Outlet users can access Procurement application')
+      await authStore.logout()
+      return next('/login')
+    }
+  }
+  
   // Role check for protected routes
   if (requiresAuth && to.meta.roles) {
     if (!to.meta.roles.includes(authStore.user?.role)) {

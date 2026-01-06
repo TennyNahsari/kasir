@@ -163,6 +163,10 @@
               <dd class="font-medium">{{ po.vendor?.name }}</dd>
             </div>
             <div class="flex justify-between">
+              <dt class="text-gray-600">Location:</dt>
+              <dd class="font-medium">{{ po.location?.name }}</dd>
+            </div>
+            <div class="flex justify-between">
               <dt class="text-gray-600">Total Amount:</dt>
               <dd class="font-bold text-lg">Rp {{ Number(po.total_amount || 0).toLocaleString('id-ID') }}</dd>
             </div>
@@ -175,10 +179,10 @@
             <button v-if="po.status === 'DRAFT'" @click="submitPO" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
               Submit for Approval
             </button>
-            <button v-if="po.status === 'PENDING_APPROVAL'" @click="approvePO" class="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+            <button v-if="po.status === 'PENDING_APPROVAL' && canApprovePO" @click="approvePO" class="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
               Approve PO
             </button>
-            <button v-if="po.status === 'APPROVED'" @click="sendPO" class="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+            <button v-if="po.status === 'APPROVED' && canSendPO" @click="sendPO" class="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
               Send to Vendor
             </button>
             <button v-if="['APPROVED', 'SENT', 'RECEIVED'].includes(po.status)" @click="downloadPDF" class="w-full bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 flex items-center justify-center gap-2">
@@ -187,7 +191,7 @@
               </svg>
               Download PDF
             </button>
-            <button v-if="po.status === 'SENT'" @click="createGRN" class="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+            <button v-if="po.status === 'SENT' && canCreateGRN" @click="createGRN" class="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
               Create Goods Receipt
             </button>
             <button v-if="['DRAFT', 'PENDING_APPROVAL', 'APPROVED'].includes(po.status)" @click="cancelPO" class="w-full bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">
@@ -268,9 +272,12 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import api from '@/services/api'
+import { useProcurementPermissions } from '@/composables/useProcurementPermissions'
 
 const router = useRouter()
 const route = useRoute()
+
+const { canApprovePO, canSendPO, canCreateGRN } = useProcurementPermissions()
 
 const po = ref({
   items: []

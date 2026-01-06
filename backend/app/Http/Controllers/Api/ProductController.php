@@ -13,6 +13,13 @@ class ProductController extends Controller
     {
         $query = Product::with('category');
 
+        // If location_id is provided, load stock for that location
+        if ($request->has('location_id')) {
+            $query->with(['inventoryStocks' => function($q) use ($request) {
+                $q->where('location_id', $request->location_id);
+            }]);
+        }
+
         // Search
         if ($request->has('search')) {
             $search = $request->search;
@@ -33,10 +40,19 @@ class ProductController extends Controller
             $query->where('is_active', $request->is_active);
         }
 
-        // Filter low stock
+        // Filter low stock (only when location_id is provided)
         if ($request->has('low_stock') && $request->low_stock) {
-            $query->whereColumn('stock', '<=', 'min_stock')
-                  ->where('track_stock', true);
+            if ($request->has('location_id')) {
+                // For inventory system: check against inventory_stocks
+                $query->whereHas('inventoryStocks', function($q) use ($request) {
+                    $q->where('location_id', $request->location_id)
+                      ->whereColumn('quantity', '<=', 'products.min_stock');
+                });
+            } else {
+                // For legacy: check products.stock
+                $query->whereColumn('stock', '<=', 'min_stock')
+                      ->where('track_stock', true);
+            }
         }
 
         // Default ordering: by created_at descending (newest first)
@@ -46,6 +62,18 @@ class ProductController extends Controller
         $query->orderBy($sortBy, $sortOrder);
 
         $products = $query->paginate($request->per_page ?? 50);
+        
+        // Map inventory stock to product's stock field for easier access
+        if ($request->has('location_id')) {
+            $products->getCollection()->transform(function ($product) {
+                if ($product->inventoryStocks->isNotEmpty()) {
+                    $product->stock = $product->inventoryStocks->first()->quantity;
+                } else {
+                    $product->stock = 0;
+                }
+                return $product;
+            });
+        }
 
         return response()->json($products);
     }

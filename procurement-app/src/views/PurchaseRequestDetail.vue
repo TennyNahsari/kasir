@@ -156,13 +156,13 @@
           <button v-if="pr.status === 'DRAFT'" @click="submitPR" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
             Submit for Approval
           </button>
-          <button v-if="pr.status === 'PENDING_APPROVAL'" @click="approvePR" class="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+          <button v-if="pr.status === 'PENDING_APPROVAL' && canApprovePR(pr)" @click="approvePR" class="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
             Approve PR
           </button>
-          <button v-if="pr.status === 'PENDING_APPROVAL'" @click="rejectPR" class="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">
+          <button v-if="pr.status === 'PENDING_APPROVAL' && canApprovePR(pr)" @click="rejectPR" class="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">
             Reject PR
           </button>
-          <button v-if="pr.status === 'APPROVED'" @click="createPO" class="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+          <button v-if="pr.status === 'APPROVED' && canCreatePO" @click="createPO" class="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
             Create Purchase Order
           </button>
           <button v-if="['DRAFT', 'PENDING_APPROVAL'].includes(pr.status)" @click="cancelPR" class="w-full bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">
@@ -243,9 +243,11 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import api from '@/services/api'
+import { useProcurementPermissions } from '@/composables/useProcurementPermissions'
 
 const router = useRouter()
 const route = useRoute()
+const { canApprovePR, canCreatePO } = useProcurementPermissions()
 
 const pr = ref({
   items: []
@@ -299,6 +301,9 @@ const loadPR = async () => {
   try {
     const { data } = await api.get(`/purchase-requests/${route.params.id}`)
     pr.value = data
+    console.log('PR Data:', data)
+    console.log('Requested By:', data.requestedBy)
+    console.log('Can Approve:', canApprovePR(data))
   } catch (error) {
     console.error('Failed to load PR:', error)
     alert('PR not found')

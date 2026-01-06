@@ -46,7 +46,7 @@ class LocationController extends Controller
         $validator = Validator::make($request->all(), [
             'code' => 'required|string|max:50|unique:locations,code',
             'name' => 'required|string|max:255',
-            'type' => 'required|in:WAREHOUSE,OUTLET',
+            'type' => 'required|in:WAREHOUSE,OUTLET,FNB,DEPARTMENT',
             'address' => 'nullable|string',
             'phone' => 'nullable|string|max:50',
             'person_in_charge' => 'nullable|string|max:255',
@@ -79,7 +79,7 @@ class LocationController extends Controller
         $validator = Validator::make($request->all(), [
             'code' => 'required|string|max:50|unique:locations,code,' . $location->id,
             'name' => 'required|string|max:255',
-            'type' => 'required|in:WAREHOUSE,OUTLET',
+            'type' => 'required|in:WAREHOUSE,OUTLET,FNB,DEPARTMENT',
             'address' => 'nullable|string',
             'phone' => 'nullable|string|max:50',
             'person_in_charge' => 'nullable|string|max:255',
@@ -131,5 +131,41 @@ class LocationController extends Controller
             });
 
         return response()->json($stocks);
+    }
+
+    /**
+     * Generate QR codes for a location (FNB type only)
+     */
+    public function generateQrCodes(Request $request, Location $location)
+    {
+        // Only owner and admin can generate QR codes
+        if (!in_array($request->user()->role, ['owner', 'admin'])) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        // Only FNB locations can have QR codes for customer orders
+        if ($location->type !== 'FNB') {
+            return response()->json(['message' => 'Only FNB locations can generate QR codes'], 422);
+        }
+
+        $validated = $request->validate([
+            'table_count' => 'required|integer|min:1|max:100',
+        ]);
+
+        $baseUrl = config('app.frontend_url', 'http://localhost:5173');
+        $qrCodes = [];
+
+        for ($i = 1; $i <= $validated['table_count']; $i++) {
+            $qrCodes[] = [
+                'table_number' => $i,
+                'url' => "{$baseUrl}/order/{$location->id}/{$i}",
+                'qr_data' => "{$baseUrl}/order/{$location->id}/{$i}"
+            ];
+        }
+
+        return response()->json([
+            'location' => $location,
+            'qr_codes' => $qrCodes
+        ]);
     }
 }

@@ -264,7 +264,7 @@ import { useRoute } from 'vue-router'
 import api from '@/services/api'
 
 const route = useRoute()
-const outletId = route.params.outletId
+const locationId = route.params.locationId
 const tableId = route.params.tableId
 const tableNumber = ref(tableId)
 
@@ -303,7 +303,7 @@ const loadData = async () => {
     // Load categories and products from public endpoints
     const [categoriesRes, productsRes] = await Promise.all([
       api.get('/public/categories'),
-      api.get('/public/products', { params: { outlet_id: outletId, per_page: 100 } })
+      api.get('/public/products', { params: { location_id: locationId, per_page: 100 } })
     ])
 
     // Filter categories: only Makanan FNB, Minuman FNB, Snack FNB
@@ -386,7 +386,7 @@ const submitOrder = async () => {
     }
     
     console.log('Sending order:', {
-      outlet_id: parseInt(outletId),
+      location_id: parseInt(locationId),
       table_id: parseInt(tableId),
       items: cart.value,
       discount: 0,
@@ -397,7 +397,7 @@ const submitOrder = async () => {
     })
     
     await api.post('/public/orders', {
-      outlet_id: parseInt(outletId),
+      location_id: parseInt(locationId),
       table_id: parseInt(tableId),
       items: cart.value,
       discount: 0,

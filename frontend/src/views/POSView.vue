@@ -1,12 +1,20 @@
 <template>
   <div class="space-y-4">
-    <!-- Outlet Selector for All Users -->
-    <OutletSelector @outlet-changed="handleOutletChange" />
+    <!-- Outlet Selector for Owner Only -->
+    <OutletSelector v-if="isOwner" @outlet-changed="handleOutletChange" />
+
+    <!-- Fixed Outlet Display for Kasir/Supervisor -->
+    <div v-if="!isOwner && userOutletName" class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <p class="text-blue-800 text-sm">
+        🏪 <strong>Outlet:</strong> {{ userOutletName }}
+      </p>
+    </div>
 
     <!-- No Outlet Warning -->
     <div v-if="showNoOutletWarning" class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
       <p class="text-yellow-800 text-sm">
-        ⚠️ <strong>Silakan pilih outlet terlebih dahulu</strong>
+        ⚠️ <strong>{{ isOwner ? 'Silakan pilih outlet terlebih dahulu' : 'User tidak memiliki outlet' }}</strong>
+        {{ isOwner ? '' : '- Hubungi admin untuk assign outlet.' }}
       </p>
     </div>
 
@@ -254,7 +262,9 @@ const successMessage = ref('')
 const barcodeInput = ref(null)
 const currentOutletId = ref(null)
 const debugInfo = ref(null)
+const userOutletName = ref('')
 
+const isOwner = computed(() => authStore.user?.role === 'owner' && !authStore.user?.outlet_id)
 const showNoOutletWarning = computed(() => !currentOutletId.value && !loading.value)
 
 const categories = computed(() => productStore.categories)
@@ -419,15 +429,77 @@ const handleOutletChange = (locationId) => {
   }
 }
 
+const getLocationIdForOutlet = async (outletId) => {
+  try {
+    console.log('Looking up location for outlet:', outletId)
+    const response = await api.get('/locations', {
+      params: {
+        type: 'OUTLET',
+        outlet_id: outletId
+      }
+    })
+    
+    if (response.data && response.data.length > 0) {
+      const location = response.data[0]
+      console.log('Found location:', location)
+      userOutletName.value = location.name // Set outlet name for display
+      return location.id
+    }
+    
+    console.warn('No location found for outlet:', outletId)
+    return null
+  } catch (error) {
+    console.error('Failed to lookup location:', error)
+    return null
+  }
+}
+
 onMounted(async () => {
-  // Check if there's a saved location from previous session
-  const savedLocation = localStorage.getItem('owner_selected_location')
-  if (savedLocation) {
-    console.log('Loading saved location:', savedLocation)
-    currentOutletId.value = savedLocation
-    await loadProductsForOutlet(savedLocation)
+  // Priority 1: Check if user has location_id (new field)
+  const userLocationId = authStore.user?.location_id
+  
+  if (userLocationId) {
+    console.log('User has location_id:', userLocationId)
+    // Load location name for display
+    try {
+      const response = await api.get(`/locations/${userLocationId}`)
+      userOutletName.value = response.data.name
+      console.log('Location name:', response.data.name)
+    } catch (error) {
+      console.error('Failed to load location:', error)
+    }
+    
+    currentOutletId.value = userLocationId
+    await loadProductsForOutlet(userLocationId)
   } else {
-    loading.value = false
+    // Priority 2: Fallback to outlet_id (for old users without location_id)
+    const userOutletId = authStore.user?.outlet_id
+    
+    if (userOutletId) {
+      console.log('User has outlet_id (old):', userOutletId, '- looking up location...')
+      // Convert outlet_id to location_id
+      const locationId = await getLocationIdForOutlet(userOutletId)
+      if (locationId) {
+        currentOutletId.value = locationId
+        await loadProductsForOutlet(locationId)
+      } else {
+        alert('Outlet belum terdaftar di inventory. Hubungi admin.')
+        loading.value = false
+      }
+    } else if (isOwner.value) {
+      // Owner will select location via OutletSelector component
+      // Check if there's a saved location from previous session
+      const savedLocation = localStorage.getItem('owner_selected_location')
+      if (savedLocation) {
+        currentOutletId.value = savedLocation
+        await loadProductsForOutlet(savedLocation)
+      } else {
+        loading.value = false
+      }
+    } else {
+      // User has no outlet and is not owner - show error
+      loading.value = false
+    }
   }
 })
 </script>

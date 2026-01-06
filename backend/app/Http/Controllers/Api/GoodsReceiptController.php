@@ -19,6 +19,8 @@ class GoodsReceiptController extends Controller
 
     public function index(Request $request)
     {
+        $user = auth()->user();
+        
         $query = GoodsReceipt::with([
             'purchaseOrder.vendor',
             'location',
@@ -26,6 +28,18 @@ class GoodsReceiptController extends Controller
             'receivedBy',
             'approvedBy',
         ]);
+
+        // Filter GRN based on user role and location
+        if ($user->role === 'owner') {
+            // Owner can see all GRNs
+        } elseif ($this->isProcurementUser($user)) {
+            // Procurement users can see all GRNs
+        } else {
+            // Staff and supervisor can only see GRNs from their own department
+            if ($user->location_id) {
+                $query->where('location_id', $user->location_id);
+            }
+        }
 
         if ($request->has('status')) {
             $query->where('status', $request->status);
@@ -50,6 +64,15 @@ class GoodsReceiptController extends Controller
 
     public function store(Request $request)
     {
+        $user = auth()->user();
+        
+        // Rule 6: Only owner and procurement users can create GRN
+        if ($user->role !== 'owner' && !$this->isProcurementUser($user)) {
+            return response()->json([
+                'message' => 'Only Owner and Procurement Department users can create Goods Receipts'
+            ], 403);
+        }
+        
         $validator = Validator::make($request->all(), [
             'po_id' => 'required|exists:purchase_orders,id',
             'location_id' => 'nullable|exists:locations,id',
@@ -74,6 +97,14 @@ class GoodsReceiptController extends Controller
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         }
+    }
+    
+    private function isProcurementUser($user)
+    {
+        if (!$user->location) return false;
+        
+        return $user->location->type === 'DEPARTMENT' && 
+               stripos($user->location->name, 'procurement') !== false;
     }
 
     public function show(GoodsReceipt $goodsReceipt)
@@ -143,6 +174,15 @@ class GoodsReceiptController extends Controller
 
     public function qualityCheck(Request $request, GoodsReceipt $goodsReceipt)
     {
+        $user = auth()->user();
+        
+        // Only owner and procurement users can submit for quality check
+        if ($user->role !== 'owner' && !$this->isProcurementUser($user)) {
+            return response()->json([
+                'message' => 'Only Owner and Procurement Department users can submit for quality check'
+            ], 403);
+        }
+        
         $validator = Validator::make($request->all(), [
             'items' => 'required|array|min:1',
             'items.*.id' => 'required|exists:goods_receipt_items,id',
@@ -170,6 +210,15 @@ class GoodsReceiptController extends Controller
 
     public function approve(GoodsReceipt $goodsReceipt)
     {
+        $user = auth()->user();
+        
+        // Only owner and procurement users can approve quality check
+        if ($user->role !== 'owner' && !$this->isProcurementUser($user)) {
+            return response()->json([
+                'message' => 'Only Owner and Procurement Department users can approve quality check'
+            ], 403);
+        }
+        
         try {
             $grn = $this->grnService->approveGRN($goodsReceipt->id, auth()->id());
             return response()->json($grn);
@@ -180,6 +229,15 @@ class GoodsReceiptController extends Controller
 
     public function post(GoodsReceipt $goodsReceipt)
     {
+        $user = auth()->user();
+        
+        // Rule 6: Only owner and procurement users can post GRN to inventory
+        if ($user->role !== 'owner' && !$this->isProcurementUser($user)) {
+            return response()->json([
+                'message' => 'Only Owner and Procurement Department users can post GRN to inventory'
+            ], 403);
+        }
+        
         try {
             $grn = $this->grnService->postGRN($goodsReceipt->id, auth()->id());
             return response()->json([

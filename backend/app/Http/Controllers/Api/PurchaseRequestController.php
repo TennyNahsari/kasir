@@ -19,12 +19,31 @@ class PurchaseRequestController extends Controller
 
     public function index(Request $request)
     {
+        $user = auth()->user();
+        
         $query = PurchaseRequest::with([
             'location',
             'items.product',
             'requestedBy',
             'approvedBy',
         ]);
+
+        // Rule 1 & 2: Filter PR based on user role and location
+        if ($user->role === 'owner') {
+            // Owner can see all PRs
+        } elseif ($user->role === 'kasir') {
+            // Kasir users see only PRs created by kasir role users
+            $query->whereHas('requestedBy', function($q) {
+                $q->where('role', 'kasir');
+            });
+        } elseif ($this->isProcurementUser($user)) {
+            // Procurement users can see all PRs
+        } else {
+            // Other staff can only see PRs from their own department
+            if ($user->location_id) {
+                $query->where('location_id', $user->location_id);
+            }
+        }
 
         if ($request->has('status')) {
             $query->where('status', $request->status);
@@ -41,6 +60,14 @@ class PurchaseRequestController extends Controller
         $prs = $query->orderBy('created_at', 'desc')->paginate(20);
 
         return response()->json($prs);
+    }
+    
+    private function isProcurementUser($user)
+    {
+        if (!$user->location) return false;
+        
+        return $user->location->type === 'DEPARTMENT' && 
+               stripos($user->location->name, 'procurement') !== false;
     }
 
     public function store(Request $request)
@@ -131,6 +158,33 @@ class PurchaseRequestController extends Controller
 
     public function approve(PurchaseRequest $purchaseRequest)
     {
+        $user = auth()->user();
+        $pr = $purchaseRequest->load('requestedBy');
+        
+        // Rule 3: If PR was created by kasir, owner or any kasir can approve (including self)
+        if ($pr->requestedBy && $pr->requestedBy->role === 'kasir') {
+            if ($user->role !== 'owner' && $user->role !== 'kasir') {
+                return response()->json([
+                    'message' => 'Only owner or kasir can approve kasir Purchase Requests'
+                ], 403);
+            }
+            // Kasir can approve their own PR or other kasir's PR
+        }
+        // For non-kasir PRs: only supervisor from same department can approve
+        else {
+            if ($user->role !== 'supervisor') {
+                return response()->json([
+                    'message' => 'Only supervisors can approve Purchase Requests'
+                ], 403);
+            }
+            
+            if ($user->location_id !== $purchaseRequest->location_id) {
+                return response()->json([
+                    'message' => 'You can only approve PRs from your own department'
+                ], 403);
+            }
+        }
+        
         try {
             $pr = $this->prService->approvePR($purchaseRequest->id, auth()->id());
             return response()->json($pr);

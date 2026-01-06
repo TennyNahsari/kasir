@@ -43,12 +43,19 @@ const router = createRouter({
         {
           path: 'inventory/locations',
           name: 'Locations',
-          component: () => import('@/views/LocationsView.vue')
+          component: () => import('@/views/LocationsView.vue'),
+          meta: { requiresSettingsAccess: true }
         },
         {
           path: 'inventory/products',
           name: 'Products',
           component: () => import('@/views/ProductList.vue')
+        },
+        {
+          path: 'users',
+          name: 'Users',
+          component: () => import('@/views/UserList.vue'),
+          meta: { requiresSettingsAccess: true }
         }
       ]
     }
@@ -81,6 +88,44 @@ router.beforeEach(async (to, from, next) => {
   // Protected routes - redirect to login if not authenticated
   if (requiresAuth && !isAuthenticated) {
     return next('/login')
+  }
+  
+  // Inventory App Access Control: Only owner and users with location type DEPARTMENT and name containing 'inventory'
+  if (requiresAuth && isAuthenticated) {
+    const user = authStore.user
+    const isOwner = user?.role === 'owner'
+    const hasInventoryDept = user?.location?.type === 'DEPARTMENT' && 
+                            user?.location?.name?.toLowerCase().includes('inventory')
+    
+    console.log('Inventory Access Check:', {
+      user: user?.name,
+      role: user?.role,
+      isOwner,
+      location: user?.location,
+      locationType: user?.location?.type,
+      locationName: user?.location?.name,
+      hasInventoryDept
+    })
+    
+    if (!isOwner && !hasInventoryDept) {
+      alert('Access Denied: Only Owner and Inventory Department users can access this application')
+      await authStore.logout()
+      return next('/login')
+    }
+  }
+  
+  // Settings Access Control: Only owner and supervisor with inventory department
+  if (requiresAuth && to.meta.requiresSettingsAccess) {
+    const user = authStore.user
+    const isOwner = user?.role === 'owner'
+    const isInventorySupervisor = user?.role === 'supervisor' && 
+                                  user?.location?.type === 'DEPARTMENT' && 
+                                  user?.location?.name?.toLowerCase().includes('inventory')
+    
+    if (!isOwner && !isInventorySupervisor) {
+      alert('Access Denied: Only Owner and Inventory Supervisor can access Settings')
+      return next('/')
+    }
   }
   
   // Role check for protected routes

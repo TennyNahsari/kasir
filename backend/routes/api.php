@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\InventoryTransferController;
 use App\Http\Controllers\Api\PurchaseRequestController;
 use App\Http\Controllers\Api\PurchaseOrderController;
 use App\Http\Controllers\Api\GoodsReceiptController;
+use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
@@ -32,11 +33,17 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index']);
+    Route::get('/dashboard/procurement-stats', [DashboardController::class, 'procurementStats']);
+    Route::get('/dashboard/expected-deliveries', [DashboardController::class, 'expectedDeliveries']);
+    Route::get('/dashboard/recent-purchase-requests', [DashboardController::class, 'recentPurchaseRequests']);
     Route::get('/reports/sales', [DashboardController::class, 'salesReport']);
 
     // Outlets (Owner only)
     Route::apiResource('outlets', OutletController::class);
     Route::post('/outlets/{outlet}/generate-qr', [OutletController::class, 'generateQrCodes']);
+
+    // Users (Owner only)
+    Route::apiResource('users', UserController::class);
 
     // Categories
     Route::apiResource('categories', CategoryController::class);
@@ -56,6 +63,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Locations (Warehouses & Outlets)
     Route::apiResource('locations', LocationController::class);
     Route::get('/locations/{location}/stock-summary', [LocationController::class, 'stockSummary']);
+    Route::post('/locations/{location}/generate-qr-codes', [LocationController::class, 'generateQrCodes']);
     
     // Vendors
     Route::apiResource('vendors', VendorController::class);

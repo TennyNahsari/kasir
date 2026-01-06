@@ -46,6 +46,11 @@ class Outlet extends Model
         return $this->hasMany(CashFlow::class);
     }
 
+    public function location()
+    {
+        return $this->hasOne(Location::class, 'outlet_id');
+    }
+
     // Business type checks
     public function isRetail(): bool
     {

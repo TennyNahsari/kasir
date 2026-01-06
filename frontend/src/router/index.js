@@ -11,7 +11,7 @@ const router = createRouter({
       meta: { guest: true }
     },
     {
-      path: '/order/:outletId/:tableId',
+      path: '/order/:locationId/:tableId',
       name: 'QROrder',
       component: () => import('@/views/QROrderView.vue'),
       meta: { public: true }
@@ -33,11 +33,6 @@ const router = createRouter({
           meta: { roles: ['kasir', 'owner', 'supervisor'] }
         },
         {
-          path: 'products',
-          name: 'Products',
-          component: () => import('@/views/ProductsView.vue')
-        },
-        {
           path: 'transactions',
           name: 'Transactions',
           component: () => import('@/views/TransactionsView.vue')
@@ -47,6 +42,30 @@ const router = createRouter({
           name: 'Reports',
           component: () => import('@/views/ReportsView.vue'),
           meta: { roles: ['owner', 'supervisor'] }
+        },
+        {
+          path: 'settings/users',
+          name: 'SettingsUsers',
+          component: () => import('@/views/UserManagement.vue'),
+          meta: { roles: ['owner'] }
+        },
+        {
+          path: 'settings/products',
+          name: 'SettingsProducts',
+          component: () => import('@/views/ProductsView.vue'),
+          meta: { roles: ['owner'] }
+        },
+        {
+          path: 'settings/stocks',
+          name: 'SettingsStocks',
+          component: () => import('@/views/StockManagement.vue'),
+          meta: { roles: ['owner'] }
+        },
+        {
+          path: 'settings/locations',
+          name: 'SettingsLocations',
+          component: () => import('@/views/LocationsManagement.vue'),
+          meta: { roles: ['owner'] }
         }
       ]
     }
@@ -79,6 +98,16 @@ router.beforeEach(async (to, from, next) => {
   // Protected routes - redirect to login if not authenticated
   if (requiresAuth && !isAuthenticated) {
     return next('/login')
+  }
+  
+  // Kasir App Access Control: Only owner and kasir allowed
+  if (requiresAuth && isAuthenticated) {
+    const userRole = authStore.user?.role
+    if (!['owner', 'kasir'].includes(userRole)) {
+      alert('Access Denied: Only Owner and Kasir can access this application')
+      await authStore.logout()
+      return next('/login')
+    }
   }
   
   // Role check for protected routes

@@ -465,6 +465,19 @@ const printBarcode = (product) => {
   }, 800)
 }
 
+const deleteProduct = async (product) => {
+  if (!confirm(`Hapus produk "${product.name}"?`)) return
+  
+  try {
+    await productStore.deleteProduct(product.id)
+    alert('Produk berhasil dihapus!')
+    loadProducts()
+  } catch (error) {
+    console.error('Error deleting product:', error)
+    alert('Gagal menghapus produk: ' + (error.response?.data?.message || error.message))
+  }
+}
+
 const saveCategory = async () => {
   try {
     if (editingCategory.value) {

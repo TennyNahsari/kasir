@@ -39,7 +39,7 @@ class AuthController extends Controller
 
         // Create response with user data
         $response = response()->json([
-            'user' => $user->load('outlet'),
+            'user' => $user->load(['outlet', 'location']),
             'message' => 'Login successful',
         ]);
 
@@ -71,6 +71,6 @@ class AuthController extends Controller
 
     public function me(Request $request)
     {
-        return response()->json($request->user()->load('outlet'));
+        return response()->json($request->user()->load(['outlet', 'location']));
     }
 }

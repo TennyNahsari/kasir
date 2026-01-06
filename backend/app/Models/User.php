@@ -18,6 +18,7 @@ class User extends Authenticatable
         'password',
         'role',
         'outlet_id',
+        'location_id',
         'is_active',
     ];
 
@@ -36,6 +37,11 @@ class User extends Authenticatable
     public function outlet()
     {
         return $this->belongsTo(Outlet::class);
+    }
+
+    public function location()
+    {
+        return $this->belongsTo(Location::class);
     }
 
     public function transactions()
