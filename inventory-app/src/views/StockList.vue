@@ -6,6 +6,12 @@
         <p class="text-gray-600">View inventory across all locations</p>
       </div>
       <div class="flex space-x-3">
+        <button @click="exportToExcel" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          Export Excel
+        </button>
         <button @click="openAddModal" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
           + Add Stock
         </button>
@@ -81,6 +87,7 @@
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <button @click="printBarcode(stock)" class="text-purple-600 hover:text-purple-900 mr-3">Barcode</button>
                 <button @click="openLedger(stock)" class="text-blue-600 hover:text-blue-900 mr-3">History</button>
                 <button @click="adjustStock(stock)" class="text-green-600 hover:text-green-900">Adjust</button>
               </td>
@@ -176,14 +183,71 @@
         </div>
       </div>
     </div>
+
+    <!-- Barcode Print Modal -->
+    <div v-if="showBarcodeModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-semibold">Print Barcode</h3>
+          <button @click="closeBarcodeModal" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <div class="space-y-4">
+          <div>
+            <p class="text-sm text-gray-600">Product: <span class="font-medium text-gray-900">{{ barcodeData.product_name }}</span></p>
+            <p class="text-sm text-gray-600">SKU: <span class="font-medium text-gray-900">{{ barcodeData.sku }}</span></p>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Label Size</label>
+            <select v-model="barcodeData.labelSize" @change="generateBarcodePreview" class="w-full border-gray-300 rounded-lg">
+              <option value="small">Small (30mm x 20mm) - Compact</option>
+              <option value="medium">Medium (50mm x 30mm) - Standard</option>
+              <option value="large">Large (100mm x 50mm) - Wide</option>
+            </select>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Number of Labels</label>
+            <input v-model.number="barcodeData.copies" type="number" min="1" max="100" class="w-full border-gray-300 rounded-lg">
+          </div>
+          
+          <div class="border rounded-lg p-4 bg-gray-50" id="barcode-preview">
+            <div class="text-center">
+              <div class="inline-block" :style="previewStyle">
+                <svg id="barcode-svg"></svg>
+                <p class="text-xs mt-2 font-mono" :style="{ fontSize: labelSizes[barcodeData.labelSize].skuFontSize }">{{ barcodeData.sku }}</p>
+                <p class="text-xs text-gray-600" :style="{ fontSize: labelSizes[barcodeData.labelSize].nameFontSize }">{{ barcodeData.product_name }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-end space-x-3 mt-6">
+          <button @click="closeBarcodeModal" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
+          <button @click="printBarcodeLabels" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+            </svg>
+            Print
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/services/api'
 import Pagination from '@/components/Pagination.vue'
+import * as XLSX from 'xlsx'
+import JsBarcode from 'jsbarcode'
 
 const router = useRouter()
 
@@ -191,8 +255,58 @@ const stocks = ref([])
 const locations = ref([])
 const showAdjustModal = ref(false)
 const showAddModal = ref(false)
+const showBarcodeModal = ref(false)
 const productSearchResults = ref([])
 const addProductSearchResults = ref([])
+
+const labelSizes = {
+  small: {
+    width: '30mm',
+    height: '20mm',
+    barcodeWidth: 1,
+    barcodeHeight: 25,
+    barcodeMargin: 5,
+    skuFontSize: '8px',
+    nameFontSize: '6px',
+    padding: '1mm'
+  },
+  medium: {
+    width: '50mm',
+    height: '30mm',
+    barcodeWidth: 1.5,
+    barcodeHeight: 40,
+    barcodeMargin: 8,
+    skuFontSize: '10px',
+    nameFontSize: '8px',
+    padding: '2mm'
+  },
+  large: {
+    width: '100mm',
+    height: '50mm',
+    barcodeWidth: 2,
+    barcodeHeight: 60,
+    barcodeMargin: 10,
+    skuFontSize: '14px',
+    nameFontSize: '10px',
+    padding: '3mm'
+  }
+}
+
+const barcodeData = ref({
+  sku: '',
+  product_name: '',
+  copies: 1,
+  labelSize: 'medium'
+})
+
+const previewStyle = computed(() => {
+  const size = labelSizes[barcodeData.value.labelSize]
+  return {
+    border: '1px dashed #ccc',
+    padding: size.padding,
+    display: 'inline-block'
+  }
+})
 
 const pagination = ref({
   current_page: 1,
@@ -239,6 +353,209 @@ const loadLocations = async () => {
     locations.value = data
   } catch (error) {
     console.error('Failed to load locations:', error)
+  }
+}
+
+const printBarcode = async (stock) => {
+  barcodeData.value = {
+    sku: stock.sku,
+    product_name: stock.product_name,
+    copies: 1,
+    labelSize: 'medium'
+  }
+  showBarcodeModal.value = true
+  
+  // Wait for DOM to update then generate barcode
+  await nextTick()
+  generateBarcodePreview()
+}
+
+const generateBarcodePreview = () => {
+  try {
+    const svg = document.getElementById('barcode-svg')
+    const size = labelSizes[barcodeData.value.labelSize]
+    
+    if (svg && barcodeData.value.sku) {
+      JsBarcode(svg, barcodeData.value.sku, {
+        format: 'CODE128',
+        width: size.barcodeWidth,
+        height: size.barcodeHeight,
+        displayValue: false,
+        margin: size.barcodeMargin
+      })
+    }
+  } catch (error) {
+    console.error('Failed to generate barcode:', error)
+    alert('Failed to generate barcode. Invalid SKU format.')
+  }
+}
+
+const printBarcodeLabels = () => {
+  const printWindow = window.open('', '', 'width=800,height=600')
+  const size = labelSizes[barcodeData.value.labelSize]
+  
+  let labelsHTML = ''
+  for (let i = 0; i < barcodeData.value.copies; i++) {
+    labelsHTML += `
+      <div class="barcode-label">
+        <svg id="barcode-${i}"></svg>
+        <div class="barcode-text">${barcodeData.value.sku}</div>
+        <div class="product-name">${barcodeData.value.product_name}</div>
+      </div>
+    `
+  }
+  
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>Print Barcode - ${barcodeData.value.sku}</title>
+        <style>
+          @page {
+            size: ${size.width} ${size.height};
+            margin: 0;
+          }
+          
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+          
+          body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+          }
+          
+          .barcode-label {
+            width: ${size.width};
+            height: ${size.height};
+            padding: ${size.padding};
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            page-break-after: always;
+          }
+          
+          .barcode-label:last-child {
+            page-break-after: auto;
+          }
+          
+          svg {
+            display: block;
+            margin: 0 auto;
+          }
+          
+          .barcode-text {
+            font-family: monospace;
+            font-size: ${size.skuFontSize};
+            font-weight: bold;
+            margin-top: 2mm;
+          }
+          
+          .product-name {
+            font-size: ${size.nameFontSize};
+            color: #333;
+            margin-top: 1mm;
+            max-width: 90%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+          
+          @media print {
+            body { 
+              margin: 0; 
+              padding: 0; 
+            }
+            .barcode-label { 
+              margin: 0; 
+            }
+          }
+        </style>
+      </head>
+      <body>
+        ${labelsHTML}
+      </body>
+    </html>
+  `)
+  
+  printWindow.document.close()
+  
+  // Generate barcodes in print window
+  setTimeout(() => {
+    for (let i = 0; i < barcodeData.value.copies; i++) {
+      const svg = printWindow.document.getElementById(`barcode-${i}`)
+      if (svg) {
+        JsBarcode(svg, barcodeData.value.sku, {
+          format: 'CODE128',
+          width: size.barcodeWidth,
+          height: size.barcodeHeight,
+          displayValue: false,
+          margin: size.barcodeMargin
+        })
+      }
+    }
+    
+    setTimeout(() => {
+      printWindow.print()
+      printWindow.close()
+    }, 500)
+  }, 500)
+}
+
+const closeBarcodeModal = () => {
+  showBarcodeModal.value = false
+  barcodeData.value = {
+    sku: '',
+    product_name: '',
+    copies: 1,
+    labelSize: 'medium'
+  }
+}
+
+const exportToExcel = () => {
+  try {
+    const exportData = stocks.value.map(stock => ({
+      'Product Name': stock.product_name,
+      'SKU': stock.sku,
+      'Location': stock.location_name,
+      'Quantity': stock.quantity,
+      'UOM': stock.uom,
+      'Reorder Level': stock.reorder_level,
+      'Status': getStockStatus(stock)
+    }))
+
+    if (exportData.length === 0) {
+      alert('No data to export')
+      return
+    }
+
+    const wb = XLSX.utils.book_new()
+    const ws = XLSX.utils.json_to_sheet(exportData)
+
+    ws['!cols'] = [
+      { wch: 30 },  // Product Name
+      { wch: 15 },  // SKU
+      { wch: 25 },  // Location
+      { wch: 12 },  // Quantity
+      { wch: 10 },  // UOM
+      { wch: 15 },  // Reorder Level
+      { wch: 15 }   // Status
+    ]
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Stock Levels')
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)
+    const filename = `Stock_Levels_${timestamp}.xlsx`
+
+    XLSX.writeFile(wb, filename)
+    alert(`Excel file exported successfully: ${filename} (${exportData.length} records)`)
+  } catch (error) {
+    console.error('Export error:', error)
+    alert('Failed to export Excel file: ' + error.message)
   }
 }
 

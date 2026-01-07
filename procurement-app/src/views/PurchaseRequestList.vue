@@ -5,9 +5,33 @@
         <h1 class="text-3xl font-bold text-gray-800">Purchase Requests</h1>
         <p class="text-gray-600">Manage procurement requests</p>
       </div>
-      <button @click="$router.push('/procurement/purchase-requests/create')" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-        Create PR
-      </button>
+      <div class="flex space-x-3">
+        <button @click="exportToExcel" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          Export Excel
+        </button>
+        <button @click="$router.push('/procurement/purchase-requests/create')" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+          Create PR
+        </button>
+      </div>
+    </div>
+
+    <!-- Export Date Range -->
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+      <div class="flex items-center gap-4">
+        <span class="text-sm font-medium text-gray-700">Export Date Range:</span>
+        <div class="flex items-center gap-2">
+          <label class="text-sm text-gray-600">From:</label>
+          <input v-model="exportFilters.start_date" type="date" class="border-gray-300 rounded-lg text-sm">
+        </div>
+        <div class="flex items-center gap-2">
+          <label class="text-sm text-gray-600">To:</label>
+          <input v-model="exportFilters.end_date" type="date" class="border-gray-300 rounded-lg text-sm">
+        </div>
+        <button @click="clearExportDates" class="text-sm text-blue-600 hover:text-blue-800">Clear</button>
+      </div>
     </div>
 
     <!-- Filters -->
@@ -90,50 +114,19 @@
           </tbody>
         </table>
       </div>
-      
-      <!-- Pagination -->
-      <div class="px-6 py-4 flex items-center justify-between border-t border-gray-200">
-        <div class="flex-1 flex justify-between sm:hidden">
-          <button @click="goToPage(pagination.current_page - 1)" :disabled="!pagination.prev_page_url" :class="{'opacity-50 cursor-not-allowed': !pagination.prev_page_url}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Previous</button>
-          <button @click="goToPage(pagination.current_page + 1)" :disabled="!pagination.next_page_url" :class="{'opacity-50 cursor-not-allowed': !pagination.next_page_url}" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Next</button>
-        </div>
-        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-          <div>
-            <p class="text-sm text-gray-700">
-              Showing <span class="font-medium">{{ pagination.from || 0 }}</span> to <span class="font-medium">{{ pagination.to || 0 }}</span> of <span class="font-medium">{{ pagination.total || 0 }}</span> results
-            </p>
-          </div>
-          <div>
-            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-              <button @click="goToPage(pagination.current_page - 1)" :disabled="!pagination.prev_page_url" :class="{'opacity-50 cursor-not-allowed': !pagination.prev_page_url}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">Previous</button>
-              <button v-for="page in visiblePages" :key="page" @click="goToPage(page)" :class="page === pagination.current_page ? 'bg-blue-50 border-blue-500 text-blue-600 z-10' : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'" class="relative inline-flex items-center px-4 py-2 border text-sm font-medium">{{ page }}</button>
-              <button @click="goToPage(pagination.current_page + 1)" :disabled="!pagination.next_page_url" :class="{'opacity-50 cursor-not-allowed': !pagination.next_page_url}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">Next</button>
-            </nav>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/services/api'
+import * as XLSX from 'xlsx'
 
 const router = useRouter()
 
 const prs = ref([])
-const pagination = ref({
-  current_page: 1,
-  last_page: 1,
-  per_page: 15,
-  total: 0,
-  from: 0,
-  to: 0,
-  prev_page_url: null,
-  next_page_url: null
-})
 
 const filters = ref({
   status: '',
@@ -142,13 +135,18 @@ const filters = ref({
   to_date: ''
 })
 
+const exportFilters = ref({
+  start_date: '',
+  end_date: ''
+})
+
 onMounted(async () => {
   await loadPRs()
 })
 
-const loadPRs = async (page = 1) => {
+const loadPRs = async () => {
   try {
-    const params = { page }
+    const params = {}
     if (filters.value.status) params.status = filters.value.status
     if (filters.value.department) params.department = filters.value.department
     if (filters.value.from_date) params.from_date = filters.value.from_date
@@ -156,21 +154,7 @@ const loadPRs = async (page = 1) => {
 
     const { data } = await api.get('/purchase-requests', { params })
     // Handle Laravel pagination response
-    if (data.data) {
-      prs.value = data.data
-      pagination.value = {
-        current_page: data.current_page,
-        last_page: data.last_page,
-        per_page: data.per_page,
-        total: data.total,
-        from: data.from,
-        to: data.to,
-        prev_page_url: data.prev_page_url,
-        next_page_url: data.next_page_url
-      }
-    } else {
-      prs.value = data || []
-    }
+    prs.value = data.data || data || []
   } catch (error) {
     console.error('Failed to load PRs:', error)
     prs.value = []
@@ -202,48 +186,79 @@ const viewPR = (pr) => {
   router.push(`/procurement/purchase-requests/${pr.id}`)
 }
 
+const exportToExcel = () => {
+  try {
+    let dataToExport = prs.value
+
+    // Filter by export date range if specified
+    if (exportFilters.value.start_date || exportFilters.value.end_date) {
+      dataToExport = dataToExport.filter(pr => {
+        const prDate = new Date(pr.request_date)
+        if (exportFilters.value.start_date && prDate < new Date(exportFilters.value.start_date)) {
+          return false
+        }
+        if (exportFilters.value.end_date && prDate > new Date(exportFilters.value.end_date)) {
+          return false
+        }
+        return true
+      })
+    }
+
+    if (dataToExport.length === 0) {
+      alert('No data to export for the selected date range')
+      return
+    }
+
+    const exportData = dataToExport.map(pr => ({
+      'PR Number': pr.pr_number,
+      'Date': formatDate(pr.request_date),
+      'Location': pr.location?.name || '-',
+      'Requested By': pr.requested_by_name,
+      'Status': pr.status,
+      'Items Count': pr.items_count,
+      'Notes': pr.notes || ''
+    }))
+
+    const wb = XLSX.utils.book_new()
+    const ws = XLSX.utils.json_to_sheet(exportData)
+
+    ws['!cols'] = [
+      { wch: 20 },  // PR Number
+      { wch: 15 },  // Date
+      { wch: 25 },  // Location
+      { wch: 25 },  // Requested By
+      { wch: 15 },  // Status
+      { wch: 12 },  // Items Count
+      { wch: 40 }   // Notes
+    ]
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Purchase Requests')
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)
+    const filename = `Purchase_Requests_${timestamp}.xlsx`
+
+    XLSX.writeFile(wb, filename)
+    alert(`Excel file exported successfully: ${filename} (${dataToExport.length} records)`)
+  } catch (error) {
+    console.error('Export error:', error)
+    alert('Failed to export Excel file: ' + error.message)
+  }
+}
+
+const clearExportDates = () => {
+  exportFilters.value.start_date = ''
+  exportFilters.value.end_date = ''
+}
+
 const deletePR = async (pr) => {
   if (!confirm(`Are you sure you want to delete PR ${pr.pr_number}?`)) return
   
   try {
     await api.delete(`/purchase-requests/${pr.id}`)
     alert('Purchase Request deleted successfully')
-    await loadPRs(pagination.value.current_page)
+    await loadPRs()
   } catch (error) {
     alert('Failed to delete PR: ' + (error.response?.data?.message || error.message))
   }
 }
-
-const goToPage = (page) => {
-  if (page < 1 || page > pagination.value.last_page) return
-  loadPRs(page)
-}
-
-const visiblePages = computed(() => {
-  const pages = []
-  const current = pagination.value.current_page
-  const last = pagination.value.last_page
-  
-  if (last <= 7) {
-    for (let i = 1; i <= last; i++) pages.push(i)
-  } else {
-    if (current <= 4) {
-      for (let i = 1; i <= 5; i++) pages.push(i)
-      pages.push('...')
-      pages.push(last)
-    } else if (current >= last - 3) {
-      pages.push(1)
-      pages.push('...')
-      for (let i = last - 4; i <= last; i++) pages.push(i)
-    } else {
-      pages.push(1)
-      pages.push('...')
-      for (let i = current - 1; i <= current + 1; i++) pages.push(i)
-      pages.push('...')
-      pages.push(last)
-    }
-  }
-  
-  return pages.filter(p => p !== '...' || typeof p === 'string')
-})
 </script>

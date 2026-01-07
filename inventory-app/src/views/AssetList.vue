@@ -2,9 +2,17 @@
   <div class="p-4 sm:p-6">
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
       <h2 class="text-2xl font-bold">Asset Management</h2>
-      <button @click="showAddModal = true" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-        + Add Asset
-      </button>
+      <div class="flex space-x-3">
+        <button @click="exportToExcel" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          Export Excel
+        </button>
+        <button @click="showAddModal = true" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+          + Add Asset
+        </button>
+      </div>
     </div>
 
     <!-- Filters -->
@@ -83,9 +91,14 @@
               </span>
             </td>
             <td class="px-4 py-3 text-sm text-center">
-              <button @click="viewAsset(asset)" class="text-blue-600 hover:text-blue-700 font-medium">
-                View
-              </button>
+              <div class="flex gap-2 justify-center">
+                <button @click="printBarcode(asset)" class="text-purple-600 hover:text-purple-900 font-medium">
+                  Barcode
+                </button>
+                <button @click="viewAsset(asset)" class="text-blue-600 hover:text-blue-700 font-medium">
+                  View
+                </button>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -138,9 +151,14 @@
           </div>
         </div>
         
-        <button @click="viewAsset(asset)" class="w-full py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100">
-          View Details
-        </button>
+        <div class="flex gap-2">
+          <button @click="printBarcode(asset)" class="flex-1 py-2 text-sm font-medium text-purple-600 bg-purple-50 rounded-lg hover:bg-purple-100">
+            Barcode
+          </button>
+          <button @click="viewAsset(asset)" class="flex-1 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100">
+            View Details
+          </button>
+        </div>
       </div>
 
       <div v-if="!loading && assets.length === 0" class="card p-8 text-center text-gray-500">
@@ -266,16 +284,130 @@
         </div>
       </div>
     </div>
+
+    <!-- Barcode Modal -->
+    <div v-if="showBarcodeModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+        <div class="flex justify-between items-center p-4 border-b">
+          <h3 class="text-lg font-semibold">Print Asset Tag Barcode</h3>
+          <button @click="closeBarcodeModal" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <div class="p-6">
+          <div class="space-y-4">
+            <div>
+              <p class="text-sm text-gray-600">Asset: <span class="font-medium text-gray-900">{{ barcodeData.product_name }}</span></p>
+              <p class="text-sm text-gray-600">Asset Tag: <span class="font-medium text-gray-900">{{ barcodeData.asset_tag }}</span></p>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Label Size</label>
+              <select v-model="barcodeData.labelSize" @change="generateBarcodePreview" class="w-full border-gray-300 rounded-lg">
+                <option value="small">Small (30mm x 20mm) - Compact</option>
+                <option value="medium">Medium (50mm x 30mm) - Standard</option>
+                <option value="large">Large (100mm x 50mm) - Wide</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Number of Labels</label>
+              <input v-model.number="barcodeData.copies" type="number" min="1" max="100" class="w-full border-gray-300 rounded-lg">
+            </div>
+            
+            <div class="border rounded-lg p-4 bg-gray-50" id="barcode-preview">
+              <div class="text-center">
+                <div class="inline-block" :style="previewStyle">
+                  <svg id="barcode-svg"></svg>
+                  <p class="text-xs mt-2 font-mono" :style="{ fontSize: labelSizes[barcodeData.labelSize].skuFontSize }">{{ barcodeData.asset_tag }}</p>
+                  <p class="text-xs text-gray-600" :style="{ fontSize: labelSizes[barcodeData.labelSize].nameFontSize }">{{ barcodeData.product_name }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="flex gap-3 justify-end p-4 border-t">
+          <button @click="closeBarcodeModal" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+            Cancel
+          </button>
+          <button @click="printBarcodeLabels" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+            Print
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Barcode Modal -->
+    <div v-if="showBarcodeModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+        <div class="flex justify-between items-center p-4 border-b">
+          <h3 class="text-lg font-semibold">Print Asset Tag Barcode</h3>
+          <button @click="closeBarcodeModal" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <div class="p-6">
+          <div class="space-y-4">
+            <div>
+              <p class="text-sm text-gray-600">Asset: <span class="font-medium text-gray-900">{{ barcodeData.product_name }}</span></p>
+              <p class="text-sm text-gray-600">Asset Tag: <span class="font-medium text-gray-900">{{ barcodeData.asset_tag }}</span></p>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Label Size</label>
+              <select v-model="barcodeData.labelSize" @change="generateBarcodePreview" class="w-full border-gray-300 rounded-lg">
+                <option value="small">Small (30mm x 20mm) - Compact</option>
+                <option value="medium">Medium (50mm x 30mm) - Standard</option>
+                <option value="large">Large (100mm x 50mm) - Wide</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Number of Labels</label>
+              <input v-model.number="barcodeData.copies" type="number" min="1" max="100" class="w-full border-gray-300 rounded-lg">
+            </div>
+            
+            <div class="border rounded-lg p-4 bg-gray-50" id="barcode-preview">
+              <div class="text-center">
+                <div class="inline-block" :style="previewStyle">
+                  <svg id="barcode-svg"></svg>
+                  <p class="text-xs mt-2 font-mono" :style="{ fontSize: labelSizes[barcodeData.labelSize].skuFontSize }">{{ barcodeData.asset_tag }}</p>
+                  <p class="text-xs text-gray-600" :style="{ fontSize: labelSizes[barcodeData.labelSize].nameFontSize }">{{ barcodeData.product_name }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="flex gap-3 justify-end p-4 border-t">
+          <button @click="closeBarcodeModal" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+            Cancel
+          </button>
+          <button @click="printBarcodeLabels" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+            Print
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import assetService from '@/services/assetService'
 import locationService from '@/services/locationService'
 import userService from '@/services/userService'
 import api from '@/services/api'
+import * as XLSX from 'xlsx'
+import JsBarcode from 'jsbarcode'
 
 const router = useRouter()
 
@@ -285,6 +417,106 @@ const users = ref([])
 const assetProducts = ref([])
 const loading = ref(false)
 const showAddModal = ref(false)
+const showBarcodeModal = ref(false)
+
+const labelSizes = {
+  small: {
+    width: '30mm',
+    height: '20mm',
+    barcodeWidth: 1,
+    barcodeHeight: 25,
+    barcodeMargin: 5,
+    skuFontSize: '8px',
+    nameFontSize: '6px',
+    padding: '1mm'
+  },
+  medium: {
+    width: '50mm',
+    height: '30mm',
+    barcodeWidth: 1.5,
+    barcodeHeight: 40,
+    barcodeMargin: 8,
+    skuFontSize: '10px',
+    nameFontSize: '8px',
+    padding: '2mm'
+  },
+  large: {
+    width: '100mm',
+    height: '50mm',
+    barcodeWidth: 2,
+    barcodeHeight: 60,
+    barcodeMargin: 10,
+    skuFontSize: '14px',
+    nameFontSize: '10px',
+    padding: '3mm'
+  }
+}
+
+const barcodeData = ref({
+  asset_tag: '',
+  product_name: '',
+  copies: 1,
+  labelSize: 'medium'
+})
+
+const previewStyle = computed(() => {
+  const size = labelSizes[barcodeData.value.labelSize]
+  return {
+    border: '1px dashed #ccc',
+    padding: size.padding,
+    display: 'inline-block'
+  }
+})
+const showBarcodeModal = ref(false)
+
+const labelSizes = {
+  small: {
+    width: '30mm',
+    height: '20mm',
+    barcodeWidth: 1,
+    barcodeHeight: 25,
+    barcodeMargin: 5,
+    skuFontSize: '8px',
+    nameFontSize: '6px',
+    padding: '1mm'
+  },
+  medium: {
+    width: '50mm',
+    height: '30mm',
+    barcodeWidth: 1.5,
+    barcodeHeight: 40,
+    barcodeMargin: 8,
+    skuFontSize: '10px',
+    nameFontSize: '8px',
+    padding: '2mm'
+  },
+  large: {
+    width: '100mm',
+    height: '50mm',
+    barcodeWidth: 2,
+    barcodeHeight: 60,
+    barcodeMargin: 10,
+    skuFontSize: '14px',
+    nameFontSize: '10px',
+    padding: '3mm'
+  }
+}
+
+const barcodeData = ref({
+  asset_tag: '',
+  product_name: '',
+  copies: 1,
+  labelSize: 'medium'
+})
+
+const previewStyle = computed(() => {
+  const size = labelSizes[barcodeData.value.labelSize]
+  return {
+    border: '1px dashed #ccc',
+    padding: size.padding,
+    display: 'inline-block'
+  }
+})
 
 const filters = ref({
   search: '',
@@ -322,6 +554,59 @@ onMounted(async () => {
     loadAssetProducts()
   ])
 })
+
+const exportToExcel = () => {
+  try {
+    const exportData = assets.value.map(asset => ({
+      'Asset Tag': asset.asset_tag,
+      'Product': asset.product?.name || '',
+      'Serial Number': asset.serial_number || '',
+      'Location': asset.location?.name || '',
+      'PIC': asset.pic || '',
+      'Status': asset.status,
+      'Condition': asset.condition || '',
+      'Purchase Date': asset.purchase_date || '',
+      'Purchase Price': asset.purchase_price || 0,
+      'Vendor': asset.vendor || '',
+      'Warranty Expiry': asset.warranty_expiry || '',
+      'Notes': asset.notes || ''
+    }))
+
+    if (exportData.length === 0) {
+      alert('No data to export')
+      return
+    }
+
+    const wb = XLSX.utils.book_new()
+    const ws = XLSX.utils.json_to_sheet(exportData)
+
+    ws['!cols'] = [
+      { wch: 15 },  // Asset Tag
+      { wch: 25 },  // Product
+      { wch: 20 },  // Serial Number
+      { wch: 20 },  // Location
+      { wch: 20 },  // PIC
+      { wch: 15 },  // Status
+      { wch: 12 },  // Condition
+      { wch: 15 },  // Purchase Date
+      { wch: 15 },  // Purchase Price
+      { wch: 25 },  // Vendor
+      { wch: 15 },  // Warranty Expiry
+      { wch: 40 }   // Notes
+    ]
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Assets')
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)
+    const filename = `Assets_${timestamp}.xlsx`
+
+    XLSX.writeFile(wb, filename)
+    alert(`Excel file exported successfully: ${filename} (${exportData.length} records)`)
+  } catch (error) {
+    console.error('Export error:', error)
+    alert('Failed to export Excel file: ' + error.message)
+  }
+}
 
 const loadAssets = async (page = 1) => {
   loading.value = true
@@ -417,6 +702,322 @@ const closeAddModal = () => {
     useful_life_years: 5,
     warranty_expiry: '',
     notes: ''
+  }
+}
+
+const printBarcode = async (asset) => {
+  barcodeData.value = {
+    asset_tag: asset.asset_tag,
+    product_name: asset.product?.name || 'Unknown Product',
+    copies: 1,
+    labelSize: 'medium'
+  }
+  showBarcodeModal.value = true
+  
+  await nextTick()
+  generateBarcodePreview()
+}
+
+const generateBarcodePreview = () => {
+  try {
+    const svg = document.getElementById('barcode-svg')
+    const size = labelSizes[barcodeData.value.labelSize]
+    
+    if (svg && barcodeData.value.asset_tag) {
+      JsBarcode(svg, barcodeData.value.asset_tag, {
+        format: 'CODE128',
+        width: size.barcodeWidth,
+        height: size.barcodeHeight,
+        displayValue: false,
+        margin: size.barcodeMargin
+      })
+    }
+  } catch (error) {
+    console.error('Failed to generate barcode:', error)
+    alert('Failed to generate barcode. Invalid Asset Tag format.')
+  }
+}
+
+const printBarcodeLabels = () => {
+  const printWindow = window.open('', '', 'width=800,height=600')
+  const size = labelSizes[barcodeData.value.labelSize]
+  
+  let labelsHTML = ''
+  for (let i = 0; i < barcodeData.value.copies; i++) {
+    labelsHTML += `
+      <div class="barcode-label">
+        <svg id="barcode-${i}"></svg>
+        <div class="barcode-text">${barcodeData.value.asset_tag}</div>
+        <div class="product-name">${barcodeData.value.product_name}</div>
+      </div>
+    `
+  }
+  
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>Print Asset Tag - ${barcodeData.value.asset_tag}</title>
+        <style>
+          @page {
+            size: ${size.width} ${size.height};
+            margin: 0;
+          }
+          
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+          
+          body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+          }
+          
+          .barcode-label {
+            width: ${size.width};
+            height: ${size.height};
+            padding: ${size.padding};
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            page-break-after: always;
+          }
+          
+          .barcode-label:last-child {
+            page-break-after: auto;
+          }
+          
+          svg {
+            display: block;
+            margin: 0 auto;
+          }
+          
+          .barcode-text {
+            font-family: monospace;
+            font-size: ${size.skuFontSize};
+            font-weight: bold;
+            margin-top: 2mm;
+          }
+          
+          .product-name {
+            font-size: ${size.nameFontSize};
+            color: #333;
+            margin-top: 1mm;
+            max-width: 90%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+          
+          @media print {
+            body { 
+              margin: 0; 
+              padding: 0; 
+            }
+            .barcode-label { 
+              margin: 0; 
+            }
+          }
+        </style>
+      </head>
+      <body>
+        ${labelsHTML}
+      </body>
+    </html>
+  `)
+  
+  printWindow.document.close()
+  
+  setTimeout(() => {
+    for (let i = 0; i < barcodeData.value.copies; i++) {
+      const svg = printWindow.document.getElementById(`barcode-${i}`)
+      if (svg) {
+        JsBarcode(svg, barcodeData.value.asset_tag, {
+          format: 'CODE128',
+          width: size.barcodeWidth,
+          height: size.barcodeHeight,
+          displayValue: false,
+          margin: size.barcodeMargin
+        })
+      }
+    }
+    
+    setTimeout(() => {
+      printWindow.print()
+      printWindow.close()
+    }, 500)
+  }, 500)
+}
+
+const closeBarcodeModal = () => {
+  showBarcodeModal.value = false
+  barcodeData.value = {
+    asset_tag: '',
+    product_name: '',
+    copies: 1,
+    labelSize: 'medium'
+  }
+}
+
+const printBarcode = async (asset) => {
+  barcodeData.value = {
+    asset_tag: asset.asset_tag,
+    product_name: asset.product?.name || 'Unknown Product',
+    copies: 1,
+    labelSize: 'medium'
+  }
+  showBarcodeModal.value = true
+  
+  await nextTick()
+  generateBarcodePreview()
+}
+
+const generateBarcodePreview = () => {
+  try {
+    const svg = document.getElementById('barcode-svg')
+    const size = labelSizes[barcodeData.value.labelSize]
+    
+    if (svg && barcodeData.value.asset_tag) {
+      JsBarcode(svg, barcodeData.value.asset_tag, {
+        format: 'CODE128',
+        width: size.barcodeWidth,
+        height: size.barcodeHeight,
+        displayValue: false,
+        margin: size.barcodeMargin
+      })
+    }
+  } catch (error) {
+    console.error('Failed to generate barcode:', error)
+    alert('Failed to generate barcode. Invalid Asset Tag format.')
+  }
+}
+
+const printBarcodeLabels = () => {
+  const printWindow = window.open('', '', 'width=800,height=600')
+  const size = labelSizes[barcodeData.value.labelSize]
+  
+  let labelsHTML = ''
+  for (let i = 0; i < barcodeData.value.copies; i++) {
+    labelsHTML += `
+      <div class="barcode-label">
+        <svg id="barcode-${i}"></svg>
+        <div class="barcode-text">${barcodeData.value.asset_tag}</div>
+        <div class="product-name">${barcodeData.value.product_name}</div>
+      </div>
+    `
+  }
+  
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>Print Asset Tag - ${barcodeData.value.asset_tag}</title>
+        <style>
+          @page {
+            size: ${size.width} ${size.height};
+            margin: 0;
+          }
+          
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+          
+          body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+          }
+          
+          .barcode-label {
+            width: ${size.width};
+            height: ${size.height};
+            padding: ${size.padding};
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            page-break-after: always;
+          }
+          
+          .barcode-label:last-child {
+            page-break-after: auto;
+          }
+          
+          svg {
+            display: block;
+            margin: 0 auto;
+          }
+          
+          .barcode-text {
+            font-family: monospace;
+            font-size: ${size.skuFontSize};
+            font-weight: bold;
+            margin-top: 2mm;
+          }
+          
+          .product-name {
+            font-size: ${size.nameFontSize};
+            color: #333;
+            margin-top: 1mm;
+            max-width: 90%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+          
+          @media print {
+            body { 
+              margin: 0; 
+              padding: 0; 
+            }
+            .barcode-label { 
+              margin: 0; 
+            }
+          }
+        </style>
+      </head>
+      <body>
+        ${labelsHTML}
+      </body>
+    </html>
+  `)
+  
+  printWindow.document.close()
+  
+  setTimeout(() => {
+    for (let i = 0; i < barcodeData.value.copies; i++) {
+      const svg = printWindow.document.getElementById(`barcode-${i}`)
+      if (svg) {
+        JsBarcode(svg, barcodeData.value.asset_tag, {
+          format: 'CODE128',
+          width: size.barcodeWidth,
+          height: size.barcodeHeight,
+          displayValue: false,
+          margin: size.barcodeMargin
+        })
+      }
+    }
+    
+    setTimeout(() => {
+      printWindow.print()
+      printWindow.close()
+    }, 500)
+  }, 500)
+}
+
+const closeBarcodeModal = () => {
+  showBarcodeModal.value = false
+  barcodeData.value = {
+    asset_tag: '',
+    product_name: '',
+    copies: 1,
+    labelSize: 'medium'
   }
 }
 

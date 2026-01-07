@@ -6,6 +6,12 @@
         <p class="text-gray-600">Manage product master data</p>
       </div>
       <div class="flex space-x-3">
+        <button @click="exportToExcel" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          Export Excel
+        </button>
         <button @click="showCategoryModal = true" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">
           + Category
         </button>
@@ -256,6 +262,7 @@
 import { ref, onMounted } from 'vue'
 import api from '@/services/api'
 import Pagination from '@/components/Pagination.vue'
+import * as XLSX from 'xlsx'
 
 const products = ref([])
 const categories = ref([])
@@ -415,6 +422,55 @@ const removeImage = () => {
 const closeModal = () => {
   showModal.value = false
   editingProduct.value = null
+}
+
+const exportToExcel = () => {
+  try {
+    const exportData = products.value.map(product => ({
+      'SKU': product.sku,
+      'Product Name': product.name,
+      'Category': product.category?.name || '',
+      'Type': product.type || 'INVENTORY',
+      'UOM': product.uom,
+      'Cost Price': product.cost_price,
+      'Selling Price': product.selling_price,
+      'Barcode': product.barcode || '',
+      'Description': product.description || '',
+      'Status': product.is_active ? 'Active' : 'Inactive'
+    }))
+
+    if (exportData.length === 0) {
+      alert('No data to export')
+      return
+    }
+
+    const wb = XLSX.utils.book_new()
+    const ws = XLSX.utils.json_to_sheet(exportData)
+
+    ws['!cols'] = [
+      { wch: 15 },  // SKU
+      { wch: 30 },  // Product Name
+      { wch: 20 },  // Category
+      { wch: 12 },  // Type
+      { wch: 10 },  // UOM
+      { wch: 15 },  // Cost Price
+      { wch: 15 },  // Selling Price
+      { wch: 20 },  // Barcode
+      { wch: 40 },  // Description
+      { wch: 10 }   // Status
+    ]
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Products')
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)
+    const filename = `Products_${timestamp}.xlsx`
+
+    XLSX.writeFile(wb, filename)
+    alert(`Excel file exported successfully: ${filename} (${exportData.length} records)`)
+  } catch (error) {
+    console.error('Export error:', error)
+    alert('Failed to export Excel file: ' + error.message)
+  }
 }
 
 const saveProduct = async () => {

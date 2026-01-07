@@ -5,12 +5,20 @@
         <h1 class="text-3xl font-bold text-gray-800 mb-2">Service Contracts</h1>
         <p class="text-gray-600">Track and manage service contracts, rentals, and subscriptions</p>
       </div>
-      <button @click="showCreateModal = true" class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 flex items-center">
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-        </svg>
-        Add Service Contract
-      </button>
+      <div class="flex space-x-3">
+        <button @click="exportToExcel" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          Export Excel
+        </button>
+        <button @click="showCreateModal = true" class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 flex items-center">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+          </svg>
+          Add Service Contract
+        </button>
+      </div>
     </div>
 
     <!-- Stats Cards -->
@@ -183,11 +191,14 @@
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm">
-                <button @click="viewContract(contract.id)" class="text-purple-600 hover:text-purple-900">
-                  View Details
-                </button>
-                <!-- Debug info -->
-                <span class="text-xs text-gray-400 ml-2">(ID: {{ contract.id }})</span>
+                <div class="flex gap-2">
+                  <button @click="printBarcode(contract)" class="text-purple-600 hover:text-purple-900">
+                    Barcode
+                  </button>
+                  <button @click="viewContract(contract.id)" class="text-purple-600 hover:text-purple-900">
+                    View Details
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -319,14 +330,72 @@
         </form>
       </div>
     </div>
+
+    <!-- Barcode Modal -->
+    <div v-if="showBarcodeModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+        <div class="flex justify-between items-center p-4 border-b">
+          <h3 class="text-lg font-semibold">Print Contract Barcode</h3>
+          <button @click="closeBarcodeModal" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <div class="p-6">
+          <div class="space-y-4">
+            <div>
+              <p class="text-sm text-gray-600">Service: <span class="font-medium text-gray-900">{{ barcodeData.product_name }}</span></p>
+              <p class="text-sm text-gray-600">Contract: <span class="font-medium text-gray-900">{{ barcodeData.contract_number }}</span></p>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Label Size</label>
+              <select v-model="barcodeData.labelSize" @change="generateBarcodePreview" class="w-full border-gray-300 rounded-lg">
+                <option value="small">Small (30mm x 20mm) - Compact</option>
+                <option value="medium">Medium (50mm x 30mm) - Standard</option>
+                <option value="large">Large (100mm x 50mm) - Wide</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Number of Labels</label>
+              <input v-model.number="barcodeData.copies" type="number" min="1" max="100" class="w-full border-gray-300 rounded-lg">
+            </div>
+            
+            <div class="border rounded-lg p-4 bg-gray-50" id="barcode-preview">
+              <div class="text-center">
+                <div class="inline-block" :style="previewStyle">
+                  <svg id="barcode-svg-contract"></svg>
+                  <p class="text-xs mt-2 font-mono" :style="{ fontSize: labelSizes[barcodeData.labelSize].skuFontSize }">{{ barcodeData.contract_number }}</p>
+                  <p class="text-xs text-gray-600" :style="{ fontSize: labelSizes[barcodeData.labelSize].nameFontSize }">{{ barcodeData.product_name }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="flex gap-3 justify-end p-4 border-t">
+          <button @click="closeBarcodeModal" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+            Cancel
+          </button>
+          <button @click="printBarcodeLabels" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+            Print
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, nextTick, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import serviceService from '@/services/serviceService'
 import api from '@/services/api'
+import * as XLSX from 'xlsx'
+import JsBarcode from 'jsbarcode'
 
 const router = useRouter()
 
@@ -338,6 +407,56 @@ const serviceProducts = ref([])
 const stats = ref({})
 const showCreateModal = ref(false)
 const creating = ref(false)
+const showBarcodeModal = ref(false)
+
+const labelSizes = {
+  small: {
+    width: '30mm',
+    height: '20mm',
+    barcodeWidth: 1,
+    barcodeHeight: 25,
+    barcodeMargin: 5,
+    skuFontSize: '8px',
+    nameFontSize: '6px',
+    padding: '1mm'
+  },
+  medium: {
+    width: '50mm',
+    height: '30mm',
+    barcodeWidth: 1.5,
+    barcodeHeight: 40,
+    barcodeMargin: 8,
+    skuFontSize: '10px',
+    nameFontSize: '8px',
+    padding: '2mm'
+  },
+  large: {
+    width: '100mm',
+    height: '50mm',
+    barcodeWidth: 2,
+    barcodeHeight: 60,
+    barcodeMargin: 10,
+    skuFontSize: '14px',
+    nameFontSize: '10px',
+    padding: '3mm'
+  }
+}
+
+const barcodeData = ref({
+  contract_number: '',
+  product_name: '',
+  copies: 1,
+  labelSize: 'medium'
+})
+
+const previewStyle = computed(() => {
+  const size = labelSizes[barcodeData.value.labelSize]
+  return {
+    border: '1px dashed #ccc',
+    padding: size.padding,
+    display: 'inline-block'
+  }
+})
 
 const filters = ref({
   search: '',
@@ -376,6 +495,59 @@ onMounted(async () => {
     loadStats()
   ])
 })
+
+const exportToExcel = () => {
+  try {
+    const exportData = contracts.value.map(contract => ({
+      'Contract Number': contract.contract_number,
+      'Product/Service': contract.product?.name || '',
+      'Vendor': contract.vendor?.name || '',
+      'Location': contract.location?.name || '',
+      'PIC': contract.pic || '',
+      'Type': contract.contract_type,
+      'Billing Cycle': contract.billing_cycle || '',
+      'Start Date': contract.start_date,
+      'End Date': contract.end_date,
+      'Contract Value': contract.contract_value || 0,
+      'Status': contract.status,
+      'Notes': contract.notes || ''
+    }))
+
+    if (exportData.length === 0) {
+      alert('No data to export')
+      return
+    }
+
+    const wb = XLSX.utils.book_new()
+    const ws = XLSX.utils.json_to_sheet(exportData)
+
+    ws['!cols'] = [
+      { wch: 20 },  // Contract Number
+      { wch: 30 },  // Product/Service
+      { wch: 25 },  // Vendor
+      { wch: 20 },  // Location
+      { wch: 20 },  // PIC
+      { wch: 15 },  // Type
+      { wch: 15 },  // Billing Cycle
+      { wch: 15 },  // Start Date
+      { wch: 15 },  // End Date
+      { wch: 15 },  // Contract Value
+      { wch: 12 },  // Status
+      { wch: 40 }   // Notes
+    ]
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Service Contracts')
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)
+    const filename = `Service_Contracts_${timestamp}.xlsx`
+
+    XLSX.writeFile(wb, filename)
+    alert(`Excel file exported successfully: ${filename} (${exportData.length} records)`)
+  } catch (error) {
+    console.error('Export error:', error)
+    alert('Failed to export Excel file: ' + error.message)
+  }
+}
 
 watch(filters, () => {
   pagination.value.current_page = 1
@@ -533,6 +705,164 @@ const closeCreateModal = () => {
     end_date: '',
     contract_value: 0,
     notes: ''
+  }
+}
+
+const printBarcode = async (contract) => {
+  barcodeData.value = {
+    contract_number: contract.contract_number,
+    product_name: contract.product?.name || 'Service Contract',
+    copies: 1,
+    labelSize: 'medium'
+  }
+  showBarcodeModal.value = true
+  
+  await nextTick()
+  generateBarcodePreview()
+}
+
+const generateBarcodePreview = () => {
+  try {
+    const svg = document.getElementById('barcode-svg-contract')
+    const size = labelSizes[barcodeData.value.labelSize]
+    
+    if (svg && barcodeData.value.contract_number) {
+      JsBarcode(svg, barcodeData.value.contract_number, {
+        format: 'CODE128',
+        width: size.barcodeWidth,
+        height: size.barcodeHeight,
+        displayValue: false,
+        margin: size.barcodeMargin
+      })
+    }
+  } catch (error) {
+    console.error('Failed to generate barcode:', error)
+    alert('Failed to generate barcode. Invalid Contract Number format.')
+  }
+}
+
+const printBarcodeLabels = () => {
+  const printWindow = window.open('', '', 'width=800,height=600')
+  const size = labelSizes[barcodeData.value.labelSize]
+  
+  let labelsHTML = ''
+  for (let i = 0; i < barcodeData.value.copies; i++) {
+    labelsHTML += `
+      <div class="barcode-label">
+        <svg id="barcode-${i}"></svg>
+        <div class="barcode-text">${barcodeData.value.contract_number}</div>
+        <div class="product-name">${barcodeData.value.product_name}</div>
+      </div>
+    `
+  }
+  
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>Print Contract Barcode - ${barcodeData.value.contract_number}</title>
+        <style>
+          @page {
+            size: ${size.width} ${size.height};
+            margin: 0;
+          }
+          
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+          
+          body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+          }
+          
+          .barcode-label {
+            width: ${size.width};
+            height: ${size.height};
+            padding: ${size.padding};
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            page-break-after: always;
+          }
+          
+          .barcode-label:last-child {
+            page-break-after: auto;
+          }
+          
+          svg {
+            display: block;
+            margin: 0 auto;
+          }
+          
+          .barcode-text {
+            font-family: monospace;
+            font-size: ${size.skuFontSize};
+            font-weight: bold;
+            margin-top: 2mm;
+          }
+          
+          .product-name {
+            font-size: ${size.nameFontSize};
+            color: #333;
+            margin-top: 1mm;
+            max-width: 90%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+          
+          @media print {
+            body { 
+              margin: 0; 
+              padding: 0; 
+            }
+            .barcode-label { 
+              margin: 0; 
+            }
+          }
+        </style>
+      </head>
+      <body>
+        ${labelsHTML}
+      </body>
+    </html>
+  `)
+  
+  printWindow.document.close()
+  
+  setTimeout(() => {
+    for (let i = 0; i < barcodeData.value.copies; i++) {
+      const svg = printWindow.document.getElementById(`barcode-${i}`)
+      if (svg) {
+        JsBarcode(svg, barcodeData.value.contract_number, {
+          format: 'CODE128',
+          width: size.barcodeWidth,
+          height: size.barcodeHeight,
+          displayValue: false,
+          margin: size.barcodeMargin
+        })
+      }
+    }
+    
+    setTimeout(() => {
+      printWindow.print()
+      printWindow.close()
+    }, 500)
+  }, 500)
+}
+
+const closeBarcodeModal = () => {
+  showBarcodeModal.value = false
+  barcodeData.value = {
+    contract_number: '',
+    product_name: '',
+    copies: 1,
+    labelSize: 'medium'
   }
 }
 

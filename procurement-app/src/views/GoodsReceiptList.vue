@@ -5,9 +5,33 @@
         <h1 class="text-3xl font-bold text-gray-800">Goods Receipt Notes</h1>
         <p class="text-gray-600">Receive goods from vendors</p>
       </div>
-      <button v-if="canCreateGRN" @click="$router.push('/procurement/goods-receipts/create')" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
-        Create GRN
-      </button>
+      <div class="flex space-x-3">
+        <button @click="exportToExcel" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          Export Excel
+        </button>
+        <button v-if="canCreateGRN" @click="$router.push('/procurement/goods-receipts/create')" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+          Create GRN
+        </button>
+      </div>
+    </div>
+
+    <!-- Export Date Range -->
+    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+      <div class="flex items-center gap-4">
+        <span class="text-sm font-medium text-gray-700">Export Date Range:</span>
+        <div class="flex items-center gap-2">
+          <label class="text-sm text-gray-600">From:</label>
+          <input v-model="exportFilters.start_date" type="date" class="border-gray-300 rounded-lg text-sm">
+        </div>
+        <div class="flex items-center gap-2">
+          <label class="text-sm text-gray-600">To:</label>
+          <input v-model="exportFilters.end_date" type="date" class="border-gray-300 rounded-lg text-sm">
+        </div>
+        <button @click="clearExportDates" class="text-sm text-green-600 hover:text-green-800">Clear</button>
+      </div>
     </div>
 
     <!-- Filters -->
@@ -94,6 +118,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/services/api'
 import { useProcurementPermissions } from '@/composables/useProcurementPermissions'
+import * as XLSX from 'xlsx'
 
 const router = useRouter()
 const { canCreateGRN } = useProcurementPermissions()
@@ -105,6 +130,11 @@ const filters = ref({
   po_number: '',
   from_date: '',
   to_date: ''
+})
+
+const exportFilters = ref({
+  start_date: '',
+  end_date: ''
 })
 
 onMounted(async () => {
@@ -145,6 +175,70 @@ const formatDate = (dateString) => {
     month: 'short',
     year: 'numeric'
   })
+}
+
+const exportToExcel = () => {
+  try {
+    let dataToExport = grns.value
+
+    // Filter by export date range if specified
+    if (exportFilters.value.start_date || exportFilters.value.end_date) {
+      dataToExport = dataToExport.filter(grn => {
+        const grnDate = new Date(grn.receipt_date)
+        if (exportFilters.value.start_date && grnDate < new Date(exportFilters.value.start_date)) {
+          return false
+        }
+        if (exportFilters.value.end_date && grnDate > new Date(exportFilters.value.end_date)) {
+          return false
+        }
+        return true
+      })
+    }
+
+    if (dataToExport.length === 0) {
+      alert('No data to export for the selected date range')
+      return
+    }
+
+    const exportData = dataToExport.map(grn => ({
+      'GRN Number': grn.grn_number,
+      'Date': formatDate(grn.receipt_date),
+      'PO Number': grn.po_number,
+      'Vendor': grn.vendor_name,
+      'Invoice Number': grn.invoice_number || '',
+      'Status': grn.status,
+      'Notes': grn.notes || ''
+    }))
+
+    const wb = XLSX.utils.book_new()
+    const ws = XLSX.utils.json_to_sheet(exportData)
+
+    ws['!cols'] = [
+      { wch: 20 },  // GRN Number
+      { wch: 15 },  // Date
+      { wch: 20 },  // PO Number
+      { wch: 30 },  // Vendor
+      { wch: 25 },  // Invoice Number
+      { wch: 15 },  // Status
+      { wch: 40 }   // Notes
+    ]
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Goods Receipt Notes')
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)
+    const filename = `Goods_Receipt_Notes_${timestamp}.xlsx`
+
+    XLSX.writeFile(wb, filename)
+    alert(`Excel file exported successfully: ${filename} (${dataToExport.length} records)`)
+  } catch (error) {
+    console.error('Export error:', error)
+    alert('Failed to export Excel file: ' + error.message)
+  }
+}
+
+const clearExportDates = () => {
+  exportFilters.value.start_date = ''
+  exportFilters.value.end_date = ''
 }
 
 const viewGRN = (grn) => {
