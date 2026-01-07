@@ -58,7 +58,7 @@ class InventoryStockController extends Controller
                 'product_id' => $stock->product_id,
                 'product_name' => $stock->product->name,
                 'sku' => $stock->product->sku,
-                'category' => $stock->product->category->name,
+                'category' => $stock->product->category ? $stock->product->category->name : null,
                 'location_id' => $stock->location_id,
                 'location_name' => $stock->location->name,
                 'quantity' => $stock->quantity,
@@ -88,6 +88,7 @@ class InventoryStockController extends Controller
             'product_id' => 'required|exists:products,id',
             'location_id' => 'required|exists:locations,id',
             'new_quantity' => 'required|numeric|min:0',
+            'reorder_level' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string',
         ]);
 
@@ -100,6 +101,7 @@ class InventoryStockController extends Controller
                 $request->product_id,
                 $request->location_id,
                 $request->new_quantity,
+                $request->reorder_level,
                 $request->notes,
                 auth()->id()
             );

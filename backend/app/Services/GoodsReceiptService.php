@@ -11,13 +11,19 @@ class GoodsReceiptService
 {
     protected $inventoryService;
     protected $poService;
+    protected $assetService;
+    protected $serviceContractService;
 
     public function __construct(
         InventoryService $inventoryService,
-        PurchaseOrderService $poService
+        PurchaseOrderService $poService,
+        AssetService $assetService,
+        ServiceContractService $serviceContractService
     ) {
         $this->inventoryService = $inventoryService;
         $this->poService = $poService;
+        $this->assetService = $assetService;
+        $this->serviceContractService = $serviceContractService;
     }
 
     /**
@@ -67,7 +73,12 @@ class GoodsReceiptService
                     'unit_price' => $poItem->unit_price,
                     'line_total' => $poItem->unit_price * ($quantityReceived - $quantityRejected),
                     'quality_status' => 'PENDING',
+                    'serial_numbers' => $itemData['serial_numbers'] ?? null,
                     'notes' => $itemData['notes'] ?? null,
+                    // Service contract fields (only for SERVICE type products)
+                    'service_start_date' => $itemData['service_start_date'] ?? null,
+                    'service_end_date' => $itemData['service_end_date'] ?? null,
+                    'contract_type' => $itemData['contract_type'] ?? null,
                 ]);
             }
 
@@ -159,30 +170,61 @@ class GoodsReceiptService
                 throw new \Exception('GRN already posted to inventory');
             }
 
+            $createdServiceContracts = [];
+
             foreach ($grn->items as $item) {
                 // Only post accepted quantity (received - rejected)
                 $acceptedQuantity = $item->quantity_received - $item->quantity_rejected;
 
                 if ($acceptedQuantity > 0 && $item->quality_status === 'PASSED') {
-                    // Stock in to inventory
-                    $this->inventoryService->stockIn(
-                        $item->product_id,
-                        $grn->location_id,
-                        $acceptedQuantity,
-                        $item->unit_price,
-                        'GRN',
-                        $grn->id,
-                        $grn->grn_no,
-                        "GRN from PO {$grn->purchaseOrder->po_no}",
-                        $userId
-                    );
+                    $product = $item->product;
+                    
+                    // Handle based on product type
+                    if ($product->type === 'ASSET') {
+                        // Create individual asset instances
+                        $serialNumbers = $item->serial_numbers ?? [];
+                        
+                        for ($i = 0; $i < $acceptedQuantity; $i++) {
+                            $this->assetService->createAsset([
+                                'product_id' => $product->id,
+                                'location_id' => $grn->location_id,
+                                'serial_number' => $serialNumbers[$i] ?? null,
+                                'purchase_date' => $grn->receipt_date,
+                                'purchase_price' => $item->unit_price,
+                                'status' => 'AVAILABLE',
+                                'condition' => 'NEW',
+                                'po_id' => $grn->po_id,
+                                'grn_id' => $grn->id,
+                            ], $userId);
+                        }
+                    } elseif ($product->type === 'INVENTORY') {
+                        // Stock in to inventory (existing logic)
+                        $this->inventoryService->stockIn(
+                            $item->product_id,
+                            $grn->location_id,
+                            $acceptedQuantity,
+                            $item->unit_price,
+                            'GRN',
+                            $grn->id,
+                            $grn->grn_no,
+                            "GRN from PO {$grn->purchaseOrder->po_no}",
+                            $userId
+                        );
 
-                    // Update product average cost
-                    $this->inventoryService->updateAverageCost(
-                        $item->product_id,
-                        $acceptedQuantity,
-                        $item->unit_price
-                    );
+                        // Update product average cost
+                        $this->inventoryService->updateAverageCost(
+                            $item->product_id,
+                            $acceptedQuantity,
+                            $item->unit_price
+                        );
+                    } elseif ($product->type === 'SERVICE') {
+                        // Create service contract
+                        $contract = $this->serviceContractService->createFromGRN($item, [
+                            'notes' => "Created from GRN {$grn->grn_no}"
+                        ]);
+                        $createdServiceContracts[] = $contract;
+                    }
+                    // No inventory or asset for SERVICE type, handled by service contract
 
                     // Mark PO item as received
                     $this->poService->markItemReceived($item->po_item_id, $acceptedQuantity);
@@ -196,7 +238,10 @@ class GoodsReceiptService
                 'posted_at' => now(),
             ]);
 
-            return $grn->fresh();
+            $freshGrn = $grn->fresh();
+            $freshGrn->created_service_contracts = $createdServiceContracts;
+
+            return $freshGrn;
         });
     }
 

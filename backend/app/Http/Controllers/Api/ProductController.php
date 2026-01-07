@@ -13,6 +13,11 @@ class ProductController extends Controller
     {
         $query = Product::with('category');
 
+        // Filter by product type
+        if ($request->has('type')) {
+            $query->where('type', $request->type);
+        }
+
         // If location_id is provided, load stock for that location
         if ($request->has('location_id')) {
             $query->with(['inventoryStocks' => function($q) use ($request) {
@@ -91,6 +96,7 @@ class ProductController extends Controller
             'stock' => 'nullable|integer|min:0',
             'min_stock' => 'nullable|integer|min:0',
             'track_stock' => 'nullable|boolean',
+            'type' => 'nullable|string|in:INVENTORY,ASSET,SERVICE',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
@@ -130,6 +136,7 @@ class ProductController extends Controller
             'stock' => 'nullable|integer|min:0',
             'min_stock' => 'nullable|integer|min:0',
             'track_stock' => 'nullable|boolean',
+            'type' => 'nullable|string|in:INVENTORY,ASSET,SERVICE',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'is_active' => 'sometimes|boolean',
         ]);

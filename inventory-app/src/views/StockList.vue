@@ -55,8 +55,7 @@
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
               <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Quantity</th>
-              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Reserved</th>
-              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Available</th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Reorder Level</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
               <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
             </tr>
@@ -65,7 +64,7 @@
             <tr v-for="stock in stocks" :key="stock.id" class="hover:bg-gray-50">
               <td class="px-6 py-4">
                 <div class="text-sm font-medium text-gray-900">{{ stock.product_name }}</div>
-                <div class="text-sm text-gray-500">{{ stock.sku }} • {{ stock.category }}</div>
+                <div class="text-sm text-gray-500">{{ stock.sku }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                 {{ stock.location_name }}
@@ -74,10 +73,7 @@
                 {{ stock.quantity }} {{ stock.uom }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
-                {{ stock.reserved_quantity }} {{ stock.uom }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
-                {{ stock.available_quantity }} {{ stock.uom }}
+                {{ stock.reorder_level }} {{ stock.uom }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span :class="getStatusClass(stock)" class="px-2 py-1 text-xs font-semibold rounded-full">
@@ -90,7 +86,7 @@
               </td>
             </tr>
             <tr v-if="stocks.length === 0">
-              <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+              <td colspan="6" class="px-6 py-4 text-center text-gray-500">
                 No stock data found
               </td>
             </tr>
@@ -122,6 +118,10 @@
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">New Quantity</label>
             <input v-model.number="adjustForm.new_quantity" type="number" step="0.01" min="0" class="w-full border-gray-300 rounded-lg" required>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Reorder Level</label>
+            <input v-model.number="adjustForm.reorder_level" type="number" step="0.01" min="0" class="w-full border-gray-300 rounded-lg" placeholder="Set minimum stock level">
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
@@ -215,6 +215,7 @@ const adjustForm = ref({
   product_search: '',
   location_id: '',
   new_quantity: 0,
+  reorder_level: 0,
   notes: ''
 })
 
@@ -288,6 +289,7 @@ const adjustStock = (stock) => {
     product_search: stock.product_name,
     location_id: stock.location_id,
     new_quantity: stock.quantity,
+    reorder_level: stock.reorder_level || 0,
     notes: ''
   }
   showAdjustModal.value = true
@@ -319,6 +321,7 @@ const submitAdjustment = async () => {
       product_id: adjustForm.value.product_id,
       location_id: adjustForm.value.location_id,
       new_quantity: adjustForm.value.new_quantity,
+      reorder_level: adjustForm.value.reorder_level,
       notes: adjustForm.value.notes
     })
     alert('Stock adjusted successfully')
@@ -336,6 +339,7 @@ const closeAdjustModal = () => {
     product_search: '',
     location_id: '',
     new_quantity: 0,
+    reorder_level: 0,
     notes: ''
   }
 }

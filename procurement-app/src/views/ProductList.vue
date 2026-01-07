@@ -2,7 +2,7 @@
   <div class="p-6">
     <div class="mb-6 flex justify-between items-center">
       <div>
-        <h1 class="text-3xl font-bold text-gray-800">Products</h1>
+        <h1 class="text-3xl font-bold text-gray-800">Master Products</h1>
         <p class="text-gray-600">Manage product master data</p>
       </div>
       <div class="flex space-x-3">
@@ -55,7 +55,6 @@
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Image</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SKU</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product Name</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
@@ -68,14 +67,6 @@
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="product in products" :key="product.id" class="hover:bg-gray-50">
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div v-if="product.image" class="w-12 h-12 flex-shrink-0">
-                  <img :src="`http://localhost:8000/storage/${product.image}`" :alt="product.name" class="w-full h-full object-cover rounded">
-                </div>
-                <div v-else class="w-12 h-12 bg-gray-100 rounded flex items-center justify-center text-gray-400">
-                  <span class="text-2xl">📦</span>
-                </div>
-              </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
                 {{ product.sku }}
               </td>
@@ -87,10 +78,10 @@
                 {{ product.category?.name }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm">
-                <span v-if="product.type === 'INVENTORY'" class="badge badge-blue">Inventory</span>
-                <span v-else-if="product.type === 'ASSET'" class="badge badge-green">Asset</span>
-                <span v-else-if="product.type === 'SERVICE'" class="badge badge-purple">Service</span>
-                <span v-else class="badge badge-gray">{{ product.type || 'Inventory' }}</span>
+                <span v-if="product.type === 'INVENTORY'" class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Inventory</span>
+                <span v-else-if="product.type === 'ASSET'" class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Asset</span>
+                <span v-else-if="product.type === 'SERVICE'" class="px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">Service</span>
+                <span v-else class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">{{ product.type || 'Inventory' }}</span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
                 {{ formatCurrency(product.cost_price) }}
@@ -109,14 +100,13 @@
               </td>
             </tr>
             <tr v-if="products.length === 0">
-              <td colspan="9" class="px-6 py-4 text-center text-gray-500">
+              <td colspan="8" class="px-6 py-4 text-center text-gray-500">
                 No products found
               </td>
             </tr>
           </tbody>
         </table>
       </div>
-      <Pagination :pagination="pagination" @page-change="changePage" />
     </div>
 
     <!-- Add/Edit Product Modal -->
@@ -186,23 +176,6 @@
               <textarea v-model="form.description" rows="3" class="w-full border-gray-300 rounded-lg"></textarea>
             </div>
 
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Product Image</label>
-              <input type="file" @change="handleImageUpload" accept="image/*" class="w-full border-gray-300 rounded-lg">
-              <p class="text-xs text-gray-500 mt-1">Max 2MB. Supported formats: JPG, PNG, GIF</p>
-              
-              <!-- Image Preview -->
-              <div v-if="imagePreview" class="mt-2">
-                <p class="text-sm text-gray-600 mb-1">Preview:</p>
-                <div class="relative inline-block">
-                  <img :src="imagePreview" alt="Preview" class="w-32 h-32 object-cover rounded-lg border">
-                  <button type="button" @click="removeImage" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600">
-                    ×
-                  </button>
-                </div>
-              </div>
-            </div>
-
             <div class="flex items-center">
               <input v-model="form.is_active" type="checkbox" class="rounded border-gray-300 text-blue-600">
               <label class="ml-2 text-sm text-gray-700">Active</label>
@@ -255,7 +228,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import api from '@/services/api'
-import Pagination from '@/components/Pagination.vue'
 
 const products = ref([])
 const categories = ref([])
@@ -263,17 +235,6 @@ const showModal = ref(false)
 const showCategoryModal = ref(false)
 const editingProduct = ref(null)
 const newCategoryName = ref('')
-const imageFile = ref(null)
-const imagePreview = ref(null)
-
-const pagination = ref({
-  current_page: 1,
-  last_page: 1,
-  per_page: 20,
-  total: 0,
-  from: 0,
-  to: 0
-})
 
 const filters = ref({
   search: '',
@@ -300,9 +261,9 @@ onMounted(async () => {
   await loadProducts()
 })
 
-const loadProducts = async (page = 1) => {
+const loadProducts = async () => {
   try {
-    const params = { page, per_page: 20 }
+    const params = {}
     if (filters.value.search) params.search = filters.value.search
     if (filters.value.category_id) params.category_id = filters.value.category_id
     if (filters.value.type) params.type = filters.value.type
@@ -310,23 +271,9 @@ const loadProducts = async (page = 1) => {
 
     const { data } = await api.get('/products', { params })
     products.value = data.data || data
-    pagination.value = {
-      current_page: data.current_page || 1,
-      last_page: data.last_page || 1,
-      per_page: data.per_page || 20,
-      total: data.total || products.value.length,
-      from: data.from || 0,
-      to: data.to || 0,
-      prev_page_url: data.prev_page_url,
-      next_page_url: data.next_page_url
-    }
   } catch (error) {
     console.error('Failed to load products:', error)
   }
-}
-
-const changePage = (page) => {
-  loadProducts(page)
 }
 
 const loadCategories = async () => {
@@ -340,8 +287,6 @@ const loadCategories = async () => {
 
 const openAddModal = () => {
   editingProduct.value = null
-  imageFile.value = null
-  imagePreview.value = null
   form.value = {
     name: '',
     sku: '',
@@ -359,8 +304,6 @@ const openAddModal = () => {
 
 const openEditModal = (product) => {
   editingProduct.value = product
-  imageFile.value = null
-  imagePreview.value = product.image ? `http://localhost:8000/storage/${product.image}` : null
   form.value = {
     name: product.name,
     sku: product.sku,
@@ -376,42 +319,6 @@ const openEditModal = (product) => {
   showModal.value = true
 }
 
-const handleImageUpload = (event) => {
-  const file = event.target.files[0]
-  if (!file) return
-  
-  // Validate file size (max 2MB)
-  if (file.size > 2 * 1024 * 1024) {
-    alert('File size must be less than 2MB')
-    event.target.value = ''
-    return
-  }
-  
-  // Validate file type
-  if (!file.type.startsWith('image/')) {
-    alert('Please select an image file')
-    event.target.value = ''
-    return
-  }
-  
-  imageFile.value = file
-  
-  // Create preview
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    imagePreview.value = e.target.result
-  }
-  reader.readAsDataURL(file)
-}
-
-const removeImage = () => {
-  imageFile.value = null
-  imagePreview.value = null
-  // Clear file input
-  const fileInput = document.querySelector('input[type="file"]')
-  if (fileInput) fileInput.value = ''
-}
-
 const closeModal = () => {
   showModal.value = false
   editingProduct.value = null
@@ -419,37 +326,18 @@ const closeModal = () => {
 
 const saveProduct = async () => {
   try {
-    // Prepare FormData for file upload
-    const formData = new FormData()
+    const data = { ...form.value }
     
-    // Append form fields with proper type conversion
-    Object.keys(form.value).forEach(key => {
-      let value = form.value[key]
-      
-      // Convert boolean to 1/0 for Laravel
-      if (key === 'is_active' || key === 'track_stock') {
-        value = value ? 1 : 0
-      }
-      
-      formData.append(key, value)
-    })
-    
-    // Append image if exists
-    if (imageFile.value) {
-      formData.append('image', imageFile.value)
-    }
-    
-    const config = {
-      headers: { 'Content-Type': 'multipart/form-data' }
+    // Convert boolean to 1/0
+    if (typeof data.is_active === 'boolean') {
+      data.is_active = data.is_active ? 1 : 0
     }
     
     if (editingProduct.value) {
-      // Laravel doesn't support PUT with FormData, so use POST with _method
-      formData.append('_method', 'PUT')
-      await api.post(`/products/${editingProduct.value.id}`, formData, config)
+      await api.put(`/products/${editingProduct.value.id}`, data)
       alert('Product updated successfully')
     } else {
-      await api.post('/products', formData, config)
+      await api.post('/products', data)
       alert('Product created successfully')
     }
     closeModal()

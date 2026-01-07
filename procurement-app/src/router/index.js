@@ -54,6 +54,23 @@ const router = createRouter({
           path: 'procurement/vendors',
           name: 'Vendors',
           component: () => import('@/views/VendorList.vue')
+        },
+        {
+          path: 'master/products',
+          name: 'Products',
+          component: () => import('@/views/ProductList.vue')
+        },
+        {
+          path: 'settings/users',
+          name: 'Users',
+          component: () => import('@/views/UserList.vue'),
+          meta: { requiresOwner: true }
+        },
+        {
+          path: 'settings/locations',
+          name: 'Locations',
+          component: () => import('@/views/LocationsView.vue'),
+          meta: { requiresOwner: true }
         }
       ]
     }
@@ -96,6 +113,12 @@ router.beforeEach(async (to, from, next) => {
       await authStore.logout()
       return next('/login')
     }
+  }
+  
+  // Owner-only routes check
+  if (to.meta.requiresOwner && authStore.user?.role !== 'owner') {
+    alert('Access Denied: Only Owner can access this page')
+    return next('/')
   }
   
   // Role check for protected routes

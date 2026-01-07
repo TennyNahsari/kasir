@@ -50,6 +50,9 @@
                   <label class="block text-sm font-medium text-gray-700 mb-2">Product</label>
                   <input :value="item.product_name" readonly
                     class="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-100">
+                  <span v-if="item.product_type === 'ASSET'" class="inline-block mt-1 px-2 py-0.5 text-xs font-medium text-green-800 bg-green-100 rounded-full">
+                    Asset - Serial Required
+                  </span>
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Ordered</label>
@@ -59,6 +62,7 @@
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Received Qty *</label>
                   <input v-model.number="item.quantity_received" type="number" step="0.01" required min="0" :max="item.quantity_ordered"
+                    @input="updateSerialNumbers(item)"
                     class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
                 <div>
@@ -67,6 +71,53 @@
                     class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
               </div>
+              
+              <!-- Serial Numbers for ASSET type products -->
+              <div v-if="item.product_type === 'ASSET' && item.quantity_received > 0" class="mt-4 border-t pt-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Serial Numbers ({{ item.serial_numbers?.length || 0 }}/{{ Math.floor(item.quantity_received) }})
+                </label>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <div v-for="i in Math.floor(item.quantity_received)" :key="i">
+                    <input 
+                      v-model="item.serial_numbers[i-1]" 
+                      type="text" 
+                      :placeholder="`Serial #${i}`"
+                      class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Service Contract Fields for SERVICE type products -->
+              <div v-if="item.product_type === 'SERVICE'" class="mt-4 border-t pt-4">
+                <h4 class="text-sm font-semibold text-purple-700 mb-3">Service Contract Details</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Start Date *</label>
+                    <input v-model="item.service_start_date" type="date" required
+                      class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">End Date *</label>
+                    <input v-model="item.service_end_date" type="date" required
+                      class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                  </div>
+                  <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Contract Type *</label>
+                    <select v-model="item.contract_type" required
+                      class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                      <option value="">-- Select Contract Type --</option>
+                      <option value="RENTAL">Rental (Sewa)</option>
+                      <option value="SUBSCRIPTION">Subscription (Langganan)</option>
+                      <option value="MAINTENANCE">Maintenance (Pemeliharaan)</option>
+                      <option value="CONSULTING">Consulting (Konsultasi)</option>
+                      <option value="UTILITY">Utility (Listrik, Air, Internet)</option>
+                      <option value="OTHER">Other (Lainnya)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              
               <div class="mt-4">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Notes</label>
                 <input v-model="item.notes" type="text"
@@ -142,7 +193,7 @@
               Reject Quality Check
             </button>
             <button v-if="grn.status === 'APPROVED' && canPostGRN" @click="postToInventory" class="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
-              Post to Inventory
+              Post to Inventory/Asset
             </button>
           </div>
         </div>
@@ -158,6 +209,7 @@
             <thead class="bg-gray-50">
               <tr>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
                 <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Ordered</th>
                 <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Received</th>
                 <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Rejected</th>
@@ -170,6 +222,12 @@
                   <div class="text-sm font-medium text-gray-900">{{ item.product?.name || 'N/A' }}</div>
                   <div class="text-sm text-gray-500">SKU: {{ item.product?.sku || 'N/A' }}</div>
                   <div v-if="item.notes" class="text-xs text-gray-400 mt-1">{{ item.notes }}</div>
+                </td>
+                <td class="px-6 py-4">
+                  <span v-if="item.product?.type === 'ASSET'" class="badge badge-green text-xs">Asset</span>
+                  <span v-else-if="item.product?.type === 'INVENTORY'" class="badge badge-blue text-xs">Inventory</span>
+                  <span v-else-if="item.product?.type === 'SERVICE'" class="badge badge-purple text-xs">Service</span>
+                  <span v-else class="badge badge-gray text-xs">-</span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
                   {{ item.quantity_ordered || item.ordered_quantity }} {{ item.product?.unit || '' }}
@@ -262,9 +320,15 @@ const loadPOData = async () => {
         po_item_id: item.id,
         product_id: item.product_id,
         product_name: item.product?.name || '',
+        product_type: item.product?.type || 'INVENTORY',
         quantity_ordered: item.quantity,
         quantity_received: item.quantity, // Default to full quantity
         quantity_rejected: 0,
+        serial_numbers: item.product?.type === 'ASSET' ? [] : null,
+        // Service contract fields (only for SERVICE type)
+        service_start_date: item.product?.type === 'SERVICE' ? new Date().toISOString().split('T')[0] : null,
+        service_end_date: item.product?.type === 'SERVICE' ? null : null,
+        contract_type: item.product?.type === 'SERVICE' ? '' : null,
         notes: ''
       }))
     }
@@ -373,7 +437,7 @@ const approveQC = async () => {
     // Then approve the GRN
     await api.post(`/goods-receipts/${grnId}/approve`)
     
-    alert('Quality check approved. GRN is ready to post to inventory.')
+    alert('Quality check approved. GRN is ready to post to inventory/asset.')
     await loadGRN()
   } catch (error) {
     alert('Failed to approve QC: ' + (error.response?.data?.message || error.message))
@@ -417,7 +481,7 @@ const postToInventory = async () => {
   const grnId = route.params.id || grn.value.id
   
   if (!grnId || grnId === 'create' || grnId === 'undefined') {
-    alert('Cannot post to inventory: GRN not found')
+    alert('Cannot post to inventory/asset: GRN not found')
     return
   }
   
@@ -425,7 +489,7 @@ const postToInventory = async () => {
   
   try {
     await api.post(`/goods-receipts/${grnId}/post`)
-    alert('GRN posted to inventory successfully!')
+    alert('GRN posted to inventory/asset successfully!')
     await loadGRN()
   } catch (error) {
     alert('Failed to post GRN: ' + (error.response?.data?.message || error.message))
@@ -434,6 +498,22 @@ const postToInventory = async () => {
 
 const goBack = () => {
   router.push('/procurement/goods-receipts')
+}
+
+const updateSerialNumbers = (item) => {
+  if (item.product_type === 'ASSET') {
+    const count = Math.floor(item.quantity_received || 0)
+    if (!item.serial_numbers) {
+      item.serial_numbers = []
+    }
+    // Adjust array size to match quantity
+    while (item.serial_numbers.length < count) {
+      item.serial_numbers.push('')
+    }
+    if (item.serial_numbers.length > count) {
+      item.serial_numbers = item.serial_numbers.slice(0, count)
+    }
+  }
 }
 
 const saveGRN = async () => {
@@ -455,6 +535,34 @@ const saveGRN = async () => {
     return
   }
 
+  // Validate serial numbers for ASSET products
+  const assetItems = grn.value.items.filter(item => item.product_type === 'ASSET' && item.quantity_received > 0)
+  for (const item of assetItems) {
+    const requiredCount = Math.floor(item.quantity_received)
+    const serialNumbers = item.serial_numbers || []
+    const filledSerials = serialNumbers.filter(sn => sn && sn.trim())
+    
+    if (filledSerials.length < requiredCount) {
+      alert(`Please enter all serial numbers for ${item.product_name} (${filledSerials.length}/${requiredCount} filled)`)
+      return
+    }
+  }
+
+  // Validate service contract fields for SERVICE products
+  const serviceItems = grn.value.items.filter(item => item.product_type === 'SERVICE' && item.quantity_received > 0)
+  for (const item of serviceItems) {
+    if (!item.service_start_date || !item.service_end_date || !item.contract_type) {
+      alert(`Please complete all service contract fields for ${item.product_name}`)
+      return
+    }
+    
+    // Validate end date is after start date
+    if (new Date(item.service_end_date) <= new Date(item.service_start_date)) {
+      alert(`Service end date must be after start date for ${item.product_name}`)
+      return
+    }
+  }
+
   saving.value = true
   try {
     const payload = {
@@ -466,6 +574,11 @@ const saveGRN = async () => {
         po_item_id: item.po_item_id,
         quantity_received: item.quantity_received,
         quantity_rejected: item.quantity_rejected || 0,
+        serial_numbers: item.product_type === 'ASSET' ? (item.serial_numbers || []) : null,
+        // Service contract fields (only for SERVICE type)
+        service_start_date: item.product_type === 'SERVICE' ? item.service_start_date : null,
+        service_end_date: item.product_type === 'SERVICE' ? item.service_end_date : null,
+        contract_type: item.product_type === 'SERVICE' ? item.contract_type : null,
         notes: item.notes
       }))
     }

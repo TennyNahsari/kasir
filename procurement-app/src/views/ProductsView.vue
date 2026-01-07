@@ -42,6 +42,7 @@
             <th class="px-4 py-3 text-left text-sm font-semibold">Barcode</th>
             <th class="px-4 py-3 text-left text-sm font-semibold">Nama Produk</th>
             <th class="px-4 py-3 text-left text-sm font-semibold">Kategori</th>
+            <th class="px-4 py-3 text-left text-sm font-semibold">Tipe</th>
             <th class="px-4 py-3 text-right text-sm font-semibold">Harga Modal</th>
             <th class="px-4 py-3 text-right text-sm font-semibold">Harga Jual</th>
             <th class="px-4 py-3 text-center text-sm font-semibold">Stok</th>
@@ -54,6 +55,12 @@
             <td class="px-4 py-3 text-sm font-mono">{{ product.barcode || '-' }}</td>
             <td class="px-4 py-3 text-sm font-medium">{{ product.name }}</td>
             <td class="px-4 py-3 text-sm">{{ product.category?.name }}</td>
+            <td class="px-4 py-3 text-sm">
+              <span v-if="product.type === 'INVENTORY'" class="badge badge-blue">Inventory</span>
+              <span v-else-if="product.type === 'ASSET'" class="badge badge-green">Asset</span>
+              <span v-else-if="product.type === 'SERVICE'" class="badge badge-purple">Service</span>
+              <span v-else class="badge badge-gray">{{ product.type }}</span>
+            </td>
             <td class="px-4 py-3 text-sm text-right">{{ formatCurrency(product.cost_price) }}</td>
             <td class="px-4 py-3 text-sm text-right font-semibold">{{ formatCurrency(product.selling_price) }}</td>
             <td class="px-4 py-3 text-sm text-center">
@@ -88,7 +95,12 @@
       <div v-for="product in products" :key="product.id" class="card p-3">
         <div class="flex justify-between items-start mb-2">
           <div class="flex-1">
-            <h3 class="font-semibold text-sm">{{ product.name }}</h3>
+            <div class="flex items-center gap-2 mb-1">
+              <h3 class="font-semibold text-sm">{{ product.name }}</h3>
+              <span v-if="product.type === 'INVENTORY'" class="badge badge-blue">Inv</span>
+              <span v-else-if="product.type === 'ASSET'" class="badge badge-green">Asset</span>
+              <span v-else-if="product.type === 'SERVICE'" class="badge badge-purple">Service</span>
+            </div>
             <p class="text-xs text-gray-600">{{ product.category?.name }}</p>
           </div>
           <img v-if="product.image" :src="`http://localhost:8000/storage/${product.image}`" class="w-12 h-12 object-cover rounded ml-2">
@@ -154,6 +166,20 @@
                 {{ cat.name }}
               </option>
             </select>
+          </div>
+
+          <div>
+            <label class="label text-xs sm:text-sm">Tipe Produk *</label>
+            <select v-model="form.type" class="input text-sm sm:text-base" required>
+              <option value="INVENTORY">Inventory (Stok Barang)</option>
+              <option value="ASSET">Asset (Aset Tetap)</option>
+              <option value="SERVICE">Service (Jasa/Layanan)</option>
+            </select>
+            <p class="text-xs text-gray-500 mt-1">
+              <span v-if="form.type === 'INVENTORY'">Barang dengan tracking stok</span>
+              <span v-else-if="form.type === 'ASSET'">Aset tetap dengan tracking individual</span>
+              <span v-else-if="form.type === 'SERVICE'">Jasa/layanan tanpa stok</span>
+            </p>
           </div>
 
           <div>
@@ -323,6 +349,7 @@ const printProduct = ref(null)
 const form = ref({
   name: '',
   category_id: '',
+  type: 'INVENTORY',
   sku: '',
   barcode: '',
   description: '',
@@ -385,6 +412,7 @@ const saveProduct = async () => {
     // Append all form fields with proper type conversion
     formData.append('name', form.value.name)
     formData.append('category_id', parseInt(form.value.category_id))
+    formData.append('type', form.value.type || 'INVENTORY')
     
     if (form.value.sku) {
       formData.append('sku', form.value.sku)
@@ -433,6 +461,7 @@ const closeModal = () => {
   form.value = {
     name: '',
     category_id: '',
+    type: 'INVENTORY',
     sku: '',
     barcode: '',
     description: '',

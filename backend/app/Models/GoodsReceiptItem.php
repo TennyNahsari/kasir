@@ -20,6 +20,7 @@ class GoodsReceiptItem extends Model
         'line_total',
         'quality_status',
         'quality_notes',
+        'serial_numbers',
         'notes',
     ];
 
@@ -29,6 +30,7 @@ class GoodsReceiptItem extends Model
         'quantity_rejected' => 'decimal:4',
         'unit_price' => 'decimal:2',
         'line_total' => 'decimal:2',
+        'serial_numbers' => 'array',
     ];
 
     // Relationships

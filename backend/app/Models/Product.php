@@ -16,6 +16,7 @@ class Product extends Model
         'name',
         'description',
         'category_id',
+        'type',
         'item_type',
         'uom',
         'track_inventory',
@@ -80,6 +81,11 @@ class Product extends Model
     public function goodsReceiptItems()
     {
         return $this->hasMany(GoodsReceiptItem::class);
+    }
+
+    public function assets()
+    {
+        return $this->hasMany(Asset::class);
     }
 
     // Helpers

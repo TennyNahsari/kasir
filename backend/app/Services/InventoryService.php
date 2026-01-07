@@ -205,10 +205,11 @@ class InventoryService
         int $productId,
         int $locationId,
         float $newQuantity,
+        float $reorderLevel = null,
         string $notes = null,
         int $userId = null
     ): InventoryLedger {
-        return DB::transaction(function () use ($productId, $locationId, $newQuantity, $notes, $userId) {
+        return DB::transaction(function () use ($productId, $locationId, $newQuantity, $reorderLevel, $notes, $userId) {
             $stock = InventoryStock::firstOrCreate(
                 [
                     'product_id' => $productId,
@@ -217,14 +218,20 @@ class InventoryService
                 [
                     'quantity' => 0,
                     'reserved_quantity' => 0,
+                    'reorder_level' => 0,
                 ]
             );
 
             $balanceBefore = $stock->quantity;
             $difference = $newQuantity - $balanceBefore;
 
-            // Update stock
+            // Update stock quantity
             $stock->update(['quantity' => $newQuantity]);
+            
+            // Update reorder level if provided
+            if ($reorderLevel !== null) {
+                $stock->update(['reorder_level' => $reorderLevel]);
+            }
 
             // Create ledger entry
             $ledger = InventoryLedger::create([

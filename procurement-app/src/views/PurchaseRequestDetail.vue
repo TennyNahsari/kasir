@@ -42,6 +42,12 @@
             </div>
 
             <div v-for="(item, index) in pr.items" :key="index" class="bg-gray-50 p-4 rounded-lg mb-4">
+              <div v-if="item.product_id" class="mb-2 flex items-center gap-2">
+                <span class="text-sm font-medium text-gray-700">{{ item.productName || item.productSearch }}</span>
+                <span v-if="item.productType === 'ASSET'" class="badge badge-green text-xs">Asset</span>
+                <span v-else-if="item.productType === 'INVENTORY'" class="badge badge-blue text-xs">Inventory</span>
+                <span v-else-if="item.productType === 'SERVICE'" class="badge badge-purple text-xs">Service</span>
+              </div>
               <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="relative">
                   <label class="block text-sm font-medium text-gray-700 mb-2">Product *</label>
@@ -60,7 +66,12 @@
                       :key="product.id"
                       @click="selectProduct(item, product)"
                       class="px-4 py-2 hover:bg-blue-50 cursor-pointer border-b last:border-b-0">
-                      <div class="font-medium">{{ product.name }}</div>
+                      <div class="flex items-center gap-2">
+                        <div class="font-medium">{{ product.name }}</div>
+                        <span v-if="product.type === 'ASSET'" class="badge badge-green text-xs">Asset</span>
+                        <span v-else-if="product.type === 'INVENTORY'" class="badge badge-blue text-xs">Inventory</span>
+                        <span v-else-if="product.type === 'SERVICE'" class="badge badge-purple text-xs">Service</span>
+                      </div>
                       <div class="text-xs text-gray-500">SKU: {{ product.sku }}</div>
                     </div>
                   </div>
@@ -182,6 +193,7 @@
           <thead class="bg-gray-50">
             <tr>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
               <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Quantity</th>
               <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Estimated Price</th>
               <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
@@ -194,6 +206,12 @@
                 <div class="text-sm font-medium text-gray-900">{{ item.product?.name || item.product_name || 'N/A' }}</div>
                 <div class="text-sm text-gray-500">SKU: {{ item.product?.sku || 'N/A' }}</div>
                 <div v-if="item.notes" class="text-xs text-gray-400 mt-1">{{ item.notes }}</div>
+              </td>
+              <td class="px-6 py-4">
+                <span v-if="item.product?.type === 'ASSET'" class="badge badge-green text-xs">Asset</span>
+                <span v-else-if="item.product?.type === 'INVENTORY'" class="badge badge-blue text-xs">Inventory</span>
+                <span v-else-if="item.product?.type === 'SERVICE'" class="badge badge-purple text-xs">Service</span>
+                <span v-else class="badge badge-gray text-xs">-</span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
                 {{ item.quantity }} {{ item.product?.unit || '' }}
@@ -219,7 +237,7 @@
           </tbody>
           <tfoot class="bg-gray-50">
             <tr>
-              <td colspan="3" class="px-6 py-4 text-right font-semibold text-gray-900">Total Estimated:</td>
+              <td colspan="4" class="px-6 py-4 text-right font-semibold text-gray-900">Total Estimated:</td>
               <td class="px-6 py-4 text-right font-bold text-gray-900">
                 Rp {{ calculateTotal().toLocaleString('id-ID') }}
               </td>
@@ -435,6 +453,8 @@ const selectProduct = (item, product) => {
   item.product_id = product.id
   item.product_name = product.name
   item.productSearch = product.name
+  item.productName = product.name
+  item.productType = product.type
   item.showDropdown = false
   item.filteredProducts = []
 }

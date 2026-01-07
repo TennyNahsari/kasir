@@ -14,6 +14,8 @@ use App\Http\Controllers\Api\InventoryTransferController;
 use App\Http\Controllers\Api\PurchaseRequestController;
 use App\Http\Controllers\Api\PurchaseOrderController;
 use App\Http\Controllers\Api\GoodsReceiptController;
+use App\Http\Controllers\Api\AssetController;
+use App\Http\Controllers\Api\ServiceContractController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -110,4 +112,27 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/goods-receipts/{goodsReceipt}/post', [GoodsReceiptController::class, 'post']);
     Route::post('/goods-receipts/{goodsReceipt}/reject', [GoodsReceiptController::class, 'reject']);
     Route::get('/goods-receipts/by-po/{poId}', [GoodsReceiptController::class, 'byPurchaseOrder']);
+    
+    // Assets
+    Route::get('/assets', [AssetController::class, 'index']);
+    Route::post('/assets', [AssetController::class, 'store']);
+    Route::get('/assets/available', [AssetController::class, 'available']);
+    Route::get('/assets/by-user/{userId}', [AssetController::class, 'byUser']);
+    Route::get('/assets/{asset}', [AssetController::class, 'show']);
+    Route::put('/assets/{asset}', [AssetController::class, 'update']);
+    Route::post('/assets/{asset}/assign', [AssetController::class, 'assign']);
+    Route::post('/assets/{asset}/return', [AssetController::class, 'return']);
+    Route::post('/assets/{asset}/transfer', [AssetController::class, 'transfer']);
+    Route::post('/assets/{asset}/dispose', [AssetController::class, 'dispose']);
+    Route::get('/assets/{asset}/history', [AssetController::class, 'history']);
+    Route::post('/assets/{asset}/history', [AssetController::class, 'addHistory']);
+    
+    // Service Contracts
+    Route::get('/service-contracts', [ServiceContractController::class, 'index']);
+    Route::post('/service-contracts', [ServiceContractController::class, 'store']);
+    Route::get('/service-contracts/stats', [ServiceContractController::class, 'stats']);
+    Route::get('/service-contracts/{id}', [ServiceContractController::class, 'show']);
+    Route::put('/service-contracts/{id}', [ServiceContractController::class, 'update']);
+    Route::post('/service-contracts/{id}/renew', [ServiceContractController::class, 'renew']);
+    Route::post('/service-contracts/{id}/terminate', [ServiceContractController::class, 'terminate']);
 });

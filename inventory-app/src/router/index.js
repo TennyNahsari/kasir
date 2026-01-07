@@ -52,6 +52,26 @@ const router = createRouter({
           component: () => import('@/views/ProductList.vue')
         },
         {
+          path: 'assets',
+          name: 'AssetList',
+          component: () => import('@/views/AssetList.vue')
+        },
+        {
+          path: 'assets/:id',
+          name: 'AssetDetail',
+          component: () => import('@/views/AssetDetail.vue')
+        },
+        {
+          path: 'services',
+          name: 'ServiceList',
+          component: () => import('@/views/ServiceList.vue')
+        },
+        {
+          path: 'services/:id',
+          name: 'ServiceDetail',
+          component: () => import('@/views/ServiceDetail.vue')
+        },
+        {
           path: 'users',
           name: 'Users',
           component: () => import('@/views/UserList.vue'),

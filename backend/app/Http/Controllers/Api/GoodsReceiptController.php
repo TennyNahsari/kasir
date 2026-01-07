@@ -84,6 +84,8 @@ class GoodsReceiptController extends Controller
             'items.*.po_item_id' => 'required|exists:purchase_order_items,id',
             'items.*.quantity_received' => 'required|numeric|min:0',
             'items.*.quantity_rejected' => 'nullable|numeric|min:0',
+            'items.*.serial_numbers' => 'nullable|array',
+            'items.*.serial_numbers.*' => 'nullable|string|max:255',
             'items.*.notes' => 'nullable|string',
         ]);
 

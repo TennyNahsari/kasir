@@ -1,34 +1,127 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <!-- Header -->
-    <header class="bg-white shadow-sm sticky top-0 z-30">
-      <div class="px-3 sm:px-6 py-3 sm:py-4">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2 sm:gap-4">
-            <button @click="showMobileMenu = !showMobileMenu" class="sm:hidden p-2 hover:bg-gray-100 rounded-lg">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-            <h1 class="text-lg sm:text-2xl font-bold text-blue-600">Inventory Management</h1>
-          </div>
-          
-          <div class="flex items-center gap-2 sm:gap-4">
-            <span class="hidden sm:inline text-xs sm:text-sm text-gray-600">
-              {{ authStore.user?.name }} <span class="hidden md:inline">({{ authStore.user?.role }})</span>
-            </span>
-            <button @click="handleLogout" class="bg-gray-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg hover:bg-gray-700 text-xs sm:text-sm">
-              Logout
-            </button>
-          </div>
-        </div>
+  <div class="flex h-screen bg-gray-50">
+    <!-- Sidebar -->
+    <aside class="hidden lg:flex lg:flex-col lg:w-64 bg-white border-r">
+      <!-- Logo/Header -->
+      <div class="h-16 flex items-center px-6 border-b">
+        <h1 class="text-lg font-bold text-blue-600">Inventory</h1>
       </div>
-    </header>
+      
+      <!-- Navigation -->
+      <nav class="flex-1 overflow-y-auto p-4">
+        <!-- Main Navigation Items -->
+        <router-link
+          to="/"
+          class="flex items-center px-4 py-3 mb-1 text-sm font-medium rounded-lg transition-colors"
+          :class="$route.path === '/' 
+            ? 'bg-blue-50 text-blue-600' 
+            : 'text-gray-700 hover:bg-gray-100'"
+        >
+          Dashboard
+        </router-link>
+        
+        <router-link
+          to="/inventory/products"
+          class="flex items-center px-4 py-3 mb-1 text-sm font-medium rounded-lg transition-colors"
+          :class="$route.path === '/inventory/products' 
+            ? 'bg-blue-50 text-blue-600' 
+            : 'text-gray-700 hover:bg-gray-100'"
+        >
+          Master Product
+        </router-link>
+        
+        <!-- Inventory Section -->
+        <div class="mt-4">
+          <div class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Inventory</div>
+          <router-link
+            to="/inventory/stocks"
+            class="flex items-center pl-8 pr-4 py-3 mb-1 text-sm font-medium rounded-lg transition-colors"
+            :class="$route.path === '/inventory/stocks' 
+              ? 'bg-blue-50 text-blue-600' 
+              : 'text-gray-700 hover:bg-gray-100'"
+          >
+            Stock Levels
+          </router-link>
+          <router-link
+            to="/inventory/transfers"
+            class="flex items-center pl-8 pr-4 py-3 mb-1 text-sm font-medium rounded-lg transition-colors"
+            :class="$route.path === '/inventory/transfers' 
+              ? 'bg-blue-50 text-blue-600' 
+              : 'text-gray-700 hover:bg-gray-100'"
+          >
+            Transfers
+          </router-link>
+          <router-link
+            to="/inventory/ledger"
+            class="flex items-center pl-8 pr-4 py-3 mb-1 text-sm font-medium rounded-lg transition-colors"
+            :class="$route.path === '/inventory/ledger' 
+              ? 'bg-blue-50 text-blue-600' 
+              : 'text-gray-700 hover:bg-gray-100'"
+          >
+            Ledger
+          </router-link>
+        </div>
+        
+        <router-link
+          to="/assets"
+          class="flex items-center px-4 py-3 mb-1 text-sm font-medium rounded-lg transition-colors"
+          :class="$route.path === '/assets' 
+            ? 'bg-blue-50 text-blue-600' 
+            : 'text-gray-700 hover:bg-gray-100'"
+        >
+          Assets
+        </router-link>
+        
+        <router-link
+          to="/services"
+          class="flex items-center px-4 py-3 mb-1 text-sm font-medium rounded-lg transition-colors"
+          :class="$route.path === '/services' 
+            ? 'bg-blue-50 text-blue-600' 
+            : 'text-gray-700 hover:bg-gray-100'"
+        >
+          Services
+        </router-link>
+        
+        <!-- Settings Section -->
+        <div v-if="hasSettingsAccess" class="mt-6 pt-4 border-t">
+          <div class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Settings</div>
+          <router-link
+            to="/users"
+            class="flex items-center pl-8 pr-4 py-3 mb-1 text-sm font-medium rounded-lg transition-colors"
+            :class="$route.path === '/users' 
+              ? 'bg-blue-50 text-blue-600' 
+              : 'text-gray-700 hover:bg-gray-100'"
+          >
+            Users
+          </router-link>
+          <router-link
+            to="/inventory/locations"
+            class="flex items-center pl-8 pr-4 py-3 mb-1 text-sm font-medium rounded-lg transition-colors"
+            :class="$route.path === '/inventory/locations' 
+              ? 'bg-blue-50 text-blue-600' 
+              : 'text-gray-700 hover:bg-gray-100'"
+          >
+            Locations
+          </router-link>
+        </div>
+      </nav>
+      
+      <!-- User Info -->
+      <div class="p-4 border-t">
+        <div class="text-sm text-gray-600 mb-2">
+          {{ authStore.user?.name }}<br>
+          <span class="text-xs text-gray-500">({{ authStore.user?.role }})</span>
+        </div>
+        <button @click="handleLogout" class="w-full bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">
+          Logout
+        </button>
+      </div>
+    </aside>
 
-    <!-- Mobile Navigation -->
+    <!-- Mobile Menu Overlay -->
     <div 
       v-if="showMobileMenu" 
-      class="sm:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+      class="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
       @click="showMobileMenu = false"
     >
       <div class="bg-white w-64 h-full" @click.stop>
@@ -41,90 +134,61 @@
               </svg>
             </button>
           </div>
-          <div class="mt-2 text-sm text-gray-600">
-            {{ authStore.user?.name }}<br>
-            <span class="text-xs">({{ authStore.user?.role }})</span>
-          </div>
         </div>
         <nav class="p-2">
-          <router-link
-            v-for="item in navigation"
-            :key="item.name"
-            :to="item.path"
-            @click="showMobileMenu = false"
-            class="block px-4 py-3 text-sm font-medium rounded-lg transition-colors mb-1"
-            :class="$route.path === item.path 
-              ? 'bg-blue-50 text-blue-600' 
-              : 'text-gray-700 hover:bg-gray-100'"
-          >
-            {{ item.name }}
-          </router-link>
+          <template v-for="item in navigation" :key="item.name">
+            <div v-if="item.isHeader" class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase">
+              {{ item.name }}
+            </div>
+            <router-link
+              v-else
+              :to="item.path"
+              @click="showMobileMenu = false"
+              class="block px-4 py-3 text-sm font-medium rounded-lg transition-colors mb-1"
+              :class="$route.path === item.path 
+                ? 'bg-blue-50 text-blue-600' 
+                : 'text-gray-700 hover:bg-gray-100'"
+            >
+              {{ item.name }}
+            </router-link>
+          </template>
         </nav>
       </div>
     </div>
 
-    <!-- Desktop Navigation -->
-    <nav class="hidden sm:block bg-white border-b">
-      <div class="px-3 sm:px-6">
-        <div class="flex gap-1">
-          <router-link
-            v-for="item in mainNavigation"
-            :key="item.name"
-            :to="item.path"
-            class="py-3 sm:py-4 px-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap"
-            :class="$route.path === item.path 
-              ? 'border-blue-600 text-blue-600' 
-              : 'border-transparent text-gray-600 hover:text-gray-900'"
-          >
-            {{ item.name }}
-          </router-link>
-          
-          <!-- Settings Dropdown -->
-          <div v-if="hasSettingsAccess" class="relative" ref="settingsDropdown">
-            <button
-              @click="toggleSettings"
-              class="py-3 sm:py-4 px-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap flex items-center gap-1"
-              :class="isSettingsActive 
-                ? 'border-blue-600 text-blue-600' 
-                : 'border-transparent text-gray-600 hover:text-gray-900'"
-            >
-              Settings
-              <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': showSettings }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            
-            <div
-              v-if="showSettings"
-              class="absolute top-full left-0 mt-0 w-48 bg-white rounded-b-lg shadow-lg border border-gray-200 py-1 z-50"
-            >
-              <router-link
-                v-for="item in settingsNav"
-                :key="item.name"
-                :to="item.path"
-                @click="showSettings = false"
-                class="block px-4 py-2 text-sm transition-colors"
-                :class="$route.path === item.path 
-                  ? 'bg-blue-50 text-blue-600' 
-                  : 'text-gray-700 hover:bg-gray-100'"
-              >
-                {{ item.name }}
-              </router-link>
-            </div>
-          </div>
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+      <!-- Header -->
+      <header class="h-16 bg-white border-b flex items-center justify-between px-4 lg:px-6">
+        <div class="flex items-center gap-4">
+          <button @click="showMobileMenu = !showMobileMenu" class="lg:hidden p-2 hover:bg-gray-100 rounded-lg">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <h1 class="text-xl font-bold text-blue-600 lg:hidden">Inventory</h1>
         </div>
-      </div>
-    </nav>
+        
+        <div class="flex items-center gap-4">
+          <span class="hidden lg:inline text-sm text-gray-600">
+            {{ authStore.user?.name }} <span class="text-gray-500">({{ authStore.user?.role }})</span>
+          </span>
+          <button @click="handleLogout" class="lg:hidden bg-gray-600 text-white px-3 py-1.5 rounded-lg hover:bg-gray-700 text-sm">
+            Logout
+          </button>
+        </div>
+      </header>
 
-    <!-- Main Content -->
-    <main class="p-3 sm:p-6">
-      <router-view />
-    </main>
+      <!-- Main Content -->
+      <main class="flex-1 overflow-y-auto p-4 lg:p-6">
+        <router-view />
+      </main>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
@@ -132,15 +196,21 @@ const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 const showMobileMenu = ref(false)
-const showSettings = ref(false)
-const settingsDropdown = ref(null)
 
 const mainNavigation = [
   { name: 'Dashboard', path: '/' },
-  { name: 'Products', path: '/inventory/products' },
-  { name: 'Stock Levels', path: '/inventory/stocks' },
-  { name: 'Transfers', path: '/inventory/transfers' },
-  { name: 'Ledger', path: '/inventory/ledger' }
+  { name: 'Master Product', path: '/inventory/products' },
+  { 
+    name: 'Inventory', 
+    isDropdown: true,
+    children: [
+      { name: 'Stock Levels', path: '/inventory/stocks' },
+      { name: 'Transfers', path: '/inventory/transfers' },
+      { name: 'Ledger', path: '/inventory/ledger' }
+    ]
+  },
+  { name: 'Assets', path: '/assets' },
+  { name: 'Services', path: '/services' }
 ]
 
 const settingsNav = [
@@ -166,36 +236,27 @@ const hasSettingsAccess = computed(() => {
 })
 
 const navigation = computed(() => {
-  const nav = [...mainNavigation]
+  const nav = []
+  
+  // Flatten mainNavigation for mobile menu
+  mainNavigation.forEach(item => {
+    if (item.isDropdown && item.children) {
+      // Add parent as header (non-clickable)
+      nav.push({ name: item.name, isHeader: true })
+      // Add children
+      nav.push(...item.children)
+    } else {
+      nav.push(item)
+    }
+  })
 
   // Add Users and Locations to mobile menu for users with settings access
   if (hasSettingsAccess.value) {
+    nav.push({ name: 'Settings', isHeader: true })
     nav.push(...settingsNav)
   }
 
   return nav
-})
-
-const isSettingsActive = computed(() => {
-  return settingsNav.some(item => route.path === item.path)
-})
-
-const toggleSettings = () => {
-  showSettings.value = !showSettings.value
-}
-
-const handleClickOutside = (event) => {
-  if (settingsDropdown.value && !settingsDropdown.value.contains(event.target)) {
-    showSettings.value = false
-  }
-}
-
-onMounted(() => {
-  document.addEventListener('click', handleClickOutside)
-})
-
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside)
 })
 
 const handleLogout = async () => {
