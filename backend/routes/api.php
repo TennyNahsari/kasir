@@ -27,6 +27,10 @@ Route::get('/public/categories', [CategoryController::class, 'index']);
 Route::get('/public/products', [ProductController::class, 'index']);
 Route::post('/public/orders', [TransactionController::class, 'store']);
 
+// Public routes for Asset QR Code (anyone can scan)
+Route::get('/public/assets/{asset}', [AssetController::class, 'show']);
+Route::get('/public/assets/{asset}/history', [AssetController::class, 'history']);
+
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
     // Auth

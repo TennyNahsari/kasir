@@ -11,6 +11,12 @@ const router = createRouter({
       meta: { guest: true }
     },
     {
+      path: '/assets/:id',
+      name: 'AssetPublicView',
+      component: () => import('@/views/AssetPublicView.vue'),
+      meta: { public: true }
+    },
+    {
       path: '/',
       component: () => import('@/layouts/MainLayout.vue'),
       meta: { requiresAuth: true },
@@ -55,11 +61,6 @@ const router = createRouter({
           path: 'assets',
           name: 'AssetList',
           component: () => import('@/views/AssetList.vue')
-        },
-        {
-          path: 'assets/:id',
-          name: 'AssetDetail',
-          component: () => import('@/views/AssetDetail.vue')
         },
         {
           path: 'services',

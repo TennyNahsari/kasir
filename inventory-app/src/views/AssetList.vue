@@ -95,6 +95,9 @@
                 <button @click="printBarcode(asset)" class="text-purple-600 hover:text-purple-900 font-medium">
                   Barcode
                 </button>
+                <button @click="printQRCode(asset)" class="text-green-600 hover:text-green-900 font-medium">
+                  QR Code
+                </button>
                 <button @click="viewAsset(asset)" class="text-blue-600 hover:text-blue-700 font-medium">
                   View
                 </button>
@@ -341,12 +344,12 @@
       </div>
     </div>
 
-    <!-- Barcode Modal -->
-    <div v-if="showBarcodeModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
+    <!-- QR Code Modal -->
+    <div v-if="showQRModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
       <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
         <div class="flex justify-between items-center p-4 border-b">
-          <h3 class="text-lg font-semibold">Print Asset Tag Barcode</h3>
-          <button @click="closeBarcodeModal" class="text-gray-400 hover:text-gray-600">
+          <h3 class="text-lg font-semibold">Print Asset QR Code</h3>
+          <button @click="closeQRModal" class="text-gray-400 hover:text-gray-600">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -356,41 +359,47 @@
         <div class="p-6">
           <div class="space-y-4">
             <div>
-              <p class="text-sm text-gray-600">Asset: <span class="font-medium text-gray-900">{{ barcodeData.product_name }}</span></p>
-              <p class="text-sm text-gray-600">Asset Tag: <span class="font-medium text-gray-900">{{ barcodeData.asset_tag }}</span></p>
+              <p class="text-sm text-gray-600">Asset: <span class="font-medium text-gray-900">{{ qrData.product_name }}</span></p>
+              <p class="text-sm text-gray-600">Asset Tag: <span class="font-medium text-gray-900">{{ qrData.asset_tag }}</span></p>
+              <p class="text-sm text-gray-600">Serial: <span class="font-medium text-gray-900">{{ qrData.serial_number }}</span></p>
             </div>
             
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Label Size</label>
-              <select v-model="barcodeData.labelSize" @change="generateBarcodePreview" class="w-full border-gray-300 rounded-lg">
-                <option value="small">Small (30mm x 20mm) - Compact</option>
-                <option value="medium">Medium (50mm x 30mm) - Standard</option>
-                <option value="large">Large (100mm x 50mm) - Wide</option>
+              <select v-model="qrData.labelSize" @change="generateQRPreview" class="w-full border-gray-300 rounded-lg">
+                <option value="small">Small (50mm x 50mm)</option>
+                <option value="medium">Medium (70mm x 70mm)</option>
+                <option value="large">Large (100mm x 100mm)</option>
               </select>
             </div>
             
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Number of Labels</label>
-              <input v-model.number="barcodeData.copies" type="number" min="1" max="100" class="w-full border-gray-300 rounded-lg">
+              <input v-model.number="qrData.copies" type="number" min="1" max="100" class="w-full border-gray-300 rounded-lg">
             </div>
             
-            <div class="border rounded-lg p-4 bg-gray-50" id="barcode-preview">
+            <div class="border rounded-lg p-4 bg-gray-50" id="qr-preview">
               <div class="text-center">
-                <div class="inline-block" :style="previewStyle">
-                  <svg id="barcode-svg"></svg>
-                  <p class="text-xs mt-2 font-mono" :style="{ fontSize: labelSizes[barcodeData.labelSize].skuFontSize }">{{ barcodeData.asset_tag }}</p>
-                  <p class="text-xs text-gray-600" :style="{ fontSize: labelSizes[barcodeData.labelSize].nameFontSize }">{{ barcodeData.product_name }}</p>
+                <div class="inline-block" :style="qrPreviewStyle">
+                  <canvas id="qr-canvas"></canvas>
+                  <p class="text-xs mt-2 font-mono font-bold" :style="{ fontSize: qrLabelSizes[qrData.labelSize].tagFontSize }">{{ qrData.asset_tag }}</p>
+                  <p class="text-xs text-gray-600" :style="{ fontSize: qrLabelSizes[qrData.labelSize].nameFontSize }">{{ qrData.product_name }}</p>
                 </div>
               </div>
+            </div>
+            
+            <div class="text-xs text-gray-500 bg-blue-50 p-3 rounded">
+              <p class="font-medium mb-1">\u2139\ufe0f Scan Info:</p>
+              <p>Scanning this QR code will show asset details including product info, location, PIC, status, and history.</p>
             </div>
           </div>
         </div>
         
         <div class="flex gap-3 justify-end p-4 border-t">
-          <button @click="closeBarcodeModal" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+          <button @click="closeQRModal" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
             Cancel
           </button>
-          <button @click="printBarcodeLabels" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+          <button @click="printQRLabels" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
             Print
           </button>
         </div>
@@ -408,6 +417,7 @@ import userService from '@/services/userService'
 import api from '@/services/api'
 import * as XLSX from 'xlsx'
 import JsBarcode from 'jsbarcode'
+import QRCode from 'qrcode'
 
 const router = useRouter()
 
@@ -418,6 +428,7 @@ const assetProducts = ref([])
 const loading = ref(false)
 const showAddModal = ref(false)
 const showBarcodeModal = ref(false)
+const showQRModal = ref(false)
 
 const labelSizes = {
   small: {
@@ -467,50 +478,46 @@ const previewStyle = computed(() => {
     display: 'inline-block'
   }
 })
-const showBarcodeModal = ref(false)
 
-const labelSizes = {
+// QR Code configuration
+const qrLabelSizes = {
   small: {
-    width: '30mm',
-    height: '20mm',
-    barcodeWidth: 1,
-    barcodeHeight: 25,
-    barcodeMargin: 5,
-    skuFontSize: '8px',
-    nameFontSize: '6px',
-    padding: '1mm'
-  },
-  medium: {
     width: '50mm',
-    height: '30mm',
-    barcodeWidth: 1.5,
-    barcodeHeight: 40,
-    barcodeMargin: 8,
-    skuFontSize: '10px',
+    height: '60mm',
+    qrSize: 150,
+    tagFontSize: '10px',
     nameFontSize: '8px',
     padding: '2mm'
   },
-  large: {
-    width: '100mm',
-    height: '50mm',
-    barcodeWidth: 2,
-    barcodeHeight: 60,
-    barcodeMargin: 10,
-    skuFontSize: '14px',
+  medium: {
+    width: '70mm',
+    height: '85mm',
+    qrSize: 220,
+    tagFontSize: '12px',
     nameFontSize: '10px',
     padding: '3mm'
+  },
+  large: {
+    width: '100mm',
+    height: '120mm',
+    qrSize: 300,
+    tagFontSize: '16px',
+    nameFontSize: '12px',
+    padding: '4mm'
   }
 }
 
-const barcodeData = ref({
+const qrData = ref({
+  asset_id: '',
   asset_tag: '',
+  serial_number: '',
   product_name: '',
   copies: 1,
   labelSize: 'medium'
 })
 
-const previewStyle = computed(() => {
-  const size = labelSizes[barcodeData.value.labelSize]
+const qrPreviewStyle = computed(() => {
+  const size = qrLabelSizes[qrData.value.labelSize]
   return {
     border: '1px dashed #ccc',
     padding: size.padding,
@@ -863,50 +870,58 @@ const closeBarcodeModal = () => {
   }
 }
 
-const printBarcode = async (asset) => {
-  barcodeData.value = {
+// QR Code Functions
+const printQRCode = async (asset) => {
+  const assetURL = `${window.location.origin}/assets/${asset.id}`
+  
+  qrData.value = {
+    asset_id: asset.id,
     asset_tag: asset.asset_tag,
+    serial_number: asset.serial_number || 'N/A',
     product_name: asset.product?.name || 'Unknown Product',
+    url: assetURL,
     copies: 1,
     labelSize: 'medium'
   }
-  showBarcodeModal.value = true
+  showQRModal.value = true
   
   await nextTick()
-  generateBarcodePreview()
+  generateQRPreview()
 }
 
-const generateBarcodePreview = () => {
+const generateQRPreview = async () => {
   try {
-    const svg = document.getElementById('barcode-svg')
-    const size = labelSizes[barcodeData.value.labelSize]
+    const canvas = document.getElementById('qr-canvas')
+    const size = qrLabelSizes[qrData.value.labelSize]
     
-    if (svg && barcodeData.value.asset_tag) {
-      JsBarcode(svg, barcodeData.value.asset_tag, {
-        format: 'CODE128',
-        width: size.barcodeWidth,
-        height: size.barcodeHeight,
-        displayValue: false,
-        margin: size.barcodeMargin
+    if (canvas && qrData.value.url) {
+      // Generate QR code with asset URL
+      await QRCode.toCanvas(canvas, qrData.value.url, {
+        width: size.qrSize,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
       })
     }
   } catch (error) {
-    console.error('Failed to generate barcode:', error)
-    alert('Failed to generate barcode. Invalid Asset Tag format.')
+    console.error('Failed to generate QR code:', error)
+    alert('Failed to generate QR code.')
   }
 }
 
-const printBarcodeLabels = () => {
+const printQRLabels = async () => {
   const printWindow = window.open('', '', 'width=800,height=600')
-  const size = labelSizes[barcodeData.value.labelSize]
+  const size = qrLabelSizes[qrData.value.labelSize]
   
   let labelsHTML = ''
-  for (let i = 0; i < barcodeData.value.copies; i++) {
+  for (let i = 0; i < qrData.value.copies; i++) {
     labelsHTML += `
-      <div class="barcode-label">
-        <svg id="barcode-${i}"></svg>
-        <div class="barcode-text">${barcodeData.value.asset_tag}</div>
-        <div class="product-name">${barcodeData.value.product_name}</div>
+      <div class="qr-label">
+        <canvas id="qr-${i}"></canvas>
+        <div class="qr-tag">${qrData.value.asset_tag}</div>
+        <div class="qr-product">${qrData.value.product_name}</div>
       </div>
     `
   }
@@ -914,7 +929,7 @@ const printBarcodeLabels = () => {
   printWindow.document.write(`
     <html>
       <head>
-        <title>Print Asset Tag - ${barcodeData.value.asset_tag}</title>
+        <title>Print QR Code - ${qrData.value.asset_tag}</title>
         <style>
           @page {
             size: ${size.width} ${size.height};
@@ -933,7 +948,7 @@ const printBarcodeLabels = () => {
             padding: 0;
           }
           
-          .barcode-label {
+          .qr-label {
             width: ${size.width};
             height: ${size.height};
             padding: ${size.padding};
@@ -943,25 +958,27 @@ const printBarcodeLabels = () => {
             justify-content: center;
             align-items: center;
             page-break-after: always;
+            border: 1px dashed #ccc;
           }
           
-          .barcode-label:last-child {
+          .qr-label:last-child {
             page-break-after: auto;
           }
           
-          svg {
+          canvas {
             display: block;
             margin: 0 auto;
           }
           
-          .barcode-text {
+          .qr-tag {
             font-family: monospace;
-            font-size: ${size.skuFontSize};
+            font-size: ${size.tagFontSize};
             font-weight: bold;
             margin-top: 2mm;
+            color: #000;
           }
           
-          .product-name {
+          .qr-product {
             font-size: ${size.nameFontSize};
             color: #333;
             margin-top: 1mm;
@@ -976,8 +993,9 @@ const printBarcodeLabels = () => {
               margin: 0; 
               padding: 0; 
             }
-            .barcode-label { 
-              margin: 0; 
+            .qr-label { 
+              margin: 0;
+              border: none;
             }
           }
         </style>
@@ -990,16 +1008,18 @@ const printBarcodeLabels = () => {
   
   printWindow.document.close()
   
-  setTimeout(() => {
-    for (let i = 0; i < barcodeData.value.copies; i++) {
-      const svg = printWindow.document.getElementById(`barcode-${i}`)
-      if (svg) {
-        JsBarcode(svg, barcodeData.value.asset_tag, {
-          format: 'CODE128',
-          width: size.barcodeWidth,
-          height: size.barcodeHeight,
-          displayValue: false,
-          margin: size.barcodeMargin
+  // Generate QR codes for each copy
+  setTimeout(async () => {
+    for (let i = 0; i < qrData.value.copies; i++) {
+      const canvas = printWindow.document.getElementById(`qr-${i}`)
+      if (canvas) {
+        await QRCode.toCanvas(canvas, qrData.value.url, {
+          width: size.qrSize,
+          margin: 2,
+          color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+          }
         })
       }
     }
@@ -1011,11 +1031,14 @@ const printBarcodeLabels = () => {
   }, 500)
 }
 
-const closeBarcodeModal = () => {
-  showBarcodeModal.value = false
-  barcodeData.value = {
+const closeQRModal = () => {
+  showQRModal.value = false
+  qrData.value = {
+    asset_id: '',
     asset_tag: '',
+    serial_number: '',
     product_name: '',
+    url: '',
     copies: 1,
     labelSize: 'medium'
   }
