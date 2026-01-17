@@ -184,7 +184,7 @@ const exportToExcel = () => {
     // Filter by export date range if specified
     if (exportFilters.value.start_date || exportFilters.value.end_date) {
       dataToExport = dataToExport.filter(grn => {
-        const grnDate = new Date(grn.receipt_date)
+        const grnDate = new Date(grn.receipt_date || grn.created_at)
         if (exportFilters.value.start_date && grnDate < new Date(exportFilters.value.start_date)) {
           return false
         }
@@ -201,12 +201,12 @@ const exportToExcel = () => {
     }
 
     const exportData = dataToExport.map(grn => ({
-      'GRN Number': grn.grn_number,
-      'Date': formatDate(grn.receipt_date),
-      'PO Number': grn.po_number,
-      'Vendor': grn.vendor_name,
-      'Invoice Number': grn.invoice_number || '',
-      'Status': grn.status,
+      'GRN Number': grn.grn_number || grn.grn_no || '',
+      'Date': formatDate(grn.receipt_date || grn.created_at),
+      'PO Number': grn.po_number || '',
+      'Vendor': grn.vendor_name || '',
+      'Invoice Number': grn.supplier_invoice_no || '',
+      'Status': grn.status || '',
       'Notes': grn.notes || ''
     }))
 

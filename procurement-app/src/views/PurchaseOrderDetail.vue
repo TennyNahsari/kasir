@@ -196,11 +196,11 @@
             <button v-if="po.status === 'APPROVED' && canSendPO" @click="sendPO" class="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
               Send to Vendor
             </button>
-            <button v-if="['APPROVED', 'SENT', 'RECEIVED'].includes(po.status)" @click="downloadPDF" class="w-full bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 flex items-center justify-center gap-2">
+            <button v-if="['APPROVED', 'SENT', 'RECEIVED'].includes(po.status)" @click="showPrintPreview = true" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
               </svg>
-              Download PDF
+              Print / Preview PO
             </button>
             <button v-if="po.status === 'SENT' && canCreateGRN" @click="createGRN" class="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
               Create Goods Receipt
@@ -283,6 +283,13 @@
         <p class="text-gray-700">{{ po.notes }}</p>
       </div>
     </div>
+
+    <!-- Print Preview Component -->
+    <PurchaseOrderPrint 
+      :po="po" 
+      :show="showPrintPreview" 
+      @close="showPrintPreview = false" 
+    />
   </div>
 </template>
 
@@ -291,6 +298,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import api from '@/services/api'
 import { useProcurementPermissions } from '@/composables/useProcurementPermissions'
+import PurchaseOrderPrint from '@/components/PurchaseOrderPrint.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -307,6 +315,7 @@ const locations = ref([])
 const products = ref([])
 const prId = ref(null)
 const prData = ref(null)
+const showPrintPreview = ref(false)
 
 const isCreateMode = computed(() => route.params.id === 'create')
 

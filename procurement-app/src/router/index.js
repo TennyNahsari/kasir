@@ -71,6 +71,12 @@ const router = createRouter({
           name: 'Locations',
           component: () => import('@/views/LocationsView.vue'),
           meta: { requiresOwner: true }
+        },
+        {
+          path: 'settings/company',
+          name: 'CompanySettings',
+          component: () => import('@/views/CompanySettings.vue'),
+          meta: { requiresOwner: true }
         }
       ]
     }

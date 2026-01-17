@@ -57,6 +57,20 @@ class PurchaseRequestController extends Controller
             $query->where('requested_by', $request->requested_by);
         }
 
+        // Date range filter
+        if ($request->has('from_date')) {
+            $query->whereDate('request_date', '>=', $request->from_date);
+        }
+
+        if ($request->has('to_date')) {
+            $query->whereDate('request_date', '<=', $request->to_date);
+        }
+
+        // Department filter (via location)
+        if ($request->has('department_id')) {
+            $query->where('location_id', $request->department_id);
+        }
+
         $prs = $query->orderBy('created_at', 'desc')->paginate(20);
 
         return response()->json($prs);

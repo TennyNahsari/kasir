@@ -50,7 +50,12 @@
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Department</label>
-          <input v-model="filters.department" @input="loadPRs" type="text" placeholder="Filter by department..." class="w-full border-gray-300 rounded-lg">
+          <select v-model="filters.department_id" @change="loadPRs" class="w-full border-gray-300 rounded-lg">
+            <option value="">All Departments</option>
+            <option v-for="dept in departments" :key="dept.id" :value="dept.id">
+              {{ dept.name }}
+            </option>
+          </select>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">From Date</label>
@@ -127,10 +132,11 @@ import * as XLSX from 'xlsx'
 const router = useRouter()
 
 const prs = ref([])
+const departments = ref([])
 
 const filters = ref({
   status: '',
-  department: '',
+  department_id: '',
   from_date: '',
   to_date: ''
 })
@@ -141,6 +147,7 @@ const exportFilters = ref({
 })
 
 onMounted(async () => {
+  await loadDepartments()
   await loadPRs()
 })
 
@@ -148,7 +155,7 @@ const loadPRs = async () => {
   try {
     const params = {}
     if (filters.value.status) params.status = filters.value.status
-    if (filters.value.department) params.department = filters.value.department
+    if (filters.value.department_id) params.department_id = filters.value.department_id
     if (filters.value.from_date) params.from_date = filters.value.from_date
     if (filters.value.to_date) params.to_date = filters.value.to_date
 
@@ -158,6 +165,16 @@ const loadPRs = async () => {
   } catch (error) {
     console.error('Failed to load PRs:', error)
     prs.value = []
+  }
+}
+
+const loadDepartments = async () => {
+  try {
+    const { data } = await api.get('/locations')
+    // Filter only departments
+    departments.value = data.filter(loc => loc.type === 'DEPARTMENT')
+  } catch (error) {
+    console.error('Failed to load departments:', error)
   }
 }
 

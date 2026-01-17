@@ -38,7 +38,7 @@ class GoodsReceipt extends Model
         'approved_at' => 'datetime',
     ];
 
-    protected $appends = ['grn_number', 'received_by_name', 'inspected_by_name', 'delivery_note_no'];
+    protected $appends = ['grn_number', 'received_by_name', 'inspected_by_name', 'delivery_note_no', 'po_number', 'vendor_name'];
 
     // Accessors
     public function getGrnNumberAttribute()
@@ -59,6 +59,18 @@ class GoodsReceipt extends Model
     public function getDeliveryNoteNoAttribute()
     {
         return $this->supplier_invoice_no;
+    }
+
+    public function getPoNumberAttribute()
+    {
+        return $this->purchaseOrder ? $this->purchaseOrder->po_number : null;
+    }
+
+    public function getVendorNameAttribute()
+    {
+        return $this->purchaseOrder && $this->purchaseOrder->vendor 
+            ? $this->purchaseOrder->vendor->name 
+            : null;
     }
 
     // Relationships

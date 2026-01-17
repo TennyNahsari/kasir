@@ -59,6 +59,15 @@ class PurchaseOrderController extends Controller
             $query->where('location_id', $request->location_id);
         }
 
+        // Date range filter
+        if ($request->has('from_date')) {
+            $query->whereDate('order_date', '>=', $request->from_date);
+        }
+
+        if ($request->has('to_date')) {
+            $query->whereDate('order_date', '<=', $request->to_date);
+        }
+
         $pos = $query->orderBy('created_at', 'desc')->paginate(20);
 
         return response()->json($pos);

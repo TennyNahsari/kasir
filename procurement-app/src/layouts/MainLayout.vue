@@ -25,6 +25,15 @@
         <div v-if="hasSettingsAccess" class="mt-6 pt-4 border-t">
           <div class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Settings</div>
           <router-link
+            to="/settings/company"
+            class="flex items-center pl-8 pr-4 py-3 mb-1 text-sm font-medium rounded-lg transition-colors"
+            :class="$route.path === '/settings/company'
+              ? 'bg-orange-50 text-orange-600' 
+              : 'text-gray-700 hover:bg-gray-100'"
+          >
+            Company
+          </router-link>
+          <router-link
             to="/settings/users"
             class="flex items-center pl-8 pr-4 py-3 mb-1 text-sm font-medium rounded-lg transition-colors"
             :class="$route.path === '/settings/users'
@@ -91,6 +100,16 @@
           <!-- Settings menu in mobile -->
           <div v-if="hasSettingsAccess" class="mt-4 border-t pt-2">
             <div class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Settings</div>
+            <router-link
+              to="/settings/company"
+              @click="showMobileMenu = false"
+              class="block px-4 py-3 text-sm font-medium rounded-lg transition-colors mb-1"
+              :class="$route.path === '/settings/company'
+                ? 'bg-orange-50 text-orange-600' 
+                : 'text-gray-700 hover:bg-gray-100'"
+            >
+              Company
+            </router-link>
             <router-link
               to="/settings/users"
               @click="showMobileMenu = false"

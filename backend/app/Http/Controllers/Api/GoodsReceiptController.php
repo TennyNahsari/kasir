@@ -57,6 +57,22 @@ class GoodsReceiptController extends Controller
             $query->where('is_posted', $request->is_posted);
         }
 
+        // Date range filter
+        if ($request->has('from_date')) {
+            $query->whereDate('receipt_date', '>=', $request->from_date);
+        }
+
+        if ($request->has('to_date')) {
+            $query->whereDate('receipt_date', '<=', $request->to_date);
+        }
+
+        // PO Number search
+        if ($request->has('po_number')) {
+            $query->whereHas('purchaseOrder', function($q) use ($request) {
+                $q->where('po_no', 'like', '%' . $request->po_number . '%');
+            });
+        }
+
         $grns = $query->orderBy('created_at', 'desc')->paginate(20);
 
         return response()->json($grns);

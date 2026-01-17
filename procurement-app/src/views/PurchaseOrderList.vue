@@ -88,7 +88,7 @@
                 <div class="text-xs text-gray-500" v-if="po.pr_number">PR: {{ po.pr_number }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {{ formatDate(po.order_date) }}
+                {{ formatDate(po.order_date || po.created_at) }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                 {{ po.vendor?.name || po.vendor_name || '-' }}
@@ -190,13 +190,18 @@ const getStatusClass = (status) => {
 
 const formatDate = (dateString) => {
   if (!dateString) return '-'
-  const date = new Date(dateString)
-  if (isNaN(date.getTime())) return '-'
-  return date.toLocaleDateString('id-ID', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric'
-  })
+  try {
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) return '-'
+    return date.toLocaleDateString('id-ID', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    })
+  } catch (error) {
+    console.error('Date format error:', error, dateString)
+    return '-'
+  }
 }
 
 const viewPO = (po) => {
@@ -236,7 +241,7 @@ const exportToExcel = () => {
 
     const exportData = dataToExport.map(po => ({
       'PO Number': po.po_number,
-      'Date': formatDate(po.order_date),
+      'Date': formatDate(po.order_date || po.created_at),
       'Vendor': po.vendor?.name || po.vendor_name || '-',
       'Location': po.location?.name || '-',
       'Status': po.status,
