@@ -80,6 +80,30 @@ class Asset extends Model
     }
 
     /**
+     * Get all tickets for this asset
+     */
+    public function tickets()
+    {
+        return $this->hasMany(Ticket::class);
+    }
+
+    /**
+     * Get maintenance schedules for this asset
+     */
+    public function maintenanceSchedules()
+    {
+        return $this->hasMany(MaintenanceSchedule::class);
+    }
+
+    /**
+     * Get the user assigned to this asset
+     */
+    public function assignedUser()
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    /**
      * Calculate depreciation
      */
     public function calculateDepreciation()

@@ -1,11 +1,32 @@
 <template>
   <div class="p-6 space-y-6">
     <div class="flex justify-between items-center">
-      <h1 class="text-2xl font-bold text-gray-900">Stock Management</h1>
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">Stock Management</h1>
+        <p class="text-sm text-gray-500 mt-1">Manage inventory stock levels across all locations</p>
+      </div>
       <button v-if="selectedLocationId" @click="openAddModal" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
         <span class="text-xl">+</span>
         Add Stock
       </button>
+    </div>
+
+    <!-- Error Message -->
+    <div v-if="errorMessage" class="bg-red-50 border border-red-200 rounded-lg p-4">
+      <div class="flex items-start gap-3">
+        <svg class="w-5 h-5 text-red-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <div class="flex-1">
+          <h3 class="text-sm font-medium text-red-800">Error</h3>
+          <p class="text-sm text-red-700 mt-1">{{ errorMessage }}</p>
+        </div>
+        <button @click="errorMessage = ''" class="text-red-400 hover:text-red-600">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
     </div>
 
     <!-- Filters -->
@@ -13,20 +34,23 @@
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Location *</label>
-          <select v-model="selectedLocationId" @change="loadStocks" class="w-full border-gray-300 rounded-lg">
+          <select v-model="selectedLocationId" @change="loadStocks" class="w-full border-gray-300 rounded-lg" :disabled="loading">
             <option value="">Select Location</option>
             <option v-for="loc in locations" :key="loc.id" :value="loc.id">
               {{ loc.name }} ({{ loc.type }})
             </option>
           </select>
+          <p v-if="locations.length === 0 && !loading" class="text-xs text-red-600 mt-1">
+            No locations found. Please add locations first.
+          </p>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
-          <input v-model="filters.search" @input="loadStocks" type="text" class="w-full border-gray-300 rounded-lg" placeholder="Product name or SKU...">
+          <input v-model="filters.search" @input="loadStocks" type="text" class="w-full border-gray-300 rounded-lg" placeholder="Product name or SKU..." :disabled="!selectedLocationId || loading">
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
-          <select v-model="filters.category_id" @change="loadStocks" class="w-full border-gray-300 rounded-lg">
+          <select v-model="filters.category_id" @change="loadStocks" class="w-full border-gray-300 rounded-lg" :disabled="!selectedLocationId || loading">
             <option value="">All Categories</option>
             <option v-for="cat in categories" :key="cat.id" :value="cat.id">
               {{ cat.name }}
@@ -36,9 +60,22 @@
       </div>
     </div>
 
+    <!-- Loading State -->
+    <div v-if="loading" class="bg-white rounded-lg shadow p-12 text-center">
+      <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-blue-600"></div>
+      <p class="text-gray-500 mt-4">Loading...</p>
+    </div>
+
     <!-- Stock Table -->
-    <div v-if="selectedLocationId" class="bg-white rounded-lg shadow overflow-hidden">
-      <div class="overflow-x-auto">
+    <div v-if="selectedLocationId && !loading" class="bg-white rounded-lg shadow overflow-hidden">
+      <div v-if="stocks.length === 0" class="p-12 text-center">
+        <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+        </svg>
+        <p class="text-gray-500 mb-2">No stock data for this location</p>
+        <p class="text-sm text-gray-400">Click "Add Stock" to add your first product to this location</p>
+      </div>
+      <div v-else class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
@@ -82,7 +119,7 @@
       </div>
     </div>
 
-    <div v-else class="bg-white rounded-lg shadow p-12 text-center">
+    <div v-else-if="!selectedLocationId && !loading" class="bg-white rounded-lg shadow p-12 text-center">
       <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
       </svg>
@@ -126,8 +163,10 @@
           </div>
         </div>
         <div class="mt-6 flex justify-end space-x-3">
-          <button @click="closeAdjustModal" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
-          <button @click="saveAdjustment" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save</button>
+          <button @click="closeAdjustModal" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50" :disabled="loading">Cancel</button>
+          <button @click="saveAdjustment" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50" :disabled="loading">
+            {{ loading ? 'Saving...' : 'Save' }}
+          </button>
         </div>
       </div>
     </div>
@@ -159,8 +198,10 @@
             <textarea v-model="addForm.notes" class="w-full border-gray-300 rounded-lg" rows="3" placeholder="Optional notes..."></textarea>
           </div>
           <div class="flex gap-2 justify-end pt-4">
-            <button @click="closeAddModal" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
-            <button @click="saveNewStock" :disabled="!addForm.product_id || addForm.quantity == null" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">Add Stock</button>
+            <button @click="closeAddModal" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50" :disabled="loading">Cancel</button>
+            <button @click="saveNewStock" :disabled="!addForm.product_id || addForm.quantity == null || loading" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+              {{ loading ? 'Adding...' : 'Add Stock' }}
+            </button>
           </div>
         </div>
       </div>
@@ -180,6 +221,8 @@ const showAdjustModal = ref(false)
 const adjustingStock = ref(null)
 const showAddModal = ref(false)
 const availableProducts = ref([])
+const errorMessage = ref('')
+const loading = ref(false)
 
 const filters = ref({
   search: '',
@@ -201,23 +244,50 @@ const addForm = ref({
 
 onMounted(async () => {
   await Promise.all([loadLocations(), loadCategories()])
+  console.log('Loaded locations:', locations.value)
+  console.log('Loaded categories:', categories.value)
 })
 
 const loadLocations = async () => {
   try {
-    const { data } = await api.get('/locations')
-    locations.value = data
+    loading.value = true
+    errorMessage.value = ''
+    const { data } = await api.get('/locations', {
+      params: { per_page: 100, is_active: 1 }
+    })
+    // Handle pagination - extract data array from paginated response
+    locations.value = data.data || data
+    
+    if (!Array.isArray(locations.value)) {
+      console.error('Locations data is not an array:', locations.value)
+      locations.value = []
+    }
+    
+    if (locations.value.length === 0) {
+      errorMessage.value = 'No locations found. Please add locations first in Settings > Locations.'
+    }
   } catch (error) {
     console.error('Failed to load locations:', error)
+    errorMessage.value = 'Failed to load locations: ' + (error.response?.data?.message || error.message)
+  } finally {
+    loading.value = false
   }
 }
 
 const loadCategories = async () => {
   try {
+    errorMessage.value = ''
     const { data } = await api.get('/categories')
-    categories.value = data
+    categories.value = Array.isArray(data) ? data : []
+    
+    if (categories.value.length === 0) {
+      console.warn('No categories found')
+      // Don't show error for categories as it's optional filter
+    }
   } catch (error) {
     console.error('Failed to load categories:', error)
+    // Categories are optional, so just log the error
+    categories.value = []
   }
 }
 
@@ -225,6 +295,8 @@ const loadStocks = async () => {
   if (!selectedLocationId.value) return
   
   try {
+    loading.value = true
+    errorMessage.value = ''
     const params = { location_id: selectedLocationId.value }
     if (filters.value.search) params.search = filters.value.search
     if (filters.value.category_id) params.category_id = filters.value.category_id
@@ -234,7 +306,10 @@ const loadStocks = async () => {
     stocks.value = Array.isArray(data) ? data : (data.data || [])
   } catch (error) {
     console.error('Failed to load stocks:', error)
-    alert('Failed to load stocks: ' + (error.response?.data?.message || error.message))
+    errorMessage.value = 'Failed to load stocks: ' + (error.response?.data?.message || error.message)
+    stocks.value = []
+  } finally {
+    loading.value = false
   }
 }
 
@@ -263,6 +338,9 @@ const calculateNewQuantity = () => {
 
 const saveAdjustment = async () => {
   try {
+    loading.value = true
+    errorMessage.value = ''
+    
     let newQuantity
     if (adjustForm.value.type === 'set') {
       newQuantity = adjustForm.value.quantity
@@ -277,12 +355,17 @@ const saveAdjustment = async () => {
       notes: adjustForm.value.reason || 'Manual adjustment'
     })
     
-    alert('Stock adjusted successfully')
     closeAdjustModal()
     await loadStocks()
+    
+    // Show success message briefly
+    const successMsg = 'Stock adjusted successfully'
+    alert(successMsg)
   } catch (error) {
     console.error('Adjust stock error:', error)
-    alert('Failed to adjust stock: ' + (error.response?.data?.message || error.message))
+    errorMessage.value = 'Failed to adjust stock: ' + (error.response?.data?.message || error.message)
+  } finally {
+    loading.value = false
   }
 }
 
@@ -293,6 +376,9 @@ const closeAdjustModal = () => {
 
 const openAddModal = async () => {
   try {
+    loading.value = true
+    errorMessage.value = ''
+    
     // Load all products
     const { data } = await api.get('/products')
     // Handle both array and object with data property
@@ -300,6 +386,11 @@ const openAddModal = async () => {
     // Filter out products that already have stock in this location
     const existingProductIds = stocks.value.map(s => s.product_id)
     availableProducts.value = products.filter(p => !existingProductIds.includes(p.id))
+    
+    if (availableProducts.value.length === 0) {
+      errorMessage.value = 'No available products to add. All products already have stock in this location or no products exist.'
+      return
+    }
     
     addForm.value = {
       product_id: '',
@@ -310,12 +401,17 @@ const openAddModal = async () => {
     showAddModal.value = true
   } catch (error) {
     console.error('Failed to load products:', error)
-    alert('Failed to load products')
+    errorMessage.value = 'Failed to load products: ' + (error.response?.data?.message || error.message)
+  } finally {
+    loading.value = false
   }
 }
 
 const saveNewStock = async () => {
   try {
+    loading.value = true
+    errorMessage.value = ''
+    
     await api.post('/inventory-stocks', {
       product_id: addForm.value.product_id,
       location_id: selectedLocationId.value,
@@ -324,12 +420,15 @@ const saveNewStock = async () => {
       notes: addForm.value.notes || 'Initial stock entry'
     })
     
-    alert('Stock added successfully')
     closeAddModal()
     await loadStocks()
+    
+    alert('Stock added successfully')
   } catch (error) {
     console.error('Add stock error:', error)
-    alert('Failed to add stock: ' + (error.response?.data?.message || error.message))
+    errorMessage.value = 'Failed to add stock: ' + (error.response?.data?.message || error.message)
+  } finally {
+    loading.value = false
   }
 }
 

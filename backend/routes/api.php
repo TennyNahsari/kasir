@@ -17,6 +17,8 @@ use App\Http\Controllers\Api\GoodsReceiptController;
 use App\Http\Controllers\Api\AssetController;
 use App\Http\Controllers\Api\ServiceContractController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\TicketController;
+use App\Http\Controllers\DashboardController as TicketDashboardController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
@@ -139,4 +141,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/service-contracts/{id}', [ServiceContractController::class, 'update']);
     Route::post('/service-contracts/{id}/renew', [ServiceContractController::class, 'renew']);
     Route::post('/service-contracts/{id}/terminate', [ServiceContractController::class, 'terminate']);
+
+    // Tickets
+    Route::get('/tickets', [TicketController::class, 'index']);
+    Route::post('/tickets', [TicketController::class, 'store']);
+    Route::get('/tickets/statistics', [TicketController::class, 'statistics']);
+    Route::get('/tickets/my-assets', [TicketController::class, 'myAssets']);
+    Route::get('/tickets/{id}', [TicketController::class, 'show']);
+    Route::put('/tickets/{id}', [TicketController::class, 'update']);
+    Route::post('/tickets/{id}/worklogs', [TicketController::class, 'addWorklog']);
+    Route::post('/tickets/{id}/attachments', [TicketController::class, 'uploadAttachment']);
+    Route::delete('/tickets/{ticketId}/attachments/{attachmentId}', [TicketController::class, 'deleteAttachment']);
+    Route::delete('/tickets/{id}', [TicketController::class, 'destroy']);
+
+    // Ticket Dashboard
+    Route::get('/ticket-dashboard', [TicketDashboardController::class, 'index']);
 });

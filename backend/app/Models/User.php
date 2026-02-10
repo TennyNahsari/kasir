@@ -20,6 +20,7 @@ class User extends Authenticatable
         'outlet_id',
         'location_id',
         'is_active',
+        'is_technician',
     ];
 
     protected $hidden = [
@@ -31,6 +32,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'is_active' => 'boolean',
+        'is_technician' => 'boolean',
     ];
 
     // Relationships
@@ -54,6 +56,20 @@ class User extends Authenticatable
         return $this->hasMany(ActivityLog::class);
     }
 
+    // Ticket relationships
+    public function reportedTickets()
+    {
+        return $this->hasMany(Ticket::class, 'reported_by');
+    }
+
+    public function assignedTickets()
+    {
+        return $this->hasMany(Ticket::class, 'assigned_to');
+    }
+
+    // Note: assignedAssets relationship removed as assets no longer use assigned_to FK
+    // Assets now use 'pic' string field instead
+
     // Role checks
     public function isOwner(): bool
     {
@@ -73,5 +89,15 @@ class User extends Authenticatable
     public function isKitchen(): bool
     {
         return $this->role === 'kitchen';
+    }
+
+    public function isTechnician(): bool
+    {
+        return $this->is_technician;
+    }
+
+    public function isStaff(): bool
+    {
+        return $this->role === 'staff';
     }
 }

@@ -29,6 +29,11 @@ class UserController extends Controller
             $query->where('is_active', $request->is_active);
         }
 
+        // Filter by is_technician flag
+        if ($request->has('is_technician')) {
+            $query->where('is_technician', $request->is_technician);
+        }
+
         // Search by name or email
         if ($request->has('search')) {
             $search = $request->search;
@@ -49,10 +54,11 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6',
-            'role' => ['required', Rule::in(['owner', 'supervisor', 'kasir', 'kitchen', 'staff'])],
+            'role' => ['required', Rule::in(['owner', 'supervisor', 'staff', 'admin'])],
             'outlet_id' => 'nullable|exists:outlets,id',
             'location_id' => 'nullable|exists:locations,id',
             'is_active' => 'nullable|boolean',
+            'is_technician' => 'nullable|boolean',
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
@@ -79,10 +85,11 @@ class UserController extends Controller
             'name' => 'sometimes|string|max:255',
             'email' => ['sometimes', 'email', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:6',
-            'role' => ['sometimes', Rule::in(['owner', 'supervisor', 'kasir', 'kitchen', 'staff'])],
+            'role' => ['sometimes', Rule::in(['owner', 'supervisor', 'staff', 'admin'])],
             'outlet_id' => 'nullable|exists:outlets,id',
             'location_id' => 'nullable|exists:locations,id',
             'is_active' => 'sometimes|boolean',
+            'is_technician' => 'sometimes|boolean',
         ]);
 
         \Log::info('Validated data', ['validated' => $validated]);

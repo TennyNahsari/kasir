@@ -33,7 +33,7 @@ class LocationController extends Controller
             });
         }
 
-        $locations = $query->orderBy('name')->get();
+        $locations = $query->orderBy('name')->paginate($request->per_page ?? 20);
 
         return response()->json($locations);
     }

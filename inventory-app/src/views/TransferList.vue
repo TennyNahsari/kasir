@@ -185,6 +185,7 @@ const router = useRouter()
 const transfers = ref([])
 const locations = ref([])
 const showModal = ref(false)
+const showCreateModal = ref(false)
 
 const pagination = ref({
   current_page: 1,

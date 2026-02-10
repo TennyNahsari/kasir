@@ -36,12 +36,12 @@ class ProductController extends Controller
         }
 
         // Filter by category
-        if ($request->has('category_id')) {
+        if ($request->has('category_id') && $request->category_id !== '') {
             $query->where('category_id', $request->category_id);
         }
 
         // Filter active
-        if ($request->has('is_active')) {
+        if ($request->has('is_active') && $request->is_active !== '') {
             $query->where('is_active', $request->is_active);
         }
 
