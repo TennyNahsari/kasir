@@ -81,6 +81,19 @@
       <div v-if="products.length === 0" class="text-center py-8 text-gray-500 text-sm">
         Tidak ada produk
       </div>
+      
+      <!-- Pagination -->
+      <Pagination
+        v-if="pagination.total > 0"
+        :current-page="pagination.currentPage"
+        :last-page="pagination.lastPage"
+        :per-page="pagination.perPage"
+        :total="pagination.total"
+        :from="pagination.from"
+        :to="pagination.to"
+        @update:current-page="handlePageChange"
+        @update:per-page="handlePerPageChange"
+      />
     </div>
 
     <!-- Mobile Card View -->
@@ -131,6 +144,19 @@
       <div v-if="products.length === 0" class="text-center py-8 text-gray-500 text-sm">
         Tidak ada produk
       </div>
+      
+      <!-- Pagination (Mobile) -->
+      <Pagination
+        v-if="pagination.total > 0"
+        :current-page="pagination.currentPage"
+        :last-page="pagination.lastPage"
+        :per-page="pagination.perPage"
+        :total="pagination.total"
+        :from="pagination.from"
+        :to="pagination.to"
+        @update:current-page="handlePageChange"
+        @update:per-page="handlePerPageChange"
+      />
     </div>
   </div>
 
@@ -307,6 +333,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useProductStore } from '@/stores/product'
 import BarcodeLabelPrint from '@/components/BarcodeLabelPrint.vue'
+import Pagination from '@/components/Pagination.vue'
 
 const productStore = useProductStore()
 
@@ -319,6 +346,15 @@ const editingCategory = ref(null)
 const imageFile = ref(null)
 const imagePreview = ref(null)
 const printProduct = ref(null)
+
+const pagination = ref({
+  currentPage: 1,
+  lastPage: 1,
+  perPage: 25,
+  total: 0,
+  from: 0,
+  to: 0
+})
 
 const form = ref({
   name: '',
@@ -352,11 +388,37 @@ const formatCurrency = (amount) => {
 }
 
 const loadProducts = async () => {
-  const params = {}
+  const params = {
+    page: pagination.value.currentPage,
+    per_page: pagination.value.perPage
+  }
   if (searchQuery.value) params.search = searchQuery.value
   if (filterCategory.value) params.category_id = filterCategory.value
   
   await productStore.fetchProducts(params)
+  
+  // Update pagination from store response
+  if (productStore.productsPagination) {
+    pagination.value = {
+      currentPage: productStore.productsPagination.current_page || 1,
+      lastPage: productStore.productsPagination.last_page || 1,
+      perPage: productStore.productsPagination.per_page || 25,
+      total: productStore.productsPagination.total || 0,
+      from: productStore.productsPagination.from || 0,
+      to: productStore.productsPagination.to || 0
+    }
+  }
+}
+
+const handlePageChange = (page) => {
+  pagination.value.currentPage = page
+  loadProducts()
+}
+
+const handlePerPageChange = (perPage) => {
+  pagination.value.perPage = perPage
+  pagination.value.currentPage = 1
+  loadProducts()
 }
 
 const editProduct = (product) => {

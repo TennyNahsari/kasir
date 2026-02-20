@@ -4,9 +4,34 @@
     <OutletSelector v-if="isOwner" @outlet-changed="handleOutletChange" />
 
     <!-- Fixed Outlet Display for Kasir/Supervisor -->
-    <div v-if="!isOwner && userOutletName" class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-      <p class="text-blue-800 text-sm">
-        🏪 <strong>Outlet:</strong> {{ userOutletName }}
+    <div v-if="!isOwner && userOutletName" class="rounded-lg p-4" 
+      :class="isFnbMode ? 'bg-orange-50 border border-orange-200' : 'bg-blue-50 border border-blue-200'">
+      <div class="flex items-center justify-between">
+        <p :class="isFnbMode ? 'text-orange-800' : 'text-blue-800'" class="text-sm">
+          <span v-if="isFnbMode">🍽️</span>
+          <span v-else>🏪</span>
+          <strong>Outlet:</strong> {{ userOutletName }}
+          <span v-if="isFnbMode" class="ml-2 px-2 py-1 bg-orange-200 rounded text-xs font-semibold">
+            F&B Mode
+          </span>
+          <span v-else class="ml-2 px-2 py-1 bg-blue-200 rounded text-xs font-semibold">
+            Retail/Outlet
+          </span>
+        </p>
+      </div>
+      <p v-if="isFnbMode" class="text-orange-700 text-xs mt-1">
+        📋 Hanya menampilkan produk F&B ({{ categories.length }} kategori)
+      </p>
+    </div>
+
+    <!-- Invalid Location Type Warning -->
+    <div v-if="outletInfo && !isValidPosLocation" class="bg-red-50 border border-red-200 rounded-lg p-4">
+      <p class="text-red-800 text-sm">
+        ⚠️ <strong>Location Type "{{ outletInfo.type }}" tidak dapat menggunakan POS Kasir</strong>
+      </p>
+      <p class="text-red-600 text-xs mt-1">
+        POS Kasir hanya tersedia untuk Location Type: <strong>OUTLET</strong> atau <strong>FNB</strong><br>
+        Location Type {{ outletInfo.type }} (Warehouse/Department) menggunakan sistem inventory.
       </p>
     </div>
 
@@ -62,7 +87,7 @@
       </div>
 
       <!-- Products Grid -->
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div v-if="isValidPosLocation" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         <div
           v-for="product in filteredProducts"
           :key="product.id"
@@ -93,7 +118,7 @@
         <p class="text-gray-500">Loading products...</p>
       </div>
 
-      <div v-if="!loading && products.length === 0 && currentOutletId" class="text-center py-8">
+      <div v-if="!loading && products.length === 0 && currentOutletId && isValidPosLocation" class="text-center py-8">
         <p class="text-gray-500 mb-2">⚠️ Tidak ada produk tersedia</p>
         <p class="text-xs text-gray-400">Pastikan outlet sudah terdaftar di inventory dan memiliki stock produk</p>
         <div v-if="debugInfo" class="mt-4 p-4 bg-gray-50 rounded text-left text-xs">
@@ -263,15 +288,62 @@ const barcodeInput = ref(null)
 const currentOutletId = ref(null)
 const debugInfo = ref(null)
 const userOutletName = ref('')
+const outletInfo = ref(null)
 
 const isOwner = computed(() => authStore.user?.role === 'owner' && !authStore.user?.outlet_id)
-const showNoOutletWarning = computed(() => !currentOutletId.value && !loading.value)
+const showNoOutletWarning = computed(() => !currentOutletId.value && !loading.value && !isOwner.value)
 
-const categories = computed(() => productStore.categories)
+// Check if current location is valid for POS (OUTLET, FNB, or Owner)
+const isValidPosLocation = computed(() => {
+  // Owner can access POS from any location
+  if (isOwner.value) return true
+  
+  if (!outletInfo.value) return true // Still loading
+  const locationType = outletInfo.value?.type?.toUpperCase()
+  return locationType === 'OUTLET' || locationType === 'FNB'
+})
+
+// Check if current location/outlet is FNB type
+const isFnbMode = computed(() => {
+  const locationType = outletInfo.value?.type?.toUpperCase()
+  return outletInfo.value?.outlet?.business_type === 'fnb' || locationType === 'FNB'
+})
+
+// Filter categories based on outlet/location type
+const categories = computed(() => {
+  const allCategories = productStore.categories
+  
+  // Owner sees all categories
+  if (isOwner.value) {
+    return allCategories
+  }
+  
+  // If FNB mode, only show FNB categories
+  if (isFnbMode.value) {
+    return allCategories.filter(cat => 
+      cat.name.includes('FNB') || 
+      cat.slug.includes('fnb') ||
+      cat.slug.includes('FNB')
+    )
+  }
+  
+  // For OUTLET type, show all categories
+  return allCategories
+})
+
 const products = computed(() => productStore.products)
 
 const filteredProducts = computed(() => {
   let filtered = products.value
+  
+  // Owner sees all products (no filter)
+  if (!isOwner.value) {
+    // If outlet/location is FNB, only show products from FNB categories
+    if (isFnbMode.value) {
+      const fnbCategoryIds = categories.value.map(c => c.id)
+      filtered = filtered.filter(p => fnbCategoryIds.includes(p.category_id))
+    }
+  }
 
   if (selectedCategory.value) {
     filtered = filtered.filter(p => p.category_id === selectedCategory.value)
@@ -357,6 +429,9 @@ const processCheckout = async () => {
   }
 
   console.log('Processing checkout with location_id:', currentOutletId.value)
+  console.log('Cart items:', cartStore.items)
+  console.log('Payment method:', paymentMethod.value)
+  console.log('Paid amount:', paidAmount.value)
 
   try {
     const transaction = await cartStore.checkout({
@@ -375,7 +450,29 @@ const processCheckout = async () => {
     // TODO: Print receipt
     
   } catch (error) {
-    alert('Checkout failed: ' + error.message)
+    console.error('Checkout error:', error)
+    console.error('Error response:', error.response?.data)
+    
+    const errorMessage = error.response?.data?.message || error.message
+    const validationErrors = error.response?.data?.errors
+    
+    let displayMessage = 'Checkout failed: ' + errorMessage
+    
+    // Add location info if error is about location/outlet
+    if (errorMessage.includes('outlet') || errorMessage.includes('location')) {
+      displayMessage += `\n\nLocation ID yang digunakan: ${currentOutletId.value}`
+      displayMessage += `\nOutlet info: ${outletInfo.value?.name || 'N/A'}`
+      displayMessage += `\nOutlet ID: ${outletInfo.value?.outlet_id || 'N/A'}`
+    }
+    
+    if (validationErrors) {
+      displayMessage += '\n\nValidation errors:\n'
+      Object.keys(validationErrors).forEach(key => {
+        displayMessage += `- ${key}: ${validationErrors[key].join(', ')}\n`
+      })
+    }
+    
+    alert(displayMessage)
   }
 }
 
@@ -391,13 +488,50 @@ const loadProductsForOutlet = async (outletId) => {
   debugInfo.value = null
   try {
     console.log('Loading products for outlet:', outletId)
+    
+    // Fetch location info to get outlet business_type
+    const locationResponse = await api.get(`/locations/${outletId}`)
+    outletInfo.value = locationResponse.data
+    userOutletName.value = locationResponse.data.name // Set outlet name for display
+    console.log('Outlet info:', outletInfo.value)
+    console.log('Outlet business type:', outletInfo.value?.outlet?.business_type)
+    console.log('Location type:', outletInfo.value?.type)
+    console.log('Is Owner:', isOwner.value)
+    
+    // Get location type for later use
+    const locationType = outletInfo.value?.type?.toUpperCase()
+    
+    // Owner can access from any location type - skip validation
+    if (!isOwner.value) {
+      // Validate location type for POS (non-owner users)
+      if (locationType !== 'OUTLET' && locationType !== 'FNB') {
+        console.warn(`⚠️ Location type "${outletInfo.value?.type}" is not valid for POS. Only OUTLET and FNB are allowed.`)
+        loading.value = false
+        return
+      }
+    } else {
+      console.log('👑 Owner mode - showing all categories and products')
+    }
+    
+    // Prepare params for fetching products
+    const productParams = { location_id: outletId, is_active: true }
+    
+    // Check if FNB mode
+    const isFnb = outletInfo.value?.outlet?.business_type === 'fnb' || locationType === 'FNB'
+    if (isFnb) {
+      console.log('🍽️ FNB Mode detected - will filter to FNB categories only')
+    } else {
+      console.log('🏪 OUTLET Mode - showing all categories and products')
+    }
+    
     const [productsResponse] = await Promise.all([
-      productStore.fetchProducts({ location_id: outletId, is_active: true }),
+      productStore.fetchProducts(productParams),
       productStore.fetchCategories()
     ])
     
     console.log('Products loaded:', products.value.length)
     console.log('Products data:', products.value)
+    console.log('Categories:', categories.value.map(c => c.name))
     
     // Extract debug info if available
     if (productsResponse && productsResponse.debug) {
@@ -420,13 +554,23 @@ const loadProductsForOutlet = async (outletId) => {
 }
 
 const handleOutletChange = (locationId) => {
-  console.log('handleOutletChange called with locationId:', locationId)
-  currentOutletId.value = locationId
-  if (locationId) {
-    // Clear cart when switching outlet
-    cartStore.clearCart()
-    loadProductsForOutlet(locationId)
+  console.log('handleOutletChange called with locationId:', locationId, 'Type:', typeof locationId)
+  
+  // Ensure it's a valid number
+  const validLocationId = locationId && !isNaN(locationId) && locationId > 0 ? Number(locationId) : null
+  
+  if (!validLocationId) {
+    console.warn('⚠️ Invalid or empty location ID received')
+    currentOutletId.value = null
+    return
   }
+  
+  console.log('Setting currentOutletId to:', validLocationId)
+  currentOutletId.value = validLocationId
+  
+  // Clear cart when switching outlet
+  cartStore.clearCart()
+  loadProductsForOutlet(validLocationId)
 }
 
 const getLocationIdForOutlet = async (outletId) => {
@@ -460,17 +604,9 @@ onMounted(async () => {
   
   if (userLocationId) {
     console.log('User has location_id:', userLocationId)
-    // Load location name for display
-    try {
-      const response = await api.get(`/locations/${userLocationId}`)
-      userOutletName.value = response.data.name
-      console.log('Location name:', response.data.name)
-    } catch (error) {
-      console.error('Failed to load location:', error)
-    }
-    
     currentOutletId.value = userLocationId
     await loadProductsForOutlet(userLocationId)
+    // userOutletName will be set by loadProductsForOutlet
   } else {
     // Priority 2: Fallback to outlet_id (for old users without location_id)
     const userOutletId = authStore.user?.outlet_id

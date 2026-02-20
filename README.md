@@ -60,9 +60,20 @@ kasir-web/
 │   └── setup.bat/sh            # Auto setup script
 │
 ├── API_DOCUMENTATION.md        # API docs
+├── AUTH_COOKIE_MIGRATION.md    # Auth migration guide
+├── CHANGELOG.md                # Version history
+├── DEPLOYMENT_GUIDE.md         # 📖 Panduan deployment lengkap (Nginx)
+├── DEPLOYMENT_QUICK.md         # ⚡ Quick reference deployment
+├── HARDWARE_DEPLOYMENT.md      # Hardware integration guide
 ├── INSTALL_BACKEND.md          # Backend setup guide
 ├── INSTALL_FRONTEND.md         # Frontend setup guide
-├── HARDWARE_DEPLOYMENT.md      # Hardware integration guide
+├── STOCK_MANAGEMENT_GUIDE.md   # Stock management guide
+├── SYSTEM_OVERVIEW.md          # System overview
+├── deploy.sh                   # 🚀 Deployment script (Linux)
+├── deploy-windows.bat          # 🚀 Deployment script (Windows)
+├── nginx-single-domain.conf    # Nginx config template (single domain)
+├── nginx-subdomain.conf        # Nginx config template (subdomain)
+├── nginx-local.conf            # Nginx config template (local IP)
 └── README.md                   # This file
 ```
 
@@ -252,23 +263,74 @@ Aplikasi tetap bisa digunakan saat internet mati:
 
 ## 🚢 Deployment
 
-### Option 1: Local Server (Toko)
-- PC/Mini PC + Windows/Linux
-- XAMPP/Laragon (all-in-one)
+### Production Deployment dengan Nginx
+
+**Ya! Nginx sangat cocok untuk deploy frontend (Vue.js) dan backend (Laravel)**
+
+Nginx akan:
+- Serve static files frontend (HTML/JS/CSS)
+- Proxy request API ke Laravel via PHP-FPM
+- Handle SSL/HTTPS
+- Caching & compression untuk performa optimal
+
+### Quick Start
+
+```bash
+# Install dependencies
+sudo apt install nginx php8.2-fpm mysql-server nodejs npm composer -y
+
+# Setup database
+sudo mysql -u root
+CREATE DATABASE kasir_pos;
+
+# Deploy backend
+cd /var/www/kasir-pos/backend
+composer install --no-dev
+php artisan migrate --seed
+
+# Build frontend
+cd /var/www/kasir-pos/frontend
+npm install && npm run build
+
+# Configure nginx
+sudo cp nginx-single-domain.conf /etc/nginx/sites-available/kasir-pos
+sudo ln -s /etc/nginx/sites-available/kasir-pos /etc/nginx/sites-enabled/
+sudo systemctl restart nginx
+```
+
+### Deployment Options
+
+#### Option 1: Local Server (Toko) 🏪
+- PC/Mini PC + Ubuntu/Windows Server
+- Nginx + PHP-FPM + MySQL
+- Akses via IP lokal (192.168.x.x)
 - UPS untuk backup power
-- **Best for**: Single outlet
+- **Best for**: Single outlet, no internet dependency
 
-### Option 2: Cloud Hosting
-- DigitalOcean, AWS, Vultr
-- Ubuntu + LEMP stack
-- SSL/HTTPS
-- **Best for**: Multi outlet, remote access
+#### Option 2: Cloud Hosting ☁️
+- DigitalOcean, AWS, Vultr, Linode
+- Ubuntu 20.04/22.04 + Nginx
+- SSL/HTTPS (Let's Encrypt)
+- **Best for**: Multi outlet, remote access, centralized data
 
-### Option 3: Shared Hosting
-- cPanel hosting dengan Laravel support
-- **Best for**: Budget friendly
+#### Option 3: VPS Lokal 🇮🇩
+- Biznet, Niagahoster, IDCloudHost
+- Lebih murah & latency rendah
+- **Best for**: Budget friendly, Indonesia-based
 
-**📖 Deployment Guide**: [HARDWARE_DEPLOYMENT.md](HARDWARE_DEPLOYMENT.md)
+### 📖 Dokumentasi Deployment
+
+- **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Panduan lengkap step-by-step
+- **[DEPLOYMENT_QUICK.md](DEPLOYMENT_QUICK.md)** - Quick reference untuk deployment
+- **[nginx-single-domain.conf](nginx-single-domain.conf)** - Config untuk 1 domain
+- **[nginx-subdomain.conf](nginx-subdomain.conf)** - Config untuk subdomain terpisah
+- **[nginx-local.conf](nginx-local.conf)** - Config untuk server lokal (no domain)
+- **[deploy.sh](deploy.sh)** - Automated deployment script (Linux)
+- **[deploy-windows.bat](deploy-windows.bat)** - Automated deployment script (Windows)
+
+### Hardware Setup
+
+- **[HARDWARE_DEPLOYMENT.md](HARDWARE_DEPLOYMENT.md)** - Barcode, printer, cash drawer integration
 
 ## 🧪 Testing
 

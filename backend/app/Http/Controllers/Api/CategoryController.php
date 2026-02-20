@@ -13,7 +13,13 @@ class CategoryController extends Controller
     {
         $categories = Category::withCount('products')
             ->orderBy('sort_order')
+            ->orderBy('name')
             ->get();
+
+        \Log::info('Categories loaded:', [
+            'total' => $categories->count(),
+            'categories' => $categories->pluck('name', 'id')->toArray()
+        ]);
 
         return response()->json($categories);
     }

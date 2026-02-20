@@ -13,6 +13,7 @@ class Transaction extends Model
     protected $fillable = [
         'transaction_no',
         'outlet_id',
+        'location_id',
         'business_type',
         'user_id',
         'subtotal',

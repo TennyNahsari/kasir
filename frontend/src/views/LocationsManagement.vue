@@ -97,6 +97,19 @@
           </div>
         </div>
       </div>
+      
+      <!-- Pagination -->
+      <Pagination
+        v-if="pagination.total > 0"
+        :current-page="pagination.currentPage"
+        :last-page="pagination.lastPage"
+        :per-page="pagination.perPage"
+        :total="pagination.total"
+        :from="pagination.from"
+        :to="pagination.to"
+        @update:current-page="handlePageChange"
+        @update:per-page="handlePerPageChange"
+      />
     </div>
 
     <!-- Create/Edit Modal -->
@@ -153,12 +166,22 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import api from '@/services/api'
+import Pagination from '@/components/Pagination.vue'
 
 const locations = ref([])
 const showCreateModal = ref(false)
 const editingLocation = ref(null)
 const loading = ref(false)
 const errorMessage = ref('')
+
+const pagination = ref({
+  currentPage: 1,
+  lastPage: 1,
+  perPage: 25,
+  total: 0,
+  from: 0,
+  to: 0
+})
 
 const locationForm = ref({
   code: '',
@@ -179,14 +202,42 @@ const loadLocations = async () => {
     loading.value = true
     errorMessage.value = ''
     const { data } = await api.get('/locations', {
-      params: { per_page: 100 }
+      params: { 
+        page: pagination.value.currentPage,
+        per_page: pagination.value.perPage
+      }
     })
-    // Handle pagination - extract data array from paginated response
-    locations.value = data.data || data
     
-    if (!Array.isArray(locations.value)) {
-      console.error('Locations data is not an array:', locations.value)
-      locations.value = []
+    // Handle both paginated and non-paginated responses
+    if (data.data && data.meta) {
+      // Paginated response
+      locations.value = data.data
+      pagination.value = {
+        currentPage: data.meta.current_page,
+        lastPage: data.meta.last_page,
+        perPage: data.meta.per_page,
+        total: data.meta.total,
+        from: data.meta.from || 0,
+        to: data.meta.to || 0
+      }
+    } else {
+      // Non-paginated response (array) or paginated without meta
+      locations.value = data.data || data
+      
+      if (!Array.isArray(locations.value)) {
+        console.error('Locations data is not an array:', locations.value)
+        locations.value = []
+      }
+      
+      // Set default pagination for non-paginated response
+      pagination.value = {
+        currentPage: 1,
+        lastPage: 1,
+        perPage: locations.value.length,
+        total: locations.value.length,
+        from: locations.value.length > 0 ? 1 : 0,
+        to: locations.value.length
+      }
     }
     
     console.log('Loaded locations:', locations.value)
@@ -197,6 +248,17 @@ const loadLocations = async () => {
   } finally {
     loading.value = false
   }
+}
+
+const handlePageChange = (page) => {
+  pagination.value.currentPage = page
+  loadLocations()
+}
+
+const handlePerPageChange = (perPage) => {
+  pagination.value.perPage = perPage
+  pagination.value.currentPage = 1
+  loadLocations()
 }
 
 const getTypeClass = (type) => {

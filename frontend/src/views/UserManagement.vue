@@ -7,6 +7,22 @@
       </button>
     </div>
 
+    <!-- Error Message -->
+    <div v-if="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+      <span class="block sm:inline">{{ errorMessage }}</span>
+      <button @click="errorMessage = ''" class="absolute top-0 bottom-0 right-0 px-4 py-3">
+        <span class="text-red-700">&times;</span>
+      </button>
+    </div>
+
+    <!-- Success Message -->
+    <div v-if="successMessage" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
+      <span class="block sm:inline">{{ successMessage }}</span>
+      <button @click="successMessage = ''" class="absolute top-0 bottom-0 right-0 px-4 py-3">
+        <span class="text-green-700">&times;</span>
+      </button>
+    </div>
+
     <!-- Filters -->
     <div class="bg-white rounded-lg shadow p-4">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -87,6 +103,19 @@
           </tbody>
         </table>
       </div>
+      
+      <!-- Pagination -->
+      <Pagination
+        v-if="pagination.total > 0"
+        :current-page="pagination.currentPage"
+        :last-page="pagination.lastPage"
+        :per-page="pagination.perPage"
+        :total="pagination.total"
+        :from="pagination.from"
+        :to="pagination.to"
+        @update:current-page="handlePageChange"
+        @update:per-page="handlePerPageChange"
+      />
     </div>
 
     <!-- Modal -->
@@ -131,8 +160,14 @@
           </div>
         </div>
         <div class="mt-6 flex justify-end space-x-3">
-          <button @click="closeModal" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
-          <button @click="saveUser" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save</button>
+          <button @click="closeModal" :disabled="loading" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Cancel</button>
+          <button @click="saveUser" :disabled="loading" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center">
+            <svg v-if="loading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            {{ loading ? 'Saving...' : 'Save' }}
+          </button>
         </div>
       </div>
     </div>
@@ -142,11 +177,24 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import api from '@/services/api'
+import Pagination from '@/components/Pagination.vue'
 
 const users = ref([])
 const locations = ref([])
 const showModal = ref(false)
 const editingUser = ref(null)
+const errorMessage = ref('')
+const successMessage = ref('')
+const loading = ref(false)
+
+const pagination = ref({
+  currentPage: 1,
+  lastPage: 1,
+  perPage: 25,
+  total: 0,
+  from: 0,
+  to: 0
+})
 
 const filters = ref({
   search: '',
@@ -169,24 +217,68 @@ onMounted(async () => {
 
 const loadUsers = async () => {
   try {
-    const params = {}
+    loading.value = true
+    errorMessage.value = ''
+    const params = {
+      page: pagination.value.currentPage,
+      per_page: pagination.value.perPage
+    }
     if (filters.value.search) params.search = filters.value.search
     if (filters.value.role) params.role = filters.value.role
     if (filters.value.is_active !== '') params.is_active = filters.value.is_active
     
     const { data } = await api.get('/users', { params })
     console.log('Users loaded:', data)
-    users.value = Array.isArray(data) ? data : (data.data || [])
+    
+    // Handle both paginated and non-paginated responses
+    if (data.data && data.meta) {
+      // Paginated response
+      users.value = data.data
+      pagination.value = {
+        currentPage: data.meta.current_page,
+        lastPage: data.meta.last_page,
+        perPage: data.meta.per_page,
+        total: data.meta.total,
+        from: data.meta.from || 0,
+        to: data.meta.to || 0
+      }
+    } else {
+      // Non-paginated response
+      users.value = Array.isArray(data) ? data : (data.data || [])
+      pagination.value = {
+        currentPage: 1,
+        lastPage: 1,
+        perPage: users.value.length,
+        total: users.value.length,
+        from: users.value.length > 0 ? 1 : 0,
+        to: users.value.length
+      }
+    }
   } catch (error) {
     console.error('Failed to load users:', error)
-    alert('Failed to load users: ' + (error.response?.data?.message || error.message))
+    errorMessage.value = 'Failed to load users: ' + (error.response?.data?.message || error.message)
+  } finally {
+    loading.value = false
   }
+}
+
+const handlePageChange = (page) => {
+  pagination.value.currentPage = page
+  loadUsers()
+}
+
+const handlePerPageChange = (perPage) => {
+  pagination.value.perPage = perPage
+  pagination.value.currentPage = 1
+  loadUsers()
 }
 
 const loadLocations = async () => {
   try {
-    const { data } = await api.get('/locations')
-    locations.value = data
+    const { data } = await api.get('/locations', { params: { per_page: 1000 } })
+    // Handle both paginated and non-paginated responses
+    locations.value = data.data ? data.data : (Array.isArray(data) ? data : [])
+    console.log('Locations loaded:', locations.value.length)
   } catch (error) {
     console.error('Failed to load locations:', error)
   }
@@ -220,6 +312,10 @@ const openEditModal = (user) => {
 
 const saveUser = async () => {
   try {
+    errorMessage.value = ''
+    successMessage.value = ''
+    loading.value = true
+    
     const payload = { ...userForm.value }
     if (editingUser.value && !payload.password) {
       delete payload.password
@@ -227,17 +323,29 @@ const saveUser = async () => {
     
     if (editingUser.value) {
       await api.put(`/users/${editingUser.value.id}`, payload)
-      alert('User updated successfully')
+      successMessage.value = 'User updated successfully'
     } else {
       await api.post('/users', payload)
-      alert('User created successfully')
+      successMessage.value = 'User created successfully'
     }
     
     closeModal()
     await loadUsers()
+    
+    // Auto-hide success message after 3 seconds
+    setTimeout(() => {
+      successMessage.value = ''
+    }, 3000)
   } catch (error) {
     console.error('Save user error:', error)
-    alert('Failed to save user: ' + (error.response?.data?.message || error.message))
+    errorMessage.value = 'Failed to save user: ' + (error.response?.data?.message || error.message)
+    if (error.response?.data?.errors) {
+      const errors = error.response.data.errors
+      const errorList = Object.values(errors).flat().join(', ')
+      errorMessage.value += ' - ' + errorList
+    }
+  } finally {
+    loading.value = false
   }
 }
 
@@ -245,12 +353,23 @@ const deleteUser = async (user) => {
   if (!confirm(`Delete user ${user.name}?`)) return
   
   try {
+    errorMessage.value = ''
+    successMessage.value = ''
+    loading.value = true
+    
     await api.delete(`/users/${user.id}`)
-    alert('User deleted successfully')
+    successMessage.value = 'User deleted successfully'
     await loadUsers()
+    
+    // Auto-hide success message after 3 seconds
+    setTimeout(() => {
+      successMessage.value = ''
+    }, 3000)
   } catch (error) {
     console.error('Delete user error:', error)
-    alert('Failed to delete user: ' + (error.response?.data?.message || error.message))
+    errorMessage.value = 'Failed to delete user: ' + (error.response?.data?.message || error.message)
+  } finally {
+    loading.value = false
   }
 }
 

@@ -117,6 +117,19 @@
           </tbody>
         </table>
       </div>
+      
+      <!-- Pagination -->
+      <Pagination
+        v-if="pagination.total > 0"
+        :current-page="pagination.currentPage"
+        :last-page="pagination.lastPage"
+        :per-page="pagination.perPage"
+        :total="pagination.total"
+        :from="pagination.from"
+        :to="pagination.to"
+        @update:current-page="handlePageChange"
+        @update:per-page="handlePerPageChange"
+      />
     </div>
 
     <div v-else-if="!selectedLocationId && !loading" class="bg-white rounded-lg shadow p-12 text-center">
@@ -212,6 +225,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import api from '@/services/api'
+import Pagination from '@/components/Pagination.vue'
 
 const locations = ref([])
 const categories = ref([])
@@ -223,6 +237,15 @@ const showAddModal = ref(false)
 const availableProducts = ref([])
 const errorMessage = ref('')
 const loading = ref(false)
+
+const pagination = ref({
+  currentPage: 1,
+  lastPage: 1,
+  perPage: 25,
+  total: 0,
+  from: 0,
+  to: 0
+})
 
 const filters = ref({
   search: '',
@@ -297,13 +320,41 @@ const loadStocks = async () => {
   try {
     loading.value = true
     errorMessage.value = ''
-    const params = { location_id: selectedLocationId.value }
+    const params = { 
+      location_id: selectedLocationId.value,
+      page: pagination.value.currentPage,
+      per_page: pagination.value.perPage
+    }
     if (filters.value.search) params.search = filters.value.search
     if (filters.value.category_id) params.category_id = filters.value.category_id
     
     const { data } = await api.get('/inventory-stocks', { params })
     console.log('Stocks loaded:', data)
-    stocks.value = Array.isArray(data) ? data : (data.data || [])
+    
+    // Handle both paginated and non-paginated responses
+    if (data.data && data.meta) {
+      // Paginated response
+      stocks.value = data.data
+      pagination.value = {
+        currentPage: data.meta.current_page,
+        lastPage: data.meta.last_page,
+        perPage: data.meta.per_page,
+        total: data.meta.total,
+        from: data.meta.from || 0,
+        to: data.meta.to || 0
+      }
+    } else {
+      // Non-paginated response (array)
+      stocks.value = Array.isArray(data) ? data : (data.data || [])
+      pagination.value = {
+        currentPage: 1,
+        lastPage: 1,
+        perPage: stocks.value.length,
+        total: stocks.value.length,
+        from: stocks.value.length > 0 ? 1 : 0,
+        to: stocks.value.length
+      }
+    }
   } catch (error) {
     console.error('Failed to load stocks:', error)
     errorMessage.value = 'Failed to load stocks: ' + (error.response?.data?.message || error.message)
@@ -311,6 +362,17 @@ const loadStocks = async () => {
   } finally {
     loading.value = false
   }
+}
+
+const handlePageChange = (page) => {
+  pagination.value.currentPage = page
+  loadStocks()
+}
+
+const handlePerPageChange = (perPage) => {
+  pagination.value.perPage = perPage
+  pagination.value.currentPage = 1
+  loadStocks()
 }
 
 const openAdjustModal = (stock) => {

@@ -66,7 +66,7 @@ class ProductController extends Controller
         
         $query->orderBy($sortBy, $sortOrder);
 
-        $products = $query->paginate($request->per_page ?? 50);
+        $products = $query->paginate($request->per_page ?? 25);
         
         // Map inventory stock to product's stock field for easier access
         if ($request->has('location_id')) {

@@ -98,7 +98,15 @@ export const useCartStore = defineStore('cart', () => {
       clearCart()
       return response.data
     } catch (error) {
-      console.error('Checkout error:', error.response?.data)
+      console.error('Checkout error:', error.response?.data || error)
+      
+      // Throw error with more details
+      if (error.response?.data?.message) {
+        const err = new Error(error.response.data.message)
+        err.response = error.response
+        throw err
+      }
+      
       throw error
     }
   }

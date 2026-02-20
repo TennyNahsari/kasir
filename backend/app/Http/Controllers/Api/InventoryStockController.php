@@ -49,7 +49,7 @@ class InventoryStockController extends Controller
             });
         }
 
-        $stocks = $query->orderBy('product_id')->paginate($request->per_page ?? 20);
+        $stocks = $query->orderBy('product_id')->paginate($request->per_page ?? 25);
 
         // Transform paginated data
         $stocks->getCollection()->transform(function ($stock) {

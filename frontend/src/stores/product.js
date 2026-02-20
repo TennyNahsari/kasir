@@ -6,6 +6,7 @@ export const useProductStore = defineStore('product', () => {
   const products = ref([])
   const categories = ref([])
   const loading = ref(false)
+  const productsPagination = ref(null)
 
   const fetchProducts = async (params = {}) => {
     loading.value = true
@@ -19,6 +20,17 @@ export const useProductStore = defineStore('product', () => {
       // Handle response with debug info
       if (response.data && typeof response.data === 'object' && 'data' in response.data) {
         products.value = response.data.data || []
+        // Store pagination info if available
+        if (response.data.meta || response.data.current_page) {
+          productsPagination.value = response.data.meta || {
+            current_page: response.data.current_page,
+            last_page: response.data.last_page,
+            per_page: response.data.per_page,
+            total: response.data.total,
+            from: response.data.from,
+            to: response.data.to
+          }
+        }
         return response.data // Return full response including debug info
       } else {
         products.value = params.location_id ? response.data : response.data.data
@@ -38,9 +50,13 @@ export const useProductStore = defineStore('product', () => {
   const fetchCategories = async () => {
     try {
       const response = await api.get('/categories')
+      console.log('Categories API response:', response.data)
       categories.value = response.data
+      console.log('Categories stored in store:', categories.value.length, 'items')
+      console.log('Category names:', categories.value.map(c => c.name))
       return response.data
     } catch (error) {
+      console.error('Error fetching categories:', error)
       throw error
     }
   }
@@ -130,6 +146,7 @@ export const useProductStore = defineStore('product', () => {
     products,
     categories,
     loading,
+    productsPagination,
     fetchProducts,
     fetchCategories,
     findByBarcode,

@@ -17,6 +17,7 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         $outletId = $request->outlet_id ?? auth()->user()->outlet_id;
+        $locationId = $request->location_id ?? auth()->user()->location_id;
         $dateFrom = $request->date_from ?? now()->startOfDay();
         $dateTo = $request->date_to ?? now()->endOfDay();
 
@@ -32,8 +33,8 @@ class DashboardController extends Controller
         // Payment method breakdown
         $paymentBreakdown = $this->getPaymentBreakdown($outletId, $dateFrom, $dateTo);
 
-        // Low stock products
-        $lowStockProducts = $this->getLowStockProducts();
+        // Low stock products (filtered by location type if FNB)
+        $lowStockProducts = $this->getLowStockProducts($locationId);
 
         return response()->json([
             'today' => $todayStats,
@@ -141,12 +142,34 @@ class DashboardController extends Controller
             ->get();
     }
 
-    private function getLowStockProducts($limit = 10)
+    private function getLowStockProducts($locationId = null, $limit = 10)
     {
-        return Product::with('category')
+        $query = Product::with('category')
             ->where('track_stock', true)
-            ->whereColumn('stock', '<=', 'min_stock')
-            ->orderBy('stock', 'asc')
+            ->whereColumn('stock', '<=', 'min_stock');
+        
+        // Check if location is FNB type
+        if ($locationId) {
+            $location = \App\Models\Location::find($locationId);
+            
+            if ($location && strtoupper($location->type) === 'FNB') {
+                // Filter only FNB categories
+                $query->whereHas('category', function($q) {
+                    $q->where(function($subQ) {
+                        $subQ->where('name', 'like', '%FNB%')
+                             ->orWhere('slug', 'like', '%fnb%')
+                             ->orWhere('slug', 'like', '%FNB%');
+                    });
+                });
+                
+                \Log::info('Dashboard: Filtering low stock for FNB location', [
+                    'location_id' => $locationId,
+                    'location_type' => $location->type
+                ]);
+            }
+        }
+        
+        return $query->orderBy('stock', 'asc')
             ->limit($limit)
             ->get();
     }

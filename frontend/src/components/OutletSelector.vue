@@ -39,50 +39,93 @@ const showSelector = computed(() => {
 })
 
 const handleOutletChange = () => {
-  console.log('Location changed to:', selectedLocationId.value)
+  console.log('Location changed to:', selectedLocationId.value, 'Type:', typeof selectedLocationId.value)
+  
+  // Convert to integer for consistency, handle empty string as null
+  const locationId = selectedLocationId.value && selectedLocationId.value !== '' 
+    ? parseInt(selectedLocationId.value) 
+    : null
+  
+  // Validate that the selected location exists in outlets list
+  if (locationId) {
+    const isValid = outlets.value.find(o => o.location_id === locationId)
+    if (!isValid) {
+      console.error('❌ Invalid location selected:', locationId)
+      alert('Location tidak valid. Silakan pilih location lain.')
+      selectedLocationId.value = ''
+      localStorage.removeItem('owner_selected_location')
+      return
+    }
+    console.log('✅ Valid location selected:', locationId, 'Outlet:', isValid.outlet_name)
+  }
   
   // Save to localStorage for persistence
-  if (selectedLocationId.value) {
-    localStorage.setItem('owner_selected_location', selectedLocationId.value)
+  if (locationId) {
+    localStorage.setItem('owner_selected_location', locationId)
   } else {
     localStorage.removeItem('owner_selected_location')
   }
   
-  // Emit event to parent (now sending location_id)
-  emit('outlet-changed', selectedLocationId.value)
+  console.log('Emitting location_id:', locationId, 'Type:', typeof locationId)
+  
+  // Emit event to parent (now sending location_id as integer or null)
+  emit('outlet-changed', locationId)
 }
 
 const loadOutlets = async () => {
   try {
     console.log('Loading outlets from locations...')
     // Load outlets that are registered in inventory locations
+    // Include both OUTLET and FNB type locations for POS
     const response = await api.get('/locations', { 
       params: { 
-        type: 'OUTLET',
-        is_active: true 
+        is_active: true,
+        per_page: 100  // Get all locations in one request
       } 
     })
     
     console.log('Locations response:', response.data)
     
+    // Handle paginated response (response.data.data) or direct array
+    const locationsData = response.data.data || response.data
+    
+    console.log('Locations data:', locationsData)
+    
     // Map locations to outlet format (with outlet info)
-    outlets.value = response.data
-      .filter(loc => loc.outlet) // Only locations that have outlet linked
+    // Filter: only locations with outlet_id (not null) AND type is OUTLET or FNB
+    outlets.value = locationsData
+      .filter(loc => {
+        const hasOutletId = loc.outlet_id != null && loc.outlet_id > 0
+        const isValidType = loc.type === 'OUTLET' || loc.type === 'FNB'
+        console.log(`Location ${loc.id} (${loc.name}): outlet_id=${loc.outlet_id}, hasOutletId=${hasOutletId}, isValidType=${isValidType}`)
+        return hasOutletId && isValidType
+      })
       .map(loc => ({
         location_id: loc.id,
         location_name: loc.name,
-        outlet_id: loc.outlet.id,
-        outlet_name: loc.outlet.name,
-        business_type: loc.outlet.business_type
+        outlet_id: loc.outlet_id,
+        outlet_name: loc.outlet?.name || loc.name,
+        business_type: loc.outlet?.business_type || 'retail',
+        location_type: loc.type
       }))
     
     console.log('Mapped outlets:', outlets.value)
+    console.log('Valid location IDs:', outlets.value.map(o => o.location_id))
     
-    // Load saved location from localStorage
+    // Load saved location from localStorage and validate it
     const savedLocation = localStorage.getItem('owner_selected_location')
-    if (savedLocation && outlets.value.find(o => o.location_id === parseInt(savedLocation))) {
-      selectedLocationId.value = savedLocation
-      emit('outlet-changed', savedLocation)
+    if (savedLocation) {
+      const savedLocationId = parseInt(savedLocation)
+      const isValidLocation = outlets.value.find(o => o.location_id === savedLocationId)
+      
+      if (isValidLocation) {
+        console.log('✅ Restored saved location:', savedLocationId)
+        selectedLocationId.value = savedLocation
+        emit('outlet-changed', savedLocationId)
+      } else {
+        console.warn('❌ Saved location', savedLocationId, 'is not valid anymore. Clearing...')
+        localStorage.removeItem('owner_selected_location')
+      }
     }
   } catch (error) {
     console.error('Failed to load outlets:', error)

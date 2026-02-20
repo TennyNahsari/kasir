@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # Single Container: Laravel + Nginx + PHP-FPM
+  app:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.single
+    container_name: kasir-app-single
+    restart: unless-stopped
+    ports:
+      - "80:80"    # Langsung expose port 80
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - DB_HOST=db
+      - DB_DATABASE=kasir_pos
+      - DB_USERNAME=root
+      - DB_PASSWORD=root_password
+    volumes:
+      # Optional: mount storage untuk persistent uploads
+      - ./backend/storage:/var/www/storage
+    networks:
+      - kasir-network
+    depends_on:
+      - db
+
+  # MySQL Database
+  db:
+    image: mysql:8.0
+    container_name: kasir-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: kasir_pos
+      MYSQL_ROOT_PASSWORD: root_password
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - kasir-network
+
+networks:
+  kasir-network:
+    driver: bridge
+
+volumes:
+  db_data:
+    driver: local

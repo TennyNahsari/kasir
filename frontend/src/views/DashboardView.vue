@@ -68,7 +68,12 @@
 
       <!-- Low Stock -->
       <div class="card">
-        <h3 class="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Stok Menipis</h3>
+        <div class="flex justify-between items-center mb-3 sm:mb-4">
+          <h3 class="text-base sm:text-lg font-semibold">Stok Menipis</h3>
+          <span v-if="isUserLocationFnb" class="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded font-medium">
+            🍽️ F&B Only
+          </span>
+        </div>
         <div class="space-y-2 sm:space-y-3">
           <div 
             v-for="product in stats?.low_stock_products" 
@@ -100,14 +105,21 @@ import { onMounted, ref, computed } from 'vue'
 import { useDashboardStore } from '@/stores/dashboard'
 import { useAuthStore } from '@/stores/auth'
 import OutletSelector from '@/components/OutletSelector.vue'
+import api from '@/services/api'
 
 const dashboardStore = useDashboardStore()
 const authStore = useAuthStore()
 const stats = ref(null)
 const currentOutletId = ref(null)
+const userLocation = ref(null)
 
 const isOwner = computed(() => authStore.user?.role === 'owner' && !authStore.user?.outlet_id)
 const showNoOutletWarning = computed(() => !currentOutletId.value && !stats.value)
+
+// Check if user location is FNB type
+const isUserLocationFnb = computed(() => {
+  return userLocation.value?.type?.toUpperCase() === 'FNB'
+})
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('id-ID', {
@@ -121,8 +133,19 @@ const loadDashboard = async (outletId) => {
   if (!outletId) return
   
   try {
-    const params = { outlet_id: outletId }
+    const params = { 
+      outlet_id: outletId 
+    }
+    
+    // Add location_id if user has one (for FNB filtering)
+    const userLocationId = authStore.user?.location_id
+    if (userLocationId) {
+      params.location_id = userLocationId
+      console.log('Loading dashboard with location_id:', userLocationId)
+    }
+    
     stats.value = await dashboardStore.fetchDashboard(params)
+    console.log('Dashboard stats loaded:', stats.value)
   } catch (error) {
     console.error('Failed to load dashboard:', error)
   }
@@ -137,6 +160,18 @@ const handleOutletChange = (outletId) => {
 
 onMounted(async () => {
   const userOutletId = authStore.user?.outlet_id
+  const userLocationId = authStore.user?.location_id
+  
+  // Load user location info if available (to check if FNB type)
+  if (userLocationId) {
+    try {
+      const response = await api.get(`/locations/${userLocationId}`)
+      userLocation.value = response.data
+      console.log('User location type:', userLocation.value?.type)
+    } catch (error) {
+      console.error('Failed to load user location:', error)
+    }
+  }
   
   if (userOutletId) {
     currentOutletId.value = userOutletId

@@ -381,11 +381,22 @@ const loadTransactions = async () => {
     if (dateTo.value) params.date_to = dateTo.value
     if (businessType.value) params.business_type = businessType.value
     if (paymentMethod.value) params.payment_method = paymentMethod.value
+    if (outletFilter.value) params.outlet_id = outletFilter.value
 
     const response = await api.get('/transactions', { params })
     transactions.value = response.data.data
   } catch (error) {
     console.error('Failed to load transactions:', error)
+  }
+}
+
+const loadOutlets = async () => {
+  if (!isOwner.value) return
+  try {
+    const response = await api.get('/outlets')
+    outlets.value = response.data
+  } catch (error) {
+    console.error('Failed to load outlets:', error)
   }
 }
 

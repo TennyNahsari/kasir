@@ -45,7 +45,7 @@
                 : 'bg-white text-gray-700 hover:bg-gray-100 shadow-sm'
             ]"
           >
-            {{ category.name }}
+            {{ formatCategoryName(category.name) }}
           </button>
           <button
             @click="selectedCategory = null"
@@ -269,6 +269,7 @@ const tableId = route.params.tableId
 const tableNumber = ref(tableId)
 
 const outlet = ref(null)
+const location = ref(null)
 const categories = ref([])
 const products = ref([])
 const selectedCategory = ref(null)
@@ -295,10 +296,23 @@ const formatNumber = (num) => {
   return new Intl.NumberFormat('id-ID').format(num)
 }
 
+const formatCategoryName = (categoryName) => {
+  // Remove 'FNB ' prefix from category names for cleaner display
+  return categoryName.replace(/^FNB\s+/i, '')
+}
+
 const loadData = async () => {
   try {
     loading.value = true
     error.value = null
+
+    // Load location info first
+    const locationRes = await api.get(`/public/locations/${locationId}`)
+    location.value = locationRes.data
+    console.log('Location loaded:', location.value)
+    
+    // Set outlet name from location
+    outlet.value = { name: location.value.name }
 
     // Load categories and products from public endpoints
     const [categoriesRes, productsRes] = await Promise.all([
@@ -306,14 +320,27 @@ const loadData = async () => {
       api.get('/public/products', { params: { location_id: locationId, per_page: 100 } })
     ])
 
-    // Filter categories: only Makanan FNB, Minuman FNB, Snack FNB
-    const allowedCategories = ['makanan-fnb', 'minuman-fnb', 'snack-fnb']
-    categories.value = categoriesRes.data.filter(cat => 
-      allowedCategories.includes(cat.slug.toLowerCase())
-    )
+    // Filter categories based on location type
+    const locationType = location.value.type?.toUpperCase()
+    console.log('Location type:', locationType)
+    
+    if (locationType === 'FNB') {
+      // For FNB locations, only show FNB categories
+      // Check for both 'fnb-makanan' style and 'makanan-fnb' style slugs
+      categories.value = categoriesRes.data.filter(cat => {
+        const slug = cat.slug.toLowerCase()
+        const name = cat.name.toUpperCase()
+        return slug.includes('fnb') || name.includes('FNB')
+      })
+      console.log('FNB categories filtered:', categories.value.map(c => c.name))
+    } else {
+      // For non-FNB locations, show all categories
+      categories.value = categoriesRes.data
+    }
     
     // Get allowed category IDs
     const allowedCategoryIds = categories.value.map(c => c.id)
+    console.log('Allowed category IDs:', allowedCategoryIds)
     
     // Handle paginated response and filter by allowed categories
     const productData = productsRes.data.data || productsRes.data
@@ -327,14 +354,13 @@ const loadData = async () => {
       // If product doesn't track stock (F&B), always show
       return !p.track_stock || p.stock > 0
     })
-
-    // Set outlet name from first product or default
-    if (products.value.length > 0) {
-      outlet.value = { name: 'Warung Makan Sedap' }
-    }
+    
+    console.log('Products loaded:', products.value.length, 'products')
+    console.log('Products:', products.value.map(p => ({ name: p.name, category: p.category?.name })))
   } catch (err) {
     error.value = 'Gagal memuat menu. Silakan refresh halaman.'
-    console.error(err)
+    console.error('Load error:', err)
+    console.error('Error response:', err.response?.data)
   } finally {
     loading.value = false
   }

@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  # Pure Octane - All in One
+  app:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.octane
+    container_name: kasir-octane
+    restart: unless-stopped
+    ports:
+      - "8000:8000"  # Akses: http://localhost:8000
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - DB_HOST=db
+      - DB_DATABASE=kasir_pos
+      - DB_USERNAME=root
+      - DB_PASSWORD=root_password
+    networks:
+      - kasir-network
+    depends_on:
+      - db
+
+  # MySQL Database
+  db:
+    image: mysql:8.0
+    container_name: kasir-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: kasir_pos
+      MYSQL_ROOT_PASSWORD: root_password
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - kasir-network
+
+networks:
+  kasir-network:
+    driver: bridge
+
+volumes:
+  db_data:
+    driver: local

@@ -27,6 +27,7 @@ Route::post('/login', [AuthController::class, 'login']);
 // Public routes for QR Order (customer)
 Route::get('/public/categories', [CategoryController::class, 'index']);
 Route::get('/public/products', [ProductController::class, 'index']);
+Route::get('/public/locations/{location}', [LocationController::class, 'show']);
 Route::post('/public/orders', [TransactionController::class, 'store']);
 
 // Public routes for Asset QR Code (anyone can scan)

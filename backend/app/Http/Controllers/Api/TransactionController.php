@@ -18,10 +18,16 @@ class TransactionController extends Controller
     {
         $query = Transaction::with(['user', 'outlet', 'items.product', 'table']);
 
-        // Filter by outlet
-        if ($request->has('outlet_id')) {
+        // Filter by location or outlet
+        if ($request->has('location_id')) {
+            $query->where('location_id', $request->location_id);
+        } elseif ($request->has('outlet_id')) {
             $query->where('outlet_id', $request->outlet_id);
+        } elseif (auth()->user()->location_id) {
+            // User with location_id: filter by location
+            $query->where('location_id', auth()->user()->location_id);
         } elseif (auth()->user()->outlet_id) {
+            // User with outlet_id: filter by outlet
             $query->where('outlet_id', auth()->user()->outlet_id);
         }
 
@@ -96,7 +102,7 @@ class TransactionController extends Controller
                 'table_id' => 'nullable|exists:tables,id',
             ]);
             
-            // If location_id is provided, convert to outlet_id
+            // If location_id is provided, get outlet_id from location
             if (isset($validated['location_id']) && !isset($validated['outlet_id'])) {
                 $location = \App\Models\Location::find($validated['location_id']);
                 if (!$location || !$location->outlet_id) {
@@ -106,7 +112,8 @@ class TransactionController extends Controller
                     ], 422);
                 }
                 $validated['outlet_id'] = $location->outlet_id;
-                \Log::info('Converted location_id to outlet_id', [
+                // Keep location_id for filtering
+                \Log::info('Got outlet_id from location', [
                     'location_id' => $validated['location_id'],
                     'outlet_id' => $validated['outlet_id']
                 ]);
@@ -155,6 +162,7 @@ class TransactionController extends Controller
             $transaction = Transaction::create([
                 'transaction_no' => Transaction::generateTransactionNo($validated['outlet_id']),
                 'outlet_id' => $validated['outlet_id'],
+                'location_id' => $validated['location_id'] ?? null, // Save location_id if provided
                 'business_type' => $businessType,
                 'user_id' => auth()->id() ?? null, // Allow null for public orders
                 'subtotal' => $subtotal,
