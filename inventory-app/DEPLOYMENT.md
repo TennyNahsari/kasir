@@ -270,7 +270,7 @@ LOG_CHANNEL=stack
 LOG_LEVEL=error
 
 # Database Configuration
-DB_CONNECTION=pgsql
+DB_CONNECTION=pgsql       # IMPORTANT: Must be 'pgsql' NOT 'psql'
 DB_HOST=127.0.0.1
 DB_PORT=5432
 DB_DATABASE=inventory_db
@@ -1006,7 +1006,29 @@ location / {
 }
 ```
 
-### Issue 5: Database Connection Error
+### Issue 5: Database Connection Not Configured
+
+**Error:** "Database connection [psql] not configured" atau "Database connection [pgsql] not configured"
+
+**Cause:** Typo di `.env` file - harus `pgsql` bukan `psql`
+
+**Solution:**
+```bash
+cd /var/www/inventory-backend/backend
+nano .env
+
+# PASTIKAN menggunakan 'pgsql' bukan 'psql'
+DB_CONNECTION=pgsql
+
+# Clear config cache
+php artisan config:clear
+php artisan config:cache
+
+# Test migration lagi
+php artisan migrate --force
+```
+
+### Issue 6: Database Connection Refused
 
 **Error:** "SQLSTATE[HY000] [2002] Connection refused"
 
@@ -1019,12 +1041,15 @@ sudo systemctl status postgresql
 cd /var/www/inventory-backend/backend
 nano .env
 
+# Verify PostgreSQL is listening
+sudo netstat -plnt | grep 5432
+
 # Test database connection
 php artisan tinker
 > DB::connection()->getPDO();
 ```
 
-### Issue 6: Laravel Storage Permission
+### Issue 7: Laravel Storage Permission
 
 **Error:** "The stream or file could not be opened: Permission denied"
 
@@ -1035,17 +1060,19 @@ sudo chown -R www-data:www-data storage bootstrap/cache
 sudo chmod -R 775 storage bootstrap/cache
 ```
 
-### Issue 7: SSL Certificate Error
+### Issue 8: SSL Certificate Error
 
 **Error:** "NET::ERR_CERT_AUTHORITY_INVALID"
 
 **Solution:**
 ```bash
-# Regenerate certificate
-sudo certbot --nginx -d inventory.yourdomain.com --force-renewal
+# Pastikan DNS sudah resolve
+nslookup api.yourdomain.com
+nslookup inventory.yourdomain.com
 
-# Restart Nginx
-sudo systemctl restart nginx
+# Regenerate certificate jika perlu
+sudo certbot --nginx -d api.yourdomain.com --force-renewal
+sudo certbot --nginx -d inventory.yourdomain.com --force-renewal
 ```
 
 
