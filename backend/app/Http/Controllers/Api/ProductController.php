@@ -25,16 +25,25 @@ class ProductController extends Controller
 
         $query = Product::with('category');
 
-        // Filter by product type
-        if ($request->has('type')) {
-            $query->where('type', $request->type);
-        }
-
-        // If location_id is provided, load stock for that location
+        // If location_id is provided, exclude the global stock column and use inventory_stocks instead
         if ($request->has('location_id')) {
+            // Select all columns EXCEPT the stock column to avoid confusion
+            $query->select([
+                'id', 'sku', 'barcode', 'name', 'description', 'category_id', 
+                'type', 'item_type', 'uom', 'track_inventory', 'cost_price', 
+                'selling_price', 'min_stock', 'min_stock_level', 'max_stock_level', 
+                'reorder_level', 'last_purchase_price', 'average_cost', 'track_stock', 
+                'image', 'is_active', 'created_at', 'updated_at', 'deleted_at'
+            ]);
+            
             $query->with(['inventoryStocks' => function($q) use ($request) {
                 $q->where('location_id', $request->location_id);
             }]);
+        }
+
+        // Filter by product type
+        if ($request->has('type')) {
+            $query->where('type', $request->type);
         }
 
         // Search
