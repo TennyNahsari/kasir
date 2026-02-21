@@ -1,23 +1,23 @@
 <template>
   <div v-if="showSelector" class="mb-4">
     <label class="block text-sm font-medium text-gray-700 mb-2">
-      <span class="text-primary-600">👤 Owner Mode:</span> Pilih Outlet
+      <span class="text-primary-600">👤 Owner/Inventory Mode:</span> Pilih Location (OUTLET/FNB)
     </label>
     <select 
       v-model="selectedLocationId" 
       @change="handleOutletChange"
       class="w-full md:w-64 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
     >
-      <option value="">-- Pilih Outlet --</option>
+      <option value="">-- Pilih Location --</option>
       <option v-for="outlet in outlets" :key="outlet.location_id" :value="outlet.location_id">
-        {{ outlet.location_name }} ({{ outlet.outlet_name }})
+        {{ outlet.location_name }} - [{{ outlet.location_type }}]
       </option>
     </select>
     <p v-if="!selectedLocationId" class="mt-1 text-xs text-gray-500">
-      Silakan pilih outlet untuk melihat data
+      Silakan pilih location untuk melihat produk & stocks
     </p>
     <p v-if="outlets.length === 0 && !selectedLocationId" class="mt-1 text-xs text-orange-600">
-      ⚠️ Tidak ada outlet yang terdaftar di inventory. Silakan daftarkan outlet di aplikasi inventory terlebih dahulu.
+      ⚠️ Tidak ada location OUTLET/FNB. Silakan buat location dengan type OUTLET atau FNB di aplikasi inventory.
     </p>
   </div>
 </template>
@@ -93,24 +93,25 @@ const loadOutlets = async () => {
     console.log('Locations data:', locationsData)
     
     // Map locations to outlet format (with outlet info)
-    // Filter: only locations with outlet_id (not null) AND type is OUTLET or FNB
+    // For POS: Show all locations with type OUTLET or FNB (regardless of outlet_id)
     const allLocations = locationsData.map(loc => ({
       location_id: loc.id,
       location_name: loc.name,
       outlet_id: loc.outlet_id,
-      outlet_name: loc.outlet?.name || loc.name,
-      business_type: loc.outlet?.business_type || 'retail',
+      outlet_name: loc.outlet?.name || 'No Outlet',
+      business_type: loc.outlet?.business_type || (loc.type === 'FNB' ? 'fnb' : 'retail'),
       location_type: loc.type,
-      hasOutletId: loc.outlet_id != null && loc.outlet_id > 0,
       isValidType: loc.type === 'OUTLET' || loc.type === 'FNB'
     }))
     
     console.log('All locations before filtering:', allLocations)
     
-    outlets.value = allLocations.filter(loc => loc.hasOutletId && loc.isValidType)
+    // Filter: Only OUTLET and FNB type locations (for POS app)
+    outlets.value = allLocations.filter(loc => loc.isValidType)
     
-    console.log('Mapped outlets:', outlets.value)
+    console.log('Filtered outlets for POS:', outlets.value)
     console.log('Valid location IDs:', outlets.value.map(o => o.location_id))
+    console.log('Location types:', outlets.value.map(o => ({ id: o.location_id, name: o.location_name, type: o.location_type })))
     
     // Load saved location from localStorage and validate it
     const savedLocation = localStorage.getItem('owner_selected_location')
