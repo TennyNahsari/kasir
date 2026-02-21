@@ -27,9 +27,9 @@ class InventoryTransferController extends Controller
             'approvedBy',
         ]);
 
-        // Authorization: owner sees all, non-owner sees transfers based on their assignment
+        // Authorization: owner and inventory see all, others see transfers based on their assignment
         $user = auth()->user();
-        if ($user->role !== 'owner') {
+        if (!in_array($user->role, ['owner', 'inventory'])) {
             if ($user->location_id) {
                 // User assigned to specific location - see transfers from/to their location
                 $query->where(function ($q) use ($user) {
@@ -71,11 +71,11 @@ class InventoryTransferController extends Controller
 
     public function store(Request $request)
     {
-        // Authorization: only owner and supervisor can create transfer
+        // Authorization: only owner, inventory, and supervisor can create transfer
         $user = auth()->user();
-        if (!in_array($user->role, ['owner', 'supervisor'])) {
+        if (!in_array($user->role, ['owner', 'inventory', 'supervisor'])) {
             return response()->json([
-                'message' => 'Access denied. Only Owner and Supervisor can create transfers.'
+                'message' => 'Access denied. Only Owner, Inventory, and Supervisor can create transfers.'
             ], 403);
         }
 
@@ -189,8 +189,8 @@ class InventoryTransferController extends Controller
     {
         $user = auth()->user();
         
-        // Authorization: owner can approve all, supervisor can only approve from their outlet
-        if ($user->role !== 'owner') {
+        // Authorization: owner and inventory can approve all, supervisor can only approve from their outlet
+        if (!in_array($user->role, ['owner', 'inventory'])) {
             $transfer->load('fromLocation');
             
             if ($user->role !== 'supervisor' || $user->outlet_id !== $transfer->fromLocation->outlet_id) {
@@ -215,8 +215,8 @@ class InventoryTransferController extends Controller
     {
         $user = auth()->user();
         
-        // Authorization: owner can receive all, supervisor can only receive to their outlet
-        if ($user->role !== 'owner') {
+        // Authorization: owner and inventory can receive all, supervisor can only receive to their outlet
+        if (!in_array($user->role, ['owner', 'inventory'])) {
             $transfer->load('toLocation');
             
             if ($user->role !== 'supervisor' || $user->outlet_id !== $transfer->toLocation->outlet_id) {

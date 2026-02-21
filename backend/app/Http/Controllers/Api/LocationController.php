@@ -13,9 +13,9 @@ class LocationController extends Controller
     {
         $query = Location::with('outlet');
 
-        // Authorization: owner sees all, non-owner sees locations based on their assignment
+        // Authorization: owner and inventory see all, others see locations based on their assignment
         $user = auth()->user();
-        if ($user->role !== 'owner') {
+        if (!in_array($user->role, ['owner', 'inventory'])) {
             if ($user->location_id) {
                 // User assigned to specific location - see only their location
                 $query->where('id', $user->location_id);

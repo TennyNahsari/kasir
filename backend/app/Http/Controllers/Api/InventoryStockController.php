@@ -22,9 +22,9 @@ class InventoryStockController extends Controller
     {
         $query = InventoryStock::with(['product.category', 'location']);
 
-        // Authorization: owner sees all, non-owner sees data based on their assignment
+        // Authorization: owner and inventory see all, others see data based on their assignment
         $user = auth()->user();
-        if ($user->role !== 'owner') {
+        if (!in_array($user->role, ['owner', 'inventory'])) {
             if ($user->location_id) {
                 // User assigned to specific location
                 $query->where('location_id', $user->location_id);
@@ -101,11 +101,11 @@ class InventoryStockController extends Controller
 
     public function adjust(Request $request)
     {
-        // Authorization: only owner and supervisor can adjust stock
+        // Authorization: only owner, inventory, and supervisor can adjust stock
         $user = auth()->user();
-        if (!in_array($user->role, ['owner', 'supervisor'])) {
+        if (!in_array($user->role, ['owner', 'inventory', 'supervisor'])) {
             return response()->json([
-                'message' => 'Access denied. Only Owner and Supervisor can adjust stock.'
+                'message' => 'Access denied. Only Owner, Inventory, and Supervisor can adjust stock.'
             ], 403);
         }
 
@@ -142,11 +142,11 @@ class InventoryStockController extends Controller
 
     public function store(Request $request)
     {
-        // Authorization: only owner and supervisor can add stock
+        // Authorization: only owner, inventory, and supervisor can add stock
         $user = auth()->user();
-        if (!in_array($user->role, ['owner', 'supervisor'])) {
+        if (!in_array($user->role, ['owner', 'inventory', 'supervisor'])) {
             return response()->json([
-                'message' => 'Access denied. Only Owner and Supervisor can add stock.'
+                'message' => 'Access denied. Only Owner, Inventory, and Supervisor can add stock.'
             ], 403);
         }
 
@@ -227,9 +227,9 @@ class InventoryStockController extends Controller
         $query = InventoryLedger::with(['product', 'location', 'createdBy'])
             ->orderBy('created_at', 'desc');
 
-        // Authorization: owner sees all, non-owner sees ledger based on their assignment
+        // Authorization: owner and inventory see all, others see ledger based on their assignment
         $user = auth()->user();
-        if ($user->role !== 'owner') {
+        if (!in_array($user->role, ['owner', 'inventory'])) {
             if ($user->location_id) {
                 // User assigned to specific location
                 $query->where('location_id', $user->location_id);

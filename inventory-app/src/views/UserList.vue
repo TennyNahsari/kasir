@@ -19,9 +19,8 @@
           <select v-model="filters.role" @change="loadUsers" class="input">
             <option value="">All Roles</option>
             <option value="owner">Owner</option>
+            <option value="inventory">Inventory</option>
             <option value="supervisor">Supervisor</option>
-            <option value="kasir">Kasir</option>
-            <option value="kitchen">Kitchen</option>
             <option value="staff">Staff</option>
           </select>
         </div>
@@ -71,9 +70,8 @@
                 <span class="px-2 py-1 text-xs font-semibold rounded-full"
                   :class="{
                     'bg-purple-100 text-purple-800': user.role === 'owner',
+                    'bg-indigo-100 text-indigo-800': user.role === 'inventory',
                     'bg-blue-100 text-blue-800': user.role === 'supervisor',
-                    'bg-green-100 text-green-800': user.role === 'kasir',
-                    'bg-orange-100 text-orange-800': user.role === 'kitchen',
                     'bg-gray-100 text-gray-800': user.role === 'staff'
                   }">
                   {{ user.role }}
@@ -134,9 +132,8 @@
             <select v-model="form.role" class="input" required>
               <option value="">-- Select Role --</option>
               <option value="owner">Owner</option>
+              <option value="inventory">Inventory</option>
               <option value="supervisor">Supervisor</option>
-              <option value="kasir">Kasir</option>
-              <option value="kitchen">Kitchen</option>
               <option value="staff">Staff</option>
             </select>
           </div>

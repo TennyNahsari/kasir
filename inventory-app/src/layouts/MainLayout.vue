@@ -274,15 +274,15 @@ const settingsNav = [
 const canAccessMasterProduct = computed(() => {
   const user = authStore.user
   if (!user) return false
-  return user.role === 'owner' || user.role === 'supervisor'
+  return user.role === 'owner' || user.role === 'inventory' || user.role === 'supervisor'
 })
 
 const hasSettingsAccess = computed(() => {
   const user = authStore.user
   if (!user) return false
   
-  // Owner always has access
-  if (user.role === 'owner') return true
+  // Owner and Inventory always have access
+  if (user.role === 'owner' || user.role === 'inventory') return true
   
   // Supervisor with inventory department has access
   if (user.role === 'supervisor' && 

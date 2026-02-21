@@ -25,9 +25,9 @@ class ServiceContractController extends Controller
         try {
             $query = ServiceContract::with(['product', 'vendor', 'location', 'goodsReceipt', 'purchaseOrder']);
 
-            // Authorization: owner sees all, non-owner sees data based on their assignment
+            // Authorization: owner and inventory see all, others see data based on their assignment
             $user = auth()->user();
-            if ($user->role !== 'owner') {
+            if (!in_array($user->role, ['owner', 'inventory'])) {
                 if ($user->location_id) {
                     // User assigned to specific location
                     $query->where('location_id', $user->location_id);
@@ -145,11 +145,11 @@ class ServiceContractController extends Controller
      */
     public function store(Request $request)
     {
-        // Authorization: only owner and supervisor can create service contract
+        // Authorization: only owner, inventory, and supervisor can create service contract
         $user = auth()->user();
-        if (!in_array($user->role, ['owner', 'supervisor'])) {
+        if (!in_array($user->role, ['owner', 'inventory', 'supervisor'])) {
             return response()->json([
-                'message' => 'Access denied. Only Owner and Supervisor can create service contracts.'
+                'message' => 'Access denied. Only Owner, Inventory, and Supervisor can create service contracts.'
             ], 403);
         }
 
