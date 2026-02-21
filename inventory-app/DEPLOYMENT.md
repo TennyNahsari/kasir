@@ -363,14 +363,19 @@ cd /var/www/inventory-frontend/inventory-app
 
 #### 5.4. Install Dependencies
 ```bash
+# JANGAN gunakan sudo!
 npm install
 ```
 
+**⚠️ PENTING:** Jangan gunakan `sudo npm install`! Ini akan menyebabkan vite permission error saat build.
+
 **Jika error `EACCES` permission:**
 ```bash
-# Fix npm permissions
+# Fix ownership dulu, baru install
 sudo chown -R $USER:$USER ~/.npm
 sudo chown -R $USER:$USER /var/www/inventory-frontend
+
+# Install TANPA sudo
 npm install
 ```
 
@@ -391,8 +396,11 @@ VITE_API_URL=https://api.yourdomain.com/api
 
 #### 5.6. Build for Production
 ```bash
+# JANGAN gunakan sudo!
 npm run build
 ```
+
+**⚠️ PENTING:** Jangan gunakan `sudo npm run build`! Bisa menyebabkan permission errors.
 
 **Output yang diharapkan:**
 ```
@@ -1075,21 +1083,7 @@ sudo certbot --nginx -d api.yourdomain.com --force-renewal
 sudo certbot --nginx -d inventory.yourdomain.com --force-renewal
 ```
 
-
-**Error:** "NET::ERR_CERT_AUTHORITY_INVALID"
-
-**Solution:**
-```bash
-# Pastikan DNS sudah resolve
-nslookup api.yourdomain.com
-nslookup inventory.yourdomain.com
-
-# Regenerate certificate jika perlu
-sudo certbot --nginx -d api.yourdomain.com --force-renewal
-sudo certbot --nginx -d inventory.yourdomain.com --force-renewal
-```
-
-### Issue 8: DNS Not Resolving
+### Issue 9: DNS Not Resolving
 
 **Solution:**
 ```bash
@@ -1101,7 +1095,7 @@ nslookup inventory.yourdomain.com
 # Tunggu DNS propagation (up to 48 hours, biasanya 5-30 menit)
 ```
 
-### Issue 9: Port 80/443 Not Accessible
+### Issue 10: Port 80/443 Not Accessible
 
 **Solution:**
 ```bash
@@ -1115,7 +1109,70 @@ sudo ufw allow 'Nginx Full'
 sudo netstat -tlnp | grep nginx
 ```
 
-### Issue 10: Blank Page / White Screen
+### Issue 11: Vite Permission Denied saat Build
+
+**Error:** "sh: 1: vite: Permission denied" atau "ls: cannot open directory '.': Permission denied"
+
+**Cause:** node_modules di-install dengan `sudo` sehingga owner menjadi `root:root`
+
+**Solution (Step-by-Step):**
+
+**Step 1: Fix ownership ke user Anda**
+```bash
+cd /var/www/kasir-web/inventory-app  # atau path aplikasi Anda
+
+# Ganti SELURUH ownership ke user Anda (inventory)
+sudo chown -R $USER:$USER /var/www/kasir-web/inventory-app
+sudo chown -R $USER:$USER ~/.npm
+
+# Verify ownership sudah benar
+ls -la node_modules/.bin/vite
+# Seharusnya: inventory inventory (bukan root root)
+```
+
+**Step 2: Reinstall node_modules (RECOMMENDED)**
+```bash
+cd /var/www/kasir-web/inventory-app
+
+# Hapus node_modules yang corrupt
+rm -rf node_modules package-lock.json
+
+# Install ulang (TANPA sudo!)
+npm install
+
+# Build
+npm run build
+```
+
+**Alternatif: Fix permissions saja (jika tidak mau reinstall)**
+```bash
+cd /var/www/kasir-web/inventory-app
+
+# Berikan execute permission
+chmod -R +x node_modules/.bin
+
+# Coba build lagi
+npm run build
+```
+
+**Step 3: Verify build berhasil**
+```bash
+# Check folder dist sudah ada
+ls -la dist/
+
+# Seharusnya ada:
+# - index.html
+# - assets/
+# - dll
+```
+
+**⚠️ PENTING:** 
+- **NEVER** use `sudo npm install` or `sudo npm run build`
+- Always run npm commands as regular user
+- Only use `sudo` for system operations (chown, service restart, etc.)
+- Jika Anda accidentally run `sudo npm install`, HARUS reinstall ulang tanpa sudo
+
+### Issue 12: Blank Page / White Screen
 
 **Cause:** Wrong API URL atau build error
 
