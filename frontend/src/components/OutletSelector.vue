@@ -94,21 +94,20 @@ const loadOutlets = async () => {
     
     // Map locations to outlet format (with outlet info)
     // Filter: only locations with outlet_id (not null) AND type is OUTLET or FNB
-    outlets.value = locationsData
-      .filter(loc => {
-        const hasOutletId = loc.outlet_id != null && loc.outlet_id > 0
-        const isValidType = loc.type === 'OUTLET' || loc.type === 'FNB'
-        console.log(`Location ${loc.id} (${loc.name}): outlet_id=${loc.outlet_id}, hasOutletId=${hasOutletId}, isValidType=${isValidType}`)
-        return hasOutletId && isValidType
-      })
-      .map(loc => ({
-        location_id: loc.id,
-        location_name: loc.name,
-        outlet_id: loc.outlet_id,
-        outlet_name: loc.outlet?.name || loc.name,
-        business_type: loc.outlet?.business_type || 'retail',
-        location_type: loc.type
-      }))
+    const allLocations = locationsData.map(loc => ({
+      location_id: loc.id,
+      location_name: loc.name,
+      outlet_id: loc.outlet_id,
+      outlet_name: loc.outlet?.name || loc.name,
+      business_type: loc.outlet?.business_type || 'retail',
+      location_type: loc.type,
+      hasOutletId: loc.outlet_id != null && loc.outlet_id > 0,
+      isValidType: loc.type === 'OUTLET' || loc.type === 'FNB'
+    }))
+    
+    console.log('All locations before filtering:', allLocations)
+    
+    outlets.value = allLocations.filter(loc => loc.hasOutletId && loc.isValidType)
     
     console.log('Mapped outlets:', outlets.value)
     console.log('Valid location IDs:', outlets.value.map(o => o.location_id))
