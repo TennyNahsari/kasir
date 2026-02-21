@@ -24,6 +24,14 @@ class AssetController extends Controller
     {
         $query = Asset::with(['product', 'location']);
 
+        // Authorization: non-owner users only see assets from their outlet
+        $user = auth()->user();
+        if ($user->role !== 'owner' && $user->outlet_id) {
+            $query->whereHas('location', function ($q) use ($user) {
+                $q->where('outlet_id', $user->outlet_id);
+            });
+        }
+
         // Filter by status
         if ($request->has('status')) {
             $query->where('status', $request->status);

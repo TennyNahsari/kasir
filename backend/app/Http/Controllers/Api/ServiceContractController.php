@@ -25,6 +25,14 @@ class ServiceContractController extends Controller
         try {
             $query = ServiceContract::with(['product', 'vendor', 'location', 'goodsReceipt', 'purchaseOrder']);
 
+            // Authorization: non-owner users only see contracts from their outlet
+            $user = auth()->user();
+            if ($user->role !== 'owner' && $user->outlet_id) {
+                $query->whereHas('location', function ($q) use ($user) {
+                    $q->where('outlet_id', $user->outlet_id);
+                });
+            }
+
             // Filter by status
             if ($request->has('status') && $request->status !== '') {
                 $query->where('status', $request->status);

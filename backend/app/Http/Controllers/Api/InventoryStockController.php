@@ -22,6 +22,14 @@ class InventoryStockController extends Controller
     {
         $query = InventoryStock::with(['product.category', 'location']);
 
+        // Authorization: non-owner users only see stocks from their outlet
+        $user = auth()->user();
+        if ($user->role !== 'owner' && $user->outlet_id) {
+            $query->whereHas('location', function ($q) use ($user) {
+                $q->where('outlet_id', $user->outlet_id);
+            });
+        }
+
         // Only filter by quantity > 0 if explicitly requested
         if ($request->has('hide_zero_stock') && $request->hide_zero_stock == true) {
             $query->where('quantity', '>', 0);
