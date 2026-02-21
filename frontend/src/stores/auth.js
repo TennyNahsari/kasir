@@ -29,6 +29,9 @@ export const useAuthStore = defineStore('auth', () => {
     loading.value = true
     try {
       const response = await api.post('/login', { email, password })
+      console.log('🔐 Login API Response:', response.data)
+      console.log('👤 User object:', response.data.user)
+      console.log('🎭 User role:', response.data.user?.role)
       user.value = response.data.user
       initialized.value = true
       return true
