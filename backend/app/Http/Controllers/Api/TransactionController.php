@@ -105,22 +105,41 @@ class TransactionController extends Controller
             // If location_id is provided, get outlet_id from location
             if (isset($validated['location_id']) && !isset($validated['outlet_id'])) {
                 $location = \App\Models\Location::find($validated['location_id']);
-                if (!$location || !$location->outlet_id) {
+                
+                if (!$location) {
                     return response()->json([
-                        'message' => 'Location does not have an associated outlet',
+                        'message' => 'Location not found',
                         'location_id' => $validated['location_id']
                     ], 422);
                 }
-                $validated['outlet_id'] = $location->outlet_id;
-                // Keep location_id for filtering
-                \Log::info('Got outlet_id from location', [
-                    'location_id' => $validated['location_id'],
-                    'outlet_id' => $validated['outlet_id']
-                ]);
+                
+                // Check if location type is valid for POS (OUTLET or FNB)
+                if (!in_array($location->type, ['OUTLET', 'FNB'])) {
+                    return response()->json([
+                        'message' => 'Invalid location type for POS. Only OUTLET and FNB locations are allowed.',
+                        'location_type' => $location->type
+                    ], 422);
+                }
+                
+                // If location has outlet_id, use it
+                if ($location->outlet_id) {
+                    $validated['outlet_id'] = $location->outlet_id;
+                    \Log::info('Got outlet_id from location', [
+                        'location_id' => $validated['location_id'],
+                        'outlet_id' => $validated['outlet_id']
+                    ]);
+                } else {
+                    // Location doesn't have outlet_id, but it's OK for OUTLET/FNB type
+                    // We'll use location_id directly
+                    \Log::info('Location has no outlet_id, using location_id directly', [
+                        'location_id' => $validated['location_id'],
+                        'location_type' => $location->type
+                    ]);
+                }
             }
             
-            // Ensure outlet_id is set
-            if (!isset($validated['outlet_id'])) {
+            // Ensure at least location_id or outlet_id is set
+            if (!isset($validated['outlet_id']) && !isset($validated['location_id'])) {
                 return response()->json([
                     'message' => 'Either outlet_id or location_id must be provided'
                 ], 422);
@@ -148,20 +167,37 @@ class TransactionController extends Controller
             $changeAmount = $paidAmount ? ($paidAmount - $total) : null;
 
             // Get outlet to determine business_type
-            $outlet = \App\Models\Outlet::find($validated['outlet_id']);
-            $businessType = $outlet ? $outlet->business_type : 'retail';
+            // If outlet_id is available, use it; otherwise infer from location
+            $outlet = null;
+            $businessType = 'retail'; // default
+            $outletIdForTransaction = $validated['outlet_id'] ?? null;
+            
+            if ($outletIdForTransaction) {
+                $outlet = \App\Models\Outlet::find($outletIdForTransaction);
+                $businessType = $outlet ? $outlet->business_type : 'retail';
+            } elseif (isset($validated['location_id'])) {
+                // No outlet_id, use location to determine business type
+                $location = \App\Models\Location::find($validated['location_id']);
+                $businessType = ($location && $location->type === 'FNB') ? 'fnb' : 'retail';
+            }
             
             \Log::info('Creating transaction', [
-                'outlet_id' => $validated['outlet_id'],
-                'outlet_name' => $outlet ? $outlet->name : 'Unknown',
+                'outlet_id' => $outletIdForTransaction,
+                'location_id' => $validated['location_id'] ?? null,
+                'outlet_name' => $outlet ? $outlet->name : 'N/A',
                 'business_type' => $businessType,
                 'table_id' => $validated['table_id'] ?? null
             ]);
 
+            // Generate transaction number
+            $transactionNo = $outletIdForTransaction 
+                ? Transaction::generateTransactionNo($outletIdForTransaction)
+                : 'TRX-' . now()->format('YmdHis') . '-' . rand(100, 999);
+
             // Create transaction
             $transaction = Transaction::create([
-                'transaction_no' => Transaction::generateTransactionNo($validated['outlet_id']),
-                'outlet_id' => $validated['outlet_id'],
+                'transaction_no' => $transactionNo,
+                'outlet_id' => $outletIdForTransaction,
                 'location_id' => $validated['location_id'] ?? null, // Save location_id if provided
                 'business_type' => $businessType,
                 'user_id' => auth()->id() ?? null, // Allow null for public orders
