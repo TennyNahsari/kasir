@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import api from '@/services/api'
 
 const router = createRouter({
   history: createWebHistory('/kasir'),
@@ -99,15 +100,60 @@ router.beforeEach(async (to, from, next) => {
     return next('/login')
   }
   
-  // Kasir App Access Control: Only owner and users with location assignment
+  // Kasir App Access Control: Owner/Inventory or users with OUTLET/FNB location assignment
   if (requiresAuth && isAuthenticated) {
     const user = authStore.user
-    const hasLocation = user?.outlet_id || user?.location_id
+    const isAdminRole = user?.role === 'owner' || user?.role === 'inventory'
     
-    if (user?.role !== 'owner' && !hasLocation) {
-      alert('Access Denied: Only Owner and users with location assignment can access this application')
-      await authStore.logout()
-      return next('/login')
+    // Owner/Inventory have full access
+    if (isAdminRole) {
+      // Continue to role check
+    } else {
+      // Non-admin users must have location assignment with type OUTLET or FNB
+      const hasLocation = user?.outlet_id || user?.location_id
+      
+      if (!hasLocation) {
+        alert('Access Denied: Only Owner/Inventory and users with location assignment can access this application')
+        await authStore.logout()
+        return next('/login')
+      }
+      
+      // Validate location type (OUTLET or FNB only)
+      try {
+        let isValidLocationType = false
+        
+        if (user.location_id) {
+          // User assigned to specific location - check its type
+          const locationResponse = await api.get(`/locations/${user.location_id}`)
+          const locationType = locationResponse.data?.type?.toUpperCase()
+          isValidLocationType = locationType === 'OUTLET' || locationType === 'FNB'
+          
+          if (!isValidLocationType) {
+            alert(`Access Denied: This POS application is only for OUTLET and FNB locations.\n\nYour location type: ${locationType}\n\nPlease use the Inventory app instead.`)
+            await authStore.logout()
+            return next('/login')
+          }
+        } else if (user.outlet_id) {
+          // User assigned to outlet - check if outlet has OUTLET or FNB type locations
+          const locationsResponse = await api.get('/locations', {
+            params: { outlet_id: user.outlet_id, is_active: true }
+          })
+          
+          const validLocations = locationsResponse.data?.filter(loc => 
+            loc.type === 'OUTLET' || loc.type === 'FNB'
+          ) || []
+          
+          if (validLocations.length === 0) {
+            alert('Access Denied: This POS application is only for OUTLET and FNB locations.\n\nYour outlet has no valid POS locations.\n\nPlease use the Inventory app instead.')
+            await authStore.logout()
+            return next('/login')
+          }
+        }
+      } catch (error) {
+        console.error('Failed to validate location type:', error)
+        alert('Failed to validate location access. Please try again.')
+        return next('/login')
+      }
     }
   }
   
