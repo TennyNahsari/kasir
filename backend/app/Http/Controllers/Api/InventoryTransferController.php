@@ -154,6 +154,19 @@ class InventoryTransferController extends Controller
 
     public function approve(InventoryTransfer $transfer)
     {
+        $user = auth()->user();
+        
+        // Authorization: owner can approve all, supervisor can only approve from their outlet
+        if ($user->role !== 'owner') {
+            $transfer->load('fromLocation');
+            
+            if ($user->role !== 'supervisor' || $user->outlet_id !== $transfer->fromLocation->outlet_id) {
+                return response()->json([
+                    'message' => 'You are not authorized to approve this transfer. Only supervisors from the source outlet can approve.'
+                ], 403);
+            }
+        }
+
         try {
             $transfer = $this->transferService->approveTransfer(
                 $transfer->id,
@@ -167,6 +180,19 @@ class InventoryTransferController extends Controller
 
     public function receive(Request $request, InventoryTransfer $transfer)
     {
+        $user = auth()->user();
+        
+        // Authorization: owner can receive all, supervisor can only receive to their outlet
+        if ($user->role !== 'owner') {
+            $transfer->load('toLocation');
+            
+            if ($user->role !== 'supervisor' || $user->outlet_id !== $transfer->toLocation->outlet_id) {
+                return response()->json([
+                    'message' => 'You are not authorized to receive this transfer. Only supervisors from the destination outlet can receive.'
+                ], 403);
+            }
+        }
+
         $validator = Validator::make($request->all(), [
             'items' => 'required|array|min:1',
             'items.*.id' => 'required|exists:inventory_transfer_items,id',
