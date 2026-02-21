@@ -2,6 +2,9 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/services/api'
 
+// Track if we already validated access for current session
+let accessValidated = false
+
 const router = createRouter({
   history: createWebHistory('/kasir'),
   routes: [
@@ -101,12 +104,12 @@ router.beforeEach(async (to, from, next) => {
   }
   
   // Kasir App Access Control: Owner/Inventory or users with OUTLET/FNB location assignment
-  // SKIP THIS CHECK for guest/login routes
-  if (requiresAuth && isAuthenticated && authStore.user && !isGuestRoute) {
+  // SKIP THIS CHECK for guest/login routes, public routes, or if already validated
+  if (requiresAuth && isAuthenticated && authStore.user && !isGuestRoute && !isPublicRoute && !accessValidated) {
     const user = authStore.user
     const isAdminRole = user?.role === 'owner' || user?.role === 'inventory'
     
-    // DEBUG: Log user data
+    // DEBUG: Log user data (only on first check)
     console.log('🔍 Router Guard - User Data:', {
       role: user?.role,
       roleType: typeof user?.role,
@@ -119,6 +122,7 @@ router.beforeEach(async (to, from, next) => {
     // Owner/Inventory have full access
     if (isAdminRole) {
       console.log('✅ Admin role detected - allowing access')
+      accessValidated = true // Mark as validated
       // Continue to role check
     } else {
       console.log('⚠️ Non-admin user - checking location assignment')
@@ -128,11 +132,12 @@ router.beforeEach(async (to, from, next) => {
       if (!hasLocation) {
         console.error('❌ No location assignment found')
         alert('Access Denied: Only Owner/Inventory and users with location assignment can access this application')
+        accessValidated = false // Reset flag
         await authStore.logout()
         return next('/login')
       }
       
-      // Validate location type (OUTLET or FNB only)
+      // Validate location type (OUTLET or FNB only) - ONLY ONCE
       try {
         let isValidLocationType = false
         
@@ -144,6 +149,7 @@ router.beforeEach(async (to, from, next) => {
           
           if (!isValidLocationType) {
             alert(`Access Denied: This POS application is only for OUTLET and FNB locations.\n\nYour location type: ${locationType}\n\nPlease use the Inventory app instead.`)
+            accessValidated = false
             await authStore.logout()
             return next('/login')
           }
@@ -159,14 +165,21 @@ router.beforeEach(async (to, from, next) => {
           
           if (validLocations.length === 0) {
             alert('Access Denied: This POS application is only for OUTLET and FNB locations.\n\nYour outlet has no valid POS locations.\n\nPlease use the Inventory app instead.')
+            accessValidated = false
             await authStore.logout()
             return next('/login')
           }
         }
+        
+        // Mark as validated after successful check
+        accessValidated = true
+        console.log('✅ Access validated successfully')
       } catch (error) {
         console.error('Failed to validate location type:', error)
-        alert('Failed to validate location access. Please try again.')
-        return next('/login')
+        // Don't block on API errors, just log and continue
+        // User might be offline temporarily
+        console.warn('⚠️ Could not validate access, allowing access anyway')
+        accessValidated = true // Allow access even if validation fails
       }
     }
   }

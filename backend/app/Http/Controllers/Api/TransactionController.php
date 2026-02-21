@@ -235,8 +235,8 @@ class TransactionController extends Controller
                 // Use location_id from request if available, otherwise lookup location for outlet
                 $locationId = $validated['location_id'] ?? null;
                 
-                if (!$locationId) {
-                    // Find location for this outlet
+                if (!$locationId && isset($validated['outlet_id'])) {
+                    // Find location for this outlet (only if outlet_id exists)
                     $location = \App\Models\Location::where('outlet_id', $validated['outlet_id'])
                         ->where('type', 'OUTLET')
                         ->first();
@@ -264,22 +264,25 @@ class TransactionController extends Controller
                         ]);
                     }
                 } else {
-                    \Log::error('No location_id found for outlet', [
-                        'outlet_id' => $validated['outlet_id']
+                    \Log::error('No location_id found', [
+                        'outlet_id' => $validated['outlet_id'] ?? null,
+                        'location_id' => $validated['location_id'] ?? null
                     ]);
                 }
             }
 
-            // Record cash flow
-            CashFlow::create([
-                'outlet_id' => $validated['outlet_id'],
-                'user_id' => auth()->id(),
-                'type' => 'in',
-                'amount' => $total,
-                'category' => 'penjualan',
-                'description' => "Transaksi #{$transaction->transaction_no}",
-                'transaction_id' => $transaction->id,
-            ]);
+            // Record cash flow (only if we have outlet_id)
+            if ($outletIdForTransaction) {
+                CashFlow::create([
+                    'outlet_id' => $outletIdForTransaction,
+                    'user_id' => auth()->id(),
+                    'type' => 'in',
+                    'amount' => $total,
+                    'category' => 'penjualan',
+                    'description' => "Transaksi #{$transaction->transaction_no}",
+                    'transaction_id' => $transaction->id,
+                ]);
+            }
 
             // Log activity
             ActivityLog::log('create_transaction', $transaction, [
