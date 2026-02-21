@@ -653,9 +653,16 @@ const loadLocations = async () => {
 
 const loadServiceProducts = async () => {
   try {
-    const { data } = await api.get('/products', { params: { type: 'SERVICE', per_page: 100 } })
+    const { data } = await api.get('/products', { 
+      params: { 
+        type: 'SERVICE', 
+        per_page: 500 
+      } 
+    })
     serviceProducts.value = data.data || []
     filteredProducts.value = serviceProducts.value
+    console.log('Loaded service products:', serviceProducts.value.length, 'items')
+    console.log('Product types:', serviceProducts.value.map(p => p.type))
   } catch (error) {
     console.error('Failed to load service products:', error)
   }

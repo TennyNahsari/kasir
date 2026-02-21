@@ -698,10 +698,15 @@ const loadUsers = async () => {
 const loadAssetProducts = async () => {
   try {
     const response = await api.get('/products', {
-      params: { type: 'ASSET' }
+      params: { 
+        type: 'ASSET',
+        per_page: 500
+      }
     })
     assetProducts.value = response.data.data || response.data
     filteredProducts.value = assetProducts.value
+    console.log('Loaded asset products:', assetProducts.value.length, 'items')
+    console.log('Product types:', assetProducts.value.map(p => p.type))
   } catch (error) {
     console.error('Failed to load asset products:', error)
   }
