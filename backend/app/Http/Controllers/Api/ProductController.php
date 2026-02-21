@@ -73,7 +73,19 @@ class ProductController extends Controller
         
         $query->orderBy($sortBy, $sortOrder);
 
+        // Debug: Log SQL query
+        \Log::info('ProductController SQL query', [
+            'sql' => $query->toSql(),
+            'bindings' => $query->getBindings()
+        ]);
+
         $products = $query->paginate($request->per_page ?? 25);
+        
+        // Debug: Log result count and types
+        \Log::info('ProductController::index result', [
+            'total' => $products->total(),
+            'types' => $products->pluck('type')->unique()->values()
+        ]);
         
         // Map inventory stock to product's stock field for easier access
         if ($request->has('location_id')) {
