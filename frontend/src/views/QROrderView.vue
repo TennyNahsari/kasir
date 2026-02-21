@@ -297,8 +297,11 @@ const formatNumber = (num) => {
 }
 
 const formatCategoryName = (categoryName) => {
-  // Remove 'FNB ' prefix from category names for cleaner display
-  return categoryName.replace(/^FNB\s+/i, '')
+  // Simplify FNB category names
+  // "Makanan FNB" -> "Makanan"
+  // "Minuman FNB" -> "Minuman"
+  // "Snack FNB" -> "Snack"
+  return categoryName.replace(/\s*FNB\s*/gi, '').trim()
 }
 
 const loadData = async () => {
@@ -326,11 +329,14 @@ const loadData = async () => {
     
     if (locationType === 'FNB') {
       // For FNB locations, only show FNB categories
-      // Check for both 'fnb-makanan' style and 'makanan-fnb' style slugs
       categories.value = categoriesRes.data.filter(cat => {
-        const slug = cat.slug.toLowerCase()
         const name = cat.name.toUpperCase()
-        return slug.includes('fnb') || name.includes('FNB')
+        // Only show: Makanan FNB, Minuman FNB, Snack FNB
+        return name.includes('FNB') && (
+          name.includes('MAKANAN') || 
+          name.includes('MINUMAN') || 
+          name.includes('SNACK')
+        )
       })
       console.log('FNB categories filtered:', categories.value.map(c => c.name))
     } else {
