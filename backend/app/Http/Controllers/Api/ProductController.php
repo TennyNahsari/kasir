@@ -235,36 +235,35 @@ class ProductController extends Controller
 
     public function getByLocation(Request $request)
     {
-        // Validate request parameters
-        $validated = $request->validate([
-            'location_id' => 'required|integer|exists:locations,id',
-            'is_active' => 'sometimes|in:true,false,1,0' // Accept string "true"/"false" or 1/0
-        ]);
+        // Get location_id from query params and validate
+        $locationId = $request->query('location_id');
         
-        $locationId = $validated['location_id'];
+        if (!$locationId) {
+            \Log::warning('location_id missing from request', [
+                'all_input' => $request->all(),
+                'query_params' => $request->query()
+            ]);
+            return response()->json([
+                'message' => 'location_id is required',
+                'received_params' => $request->query()
+            ], 400);
+        }
+        
+        // Validate location exists
+        $location = \App\Models\Location::find($locationId);
+        if (!$location) {
+            return response()->json([
+                'message' => 'Location not found',
+                'location_id' => $locationId
+            ], 404);
+        }
         
         \Log::info('getByLocation called', [
             'location_id' => $locationId,
             'all_query_params' => $request->query(),
-            'validated' => $validated
+            'location_name' => $location->name,
+            'location_type' => $location->type
         ]);
-
-        // Get location info for debugging
-        $location = \App\Models\Location::find($locationId);
-        
-        \Log::info('Location lookup', [
-            'location_id' => $locationId,
-            'location_found' => $location ? true : false,
-            'location_name' => $location?->name,
-            'location_type' => $location?->type
-        ]);
-        
-        if (!$location) {
-            return response()->json([
-                'message' => 'Location not found.',
-                'location_id' => $locationId
-            ], 404);
-        }
 
         // Authorization: Check if user can access this location
         $user = auth()->user();
