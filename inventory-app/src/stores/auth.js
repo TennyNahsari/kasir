@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import api from '@/services/api'
+import axios from 'axios'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
@@ -28,10 +29,10 @@ export const useAuthStore = defineStore('auth', () => {
   const login = async (email, password) => {
     loading.value = true
     try {
-      // Get CSRF cookie - use axios with withCredentials for consistent session
-      await api.get('https://tazkia-inv.duckdns.org/sanctum/csrf-cookie')
+      // Get CSRF cookie - use plain axios to avoid baseURL issue
+      await axios.get('/sanctum/csrf-cookie', { withCredentials: true })
       
-      // Then login
+      // Then login using api instance (which has baseURL /api)
       const response = await api.post('/login', { email, password })
       user.value = response.data.user
       initialized.value = true
