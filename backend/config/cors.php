@@ -14,6 +14,7 @@ return [
         'http://127.0.0.1:5174',
         'http://127.0.0.1:5175',
         'http://127.0.0.1:5176',
+        'https://tazkia-inv.duckdns.org',
     ],
     'allowed_origins_patterns' => [],
     'allowed_headers' => ['*'],
