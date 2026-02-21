@@ -238,7 +238,7 @@ class ProductController extends Controller
         // Validate request parameters
         $validated = $request->validate([
             'location_id' => 'required|integer|exists:locations,id',
-            'is_active' => 'sometimes|boolean'
+            'is_active' => 'sometimes|in:true,false,1,0' // Accept string "true"/"false" or 1/0
         ]);
         
         $locationId = $validated['location_id'];
