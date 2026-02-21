@@ -358,15 +358,35 @@ const loadData = async () => {
     
     // Handle paginated response and filter by allowed categories
     const productData = productsRes.data.data || productsRes.data
+    console.log('All products before filtering:', productData.length)
+    console.log('All products data:', productData.map(p => ({
+      name: p.name,
+      category_id: p.category_id,
+      stock: p.stock,
+      track_stock: p.track_stock,
+      inventoryStocks: p.inventoryStocks,
+      is_active: p.is_active
+    })))
+    
     products.value = productData.filter(p => {
       // Only show active products from allowed categories
       if (!p.is_active || !allowedCategoryIds.includes(p.category_id)) {
+        console.log('Filtered out (inactive or wrong category):', p.name)
         return false
       }
       
-      // If product tracks stock, check stock > 0
-      // If product doesn't track stock (F&B), always show
-      return !p.track_stock || p.stock > 0
+      // IMPORTANT: Only show products that have inventory stock for this location
+      // Check if product has inventoryStocks array and it has quantity > 0
+      const hasStock = p.inventoryStocks && p.inventoryStocks.length > 0 && p.inventoryStocks[0].quantity > 0
+      
+      if (!hasStock) {
+        console.log('Filtered out (no stock for this location):', p.name, {
+          inventoryStocks: p.inventoryStocks,
+          stock: p.stock
+        })
+      }
+      
+      return hasStock
     })
     
     console.log('Products loaded:', products.value.length, 'products')
