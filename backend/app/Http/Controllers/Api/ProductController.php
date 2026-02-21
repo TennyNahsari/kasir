@@ -15,7 +15,12 @@ class ProductController extends Controller
         \Log::info('ProductController::index called', [
             'type' => $request->type,
             'search' => $request->search,
-            'all_params' => $request->all()
+            'per_page' => $request->per_page,
+            'all_params' => $request->all(),
+            'query_params' => $request->query(),
+            'input_all' => $request->input(),
+            'url' => $request->fullUrl(),
+            'query_string' => $request->getQueryString()
         ]);
 
         $query = Product::with('category');
