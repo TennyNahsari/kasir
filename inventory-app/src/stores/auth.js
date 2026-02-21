@@ -28,8 +28,8 @@ export const useAuthStore = defineStore('auth', () => {
   const login = async (email, password) => {
     loading.value = true
     try {
-      // Get CSRF cookie using native fetch (same session guaranteed)
-      await fetch('/sanctum/csrf-cookie', { credentials: 'include' })
+      // Get CSRF cookie - use axios with withCredentials for consistent session
+      await api.get('https://tazkia-inv.duckdns.org/sanctum/csrf-cookie')
       
       // Then login
       const response = await api.post('/login', { email, password })
