@@ -94,11 +94,26 @@ class ProductController extends Controller
         
         // Map inventory stock to product's stock field for easier access
         if ($request->has('location_id')) {
-            $products->getCollection()->transform(function ($product) {
+            $products->getCollection()->transform(function ($product) use ($request) {
                 if ($product->inventoryStocks->isNotEmpty()) {
-                    $product->stock = $product->inventoryStocks->first()->quantity;
+                    $inventoryStock = $product->inventoryStocks->first();
+                    $product->stock = $inventoryStock->quantity;
+                    
+                    // Debug logging
+                    \Log::info('Product stock mapping', [
+                        'product_id' => $product->id,
+                        'product_name' => $product->name,
+                        'location_id' => $request->location_id,
+                        'inventory_stock_quantity' => $inventoryStock->quantity,
+                        'track_stock' => $product->track_stock
+                    ]);
                 } else {
                     $product->stock = 0;
+                    \Log::info('Product has no inventory stock', [
+                        'product_id' => $product->id,
+                        'product_name' => $product->name,
+                        'location_id' => $request->location_id
+                    ]);
                 }
                 return $product;
             });

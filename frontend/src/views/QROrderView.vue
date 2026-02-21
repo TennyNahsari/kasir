@@ -314,6 +314,14 @@ const loadData = async () => {
     location.value = locationRes.data
     console.log('Location loaded:', location.value)
     
+    // Validate location type - only allow FNB locations
+    const locationType = location.value.type?.toUpperCase()
+    if (locationType !== 'FNB') {
+      error.value = 'QR Order hanya tersedia untuk lokasi FNB (Food & Beverage). Lokasi ini bertipe: ' + (location.value.type || 'tidak diketahui')
+      loading.value = false
+      return
+    }
+    
     // Set outlet name from location
     outlet.value = { name: location.value.name }
 
@@ -322,11 +330,17 @@ const loadData = async () => {
       api.get('/public/categories'),
       api.get('/public/products', { params: { location_id: locationId, per_page: 100 } })
     ])
-
-    // Filter categories based on location type
-    const locationType = location.value.type?.toUpperCase()
-    console.log('Location type:', locationType)
     
+    // Debug: Log products response to check stock values
+    console.log('Products API response:', productsRes.data)
+    console.log('Sample product stocks:', productsRes.data.data?.slice(0, 3).map(p => ({
+      name: p.name,
+      stock: p.stock,
+      track_stock: p.track_stock,
+      inventoryStocks: p.inventoryStocks
+    })))
+
+    // Filter categories for FNB locations
     if (locationType === 'FNB') {
       // For FNB locations, only show FNB categories
       categories.value = categoriesRes.data.filter(cat => {
@@ -339,10 +353,6 @@ const loadData = async () => {
         )
       })
       console.log('FNB categories filtered:', categories.value.map(c => c.name))
-    } else {
-      // For non-FNB locations, show all categories
-      categories.value = categoriesRes.data
-    }
     
     // Get allowed category IDs
     const allowedCategoryIds = categories.value.map(c => c.id)
@@ -362,7 +372,13 @@ const loadData = async () => {
     })
     
     console.log('Products loaded:', products.value.length, 'products')
-    console.log('Products:', products.value.map(p => ({ name: p.name, category: p.category?.name })))
+    console.log('Products with stock info:', products.value.map(p => ({
+      name: p.name,
+      category: p.category?.name,
+      track_stock: p.track_stock,
+      stock: p.stock,
+      available: !p.track_stock || p.stock > 0
+    })))
   } catch (err) {
     error.value = 'Gagal memuat menu. Silakan refresh halaman.'
     console.error('Load error:', err)
