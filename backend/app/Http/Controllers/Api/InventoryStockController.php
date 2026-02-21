@@ -22,18 +22,10 @@ class InventoryStockController extends Controller
     {
         $query = InventoryStock::with(['product.category', 'location']);
 
-        // Authorization: non-owner users have restricted view
+        // Authorization: owner sees all, non-owner only sees data at their assigned location
         $user = auth()->user();
-        if ($user->role !== 'owner') {
-            if ($user->outlet_id) {
-                // User with outlet_id: see only stocks from their outlet
-                $query->whereHas('location', function ($q) use ($user) {
-                    $q->where('outlet_id', $user->outlet_id);
-                });
-            } elseif ($user->location_id) {
-                // User with location_id (DEPARTMENT/WAREHOUSE/FNB): see only stocks at their specific location
-                $query->where('location_id', $user->location_id);
-            }
+        if ($user->role !== 'owner' && $user->location_id) {
+            $query->where('location_id', $user->location_id);
         }
 
         // Only filter by quantity > 0 if explicitly requested
@@ -223,6 +215,12 @@ class InventoryStockController extends Controller
     {
         $query = InventoryLedger::with(['product', 'location', 'createdBy'])
             ->orderBy('created_at', 'desc');
+
+        // Authorization: owner sees all, non-owner only sees ledger at their assigned location
+        $user = auth()->user();
+        if ($user->role !== 'owner' && $user->location_id) {
+            $query->where('location_id', $user->location_id);
+        }
 
         if ($request->has('product_id')) {
             $query->where('product_id', $request->product_id);

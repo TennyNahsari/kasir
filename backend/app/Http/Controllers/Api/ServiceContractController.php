@@ -25,18 +25,10 @@ class ServiceContractController extends Controller
         try {
             $query = ServiceContract::with(['product', 'vendor', 'location', 'goodsReceipt', 'purchaseOrder']);
 
-            // Authorization: non-owner users have restricted view
+            // Authorization: owner sees all, non-owner only sees data at their assigned location
             $user = auth()->user();
-            if ($user->role !== 'owner') {
-                if ($user->outlet_id) {
-                    // User with outlet_id: see only contracts from their outlet
-                    $query->whereHas('location', function ($q) use ($user) {
-                        $q->where('outlet_id', $user->outlet_id);
-                    });
-                } elseif ($user->location_id) {
-                    // User with location_id (DEPARTMENT/WAREHOUSE/FNB): see only contracts at their specific location
-                    $query->where('location_id', $user->location_id);
-                }
+            if ($user->role !== 'owner' && $user->location_id) {
+                $query->where('location_id', $user->location_id);
             }
 
             // Filter by status
