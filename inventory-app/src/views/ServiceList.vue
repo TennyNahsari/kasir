@@ -235,7 +235,7 @@
                 v-model="productSearch" 
                 @focus="showProductDropdown = true"
                 @input="filterProducts"
-                @blur="() => setTimeout(() => showProductDropdown = false, 200)"
+                @blur="handleProductBlur"
                 type="text" 
                 required 
                 class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -685,6 +685,12 @@ const selectProduct = (product) => {
   createForm.value.product_id = product.id
   productSearch.value = product.name
   showProductDropdown.value = false
+}
+
+const handleProductBlur = () => {
+  setTimeout(() => {
+    showProductDropdown.value = false
+  }, 200)
 }
 
 const loadStats = async () => {

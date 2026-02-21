@@ -217,7 +217,7 @@
                   v-model="productSearch" 
                   @focus="showProductDropdown = true"
                   @input="filterProducts"
-                  @blur="() => setTimeout(() => showProductDropdown = false, 200)"
+                  @blur="handleProductBlur"
                   type="text" 
                   required 
                   class="w-full border-gray-300 rounded-lg"
@@ -729,6 +729,12 @@ const selectProduct = (product) => {
   assetForm.value.product_id = product.id
   productSearch.value = product.name
   showProductDropdown.value = false
+}
+
+const handleProductBlur = () => {
+  setTimeout(() => {
+    showProductDropdown.value = false
+  }, 200)
 }
 
 const createAsset = async () => {
