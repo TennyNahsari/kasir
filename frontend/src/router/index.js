@@ -105,14 +105,27 @@ router.beforeEach(async (to, from, next) => {
     const user = authStore.user
     const isAdminRole = user?.role === 'owner' || user?.role === 'inventory'
     
+    // DEBUG: Log user data
+    console.log('🔍 Router Guard - User Data:', {
+      role: user?.role,
+      roleType: typeof user?.role,
+      isAdminRole: isAdminRole,
+      location_id: user?.location_id,
+      outlet_id: user?.outlet_id,
+      fullUser: user
+    })
+    
     // Owner/Inventory have full access
     if (isAdminRole) {
+      console.log('✅ Admin role detected - allowing access')
       // Continue to role check
     } else {
+      console.log('⚠️ Non-admin user - checking location assignment')
       // Non-admin users must have location assignment with type OUTLET or FNB
       const hasLocation = user?.outlet_id || user?.location_id
       
       if (!hasLocation) {
+        console.error('❌ No location assignment found')
         alert('Access Denied: Only Owner/Inventory and users with location assignment can access this application')
         await authStore.logout()
         return next('/login')
