@@ -235,17 +235,32 @@ class ProductController extends Controller
 
     public function getByLocation(Request $request)
     {
-        // Get location_id from query params and validate
-        $locationId = $request->query('location_id');
+        // Get location_id from query params (use input() for better compatibility)
+        $locationId = $request->input('location_id') ?? $request->query('location_id');
+        
+        \Log::info('getByLocation request received', [
+            'input_location_id' => $request->input('location_id'),
+            'query_location_id' => $request->query('location_id'),
+            'all_input' => $request->all(),
+            'query_params' => $request->query(),
+            'method' => $request->method(),
+            'url' => $request->fullUrl()
+        ]);
         
         if (!$locationId) {
             \Log::warning('location_id missing from request', [
                 'all_input' => $request->all(),
-                'query_params' => $request->query()
+                'query_params' => $request->query(),
+                'input_params' => $request->input()
             ]);
             return response()->json([
                 'message' => 'location_id is required',
-                'received_params' => $request->query()
+                'debug' => [
+                    'received_query' => $request->query(),
+                    'received_input' => $request->input(),
+                    'received_all' => $request->all(),
+                    'url' => $request->fullUrl()
+                ]
             ], 400);
         }
         
@@ -258,7 +273,7 @@ class ProductController extends Controller
             ], 404);
         }
         
-        \Log::info('getByLocation called', [
+        \Log::info('getByLocation called successfully', [
             'location_id' => $locationId,
             'all_query_params' => $request->query(),
             'location_name' => $location->name,
