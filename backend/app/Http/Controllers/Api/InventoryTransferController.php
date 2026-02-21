@@ -27,16 +27,27 @@ class InventoryTransferController extends Controller
             'approvedBy',
         ]);
 
-        // Authorization: owner sees all, non-owner only sees transfers involving their location
+        // Authorization: owner sees all, non-owner sees transfers based on their assignment
         $user = auth()->user();
         if ($user->role !== 'owner') {
             if ($user->location_id) {
+                // User assigned to specific location - see transfers from/to their location
                 $query->where(function ($q) use ($user) {
                     $q->where('from_location_id', $user->location_id)
                       ->orWhere('to_location_id', $user->location_id);
                 });
+            } elseif ($user->outlet_id) {
+                // User assigned to outlet (old schema) - see transfers involving outlet locations
+                $query->where(function ($q) use ($user) {
+                    $q->whereHas('fromLocation', function ($q) use ($user) {
+                        $q->where('outlet_id', $user->outlet_id);
+                    })
+                    ->orWhereHas('toLocation', function ($q) use ($user) {
+                        $q->where('outlet_id', $user->outlet_id);
+                    });
+                });
             } else {
-                // User without location_id cannot see any data
+                // User without assignment cannot see any data
                 $query->whereRaw('1 = 0');
             }
         }

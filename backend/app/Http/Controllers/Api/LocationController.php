@@ -13,13 +13,17 @@ class LocationController extends Controller
     {
         $query = Location::with('outlet');
 
-        // Authorization: owner sees all, non-owner only sees their assigned location
+        // Authorization: owner sees all, non-owner sees locations based on their assignment
         $user = auth()->user();
         if ($user->role !== 'owner') {
             if ($user->location_id) {
+                // User assigned to specific location - see only their location
                 $query->where('id', $user->location_id);
+            } elseif ($user->outlet_id) {
+                // User assigned to outlet (old schema) - see all locations in that outlet
+                $query->where('outlet_id', $user->outlet_id);
             } else {
-                // User without location_id cannot see any data
+                // User without assignment cannot see any data
                 $query->whereRaw('1 = 0');
             }
         }
