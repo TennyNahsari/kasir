@@ -56,7 +56,7 @@ const router = createRouter({
           path: 'settings/products',
           name: 'SettingsProducts',
           component: () => import('@/views/ProductsView.vue'),
-          meta: { roles: ['owner', 'inventory', 'supervisor'] }
+          meta: { roles: ['owner', 'inventory'] }
         },
         {
           path: 'settings/stocks',
