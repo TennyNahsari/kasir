@@ -618,7 +618,12 @@ const searchProducts = async () => {
     return
   }
   try {
-    const { data } = await api.get('/products', { params: { search: adjustForm.value.product_search } })
+    const { data } = await api.get('/products', { 
+      params: { 
+        search: adjustForm.value.product_search,
+        type: 'INVENTORY'
+      } 
+    })
     // Handle paginated response
     productSearchResults.value = (data.data || data).slice(0, 5)
   } catch (error) {
@@ -694,7 +699,12 @@ const searchProductsForAdd = async () => {
     return
   }
   try {
-    const { data } = await api.get('/products', { params: { search: addForm.value.product_search } })
+    const { data } = await api.get('/products', { 
+      params: { 
+        search: addForm.value.product_search,
+        type: 'INVENTORY'
+      } 
+    })
     addProductSearchResults.value = (data.data || data).slice(0, 5)
   } catch (error) {
     console.error('Failed to search products:', error)
