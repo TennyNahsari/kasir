@@ -101,7 +101,8 @@ router.beforeEach(async (to, from, next) => {
   }
   
   // Kasir App Access Control: Owner/Inventory or users with OUTLET/FNB location assignment
-  if (requiresAuth && isAuthenticated && authStore.user) {
+  // SKIP THIS CHECK for guest/login routes
+  if (requiresAuth && isAuthenticated && authStore.user && !isGuestRoute) {
     const user = authStore.user
     const isAdminRole = user?.role === 'owner' || user?.role === 'inventory'
     

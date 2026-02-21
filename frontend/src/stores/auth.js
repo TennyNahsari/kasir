@@ -17,6 +17,14 @@ export const useAuthStore = defineStore('auth', () => {
     
     initialized.value = true
     loading.value = true
+    
+    // Don't check auth on login page to prevent issues
+    if (window.location.pathname.includes('/login')) {
+      console.log('⏭️ initAuth skipped - on login page')
+      loading.value = false
+      return
+    }
+    
     try {
       console.log('📡 initAuth: Calling GET /me...')
       // Try to get current user from API (cookie will be sent automatically)
