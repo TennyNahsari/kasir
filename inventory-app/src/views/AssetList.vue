@@ -211,14 +211,33 @@
 
           <form @submit.prevent="createAsset" class="space-y-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
+              <div class="relative">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Product *</label>
-                <select v-model="assetForm.product_id" required class="w-full border-gray-300 rounded-lg">
-                  <option value="">Select Product</option>
-                  <option v-for="product in assetProducts" :key="product.id" :value="product.id">
-                    {{ product.name }}
-                  </option>
-                </select>
+                <input 
+                  v-model="productSearch" 
+                  @focus="showProductDropdown = true"
+                  @input="filterProducts"
+                  @blur="() => setTimeout(() => showProductDropdown = false, 200)"
+                  type="text" 
+                  required 
+                  class="w-full border-gray-300 rounded-lg"
+                  placeholder="Search product by name or SKU..."
+                  autocomplete="off"
+                >
+                <div 
+                  v-if="showProductDropdown && filteredProducts.length > 0" 
+                  class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                >
+                  <div 
+                    v-for="product in filteredProducts" 
+                    :key="product.id"
+                    @click="selectProduct(product)"
+                    class="px-4 py-2 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-0"
+                  >
+                    <div class="font-medium text-gray-900">{{ product.name }}</div>
+                    <div class="text-sm text-gray-500">SKU: {{ product.sku || 'N/A' }}</div>
+                  </div>
+                </div>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Serial Number *</label>
@@ -429,6 +448,11 @@ const loading = ref(false)
 const showAddModal = ref(false)
 const showBarcodeModal = ref(false)
 const showQRModal = ref(false)
+
+// Product autocomplete states
+const productSearch = ref('')
+const showProductDropdown = ref(false)
+const filteredProducts = ref([])
 
 const labelSizes = {
   small: {
@@ -677,9 +701,29 @@ const loadAssetProducts = async () => {
       params: { type: 'ASSET' }
     })
     assetProducts.value = response.data.data || response.data
+    filteredProducts.value = assetProducts.value
   } catch (error) {
     console.error('Failed to load asset products:', error)
   }
+}
+
+const filterProducts = () => {
+  const search = productSearch.value.toLowerCase()
+  if (!search) {
+    filteredProducts.value = assetProducts.value
+  } else {
+    filteredProducts.value = assetProducts.value.filter(product => 
+      product.name.toLowerCase().includes(search) ||
+      (product.sku && product.sku.toLowerCase().includes(search))
+    )
+  }
+  showProductDropdown.value = true
+}
+
+const selectProduct = (product) => {
+  assetForm.value.product_id = product.id
+  productSearch.value = product.name
+  showProductDropdown.value = false
 }
 
 const createAsset = async () => {
@@ -699,6 +743,9 @@ const createAsset = async () => {
 
 const closeAddModal = () => {
   showAddModal.value = false
+  productSearch.value = ''
+  showProductDropdown.value = false
+  filteredProducts.value = assetProducts.value
   assetForm.value = {
     product_id: '',
     serial_number: '',

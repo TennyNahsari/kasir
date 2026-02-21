@@ -32,34 +32,59 @@
         
         <!-- Inventory Section -->
         <div class="mt-4">
-          <div class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Inventory</div>
-          <router-link
-            to="/inventory/stocks"
-            class="flex items-center pl-8 pr-4 py-3 mb-1 text-sm font-medium rounded-lg transition-colors"
-            :class="$route.path === '/inventory/stocks' 
-              ? 'bg-blue-50 text-blue-600' 
-              : 'text-gray-700 hover:bg-gray-100'"
+          <button 
+            @click="inventoryExpanded = !inventoryExpanded"
+            class="w-full flex items-center justify-between px-4 py-2 text-xs font-semibold text-gray-500 uppercase hover:bg-gray-100 rounded-lg transition-colors"
           >
-            Stock Levels
-          </router-link>
-          <router-link
-            to="/inventory/transfers"
-            class="flex items-center pl-8 pr-4 py-3 mb-1 text-sm font-medium rounded-lg transition-colors"
-            :class="$route.path === '/inventory/transfers' 
-              ? 'bg-blue-50 text-blue-600' 
-              : 'text-gray-700 hover:bg-gray-100'"
+            <span>Inventory</span>
+            <svg 
+              class="w-4 h-4 transition-transform duration-200"
+              :class="inventoryExpanded ? 'rotate-180' : ''"
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          <transition
+            enter-active-class="transition-all duration-200 ease-out"
+            enter-from-class="opacity-0 -translate-y-2"
+            enter-to-class="opacity-100 translate-y-0"
+            leave-active-class="transition-all duration-200 ease-in"
+            leave-from-class="opacity-100 translate-y-0"
+            leave-to-class="opacity-0 -translate-y-2"
           >
-            Transfers
-          </router-link>
-          <router-link
-            to="/inventory/ledger"
-            class="flex items-center pl-8 pr-4 py-3 mb-1 text-sm font-medium rounded-lg transition-colors"
-            :class="$route.path === '/inventory/ledger' 
-              ? 'bg-blue-50 text-blue-600' 
-              : 'text-gray-700 hover:bg-gray-100'"
-          >
-            Ledger
-          </router-link>
+            <div v-show="inventoryExpanded" class="overflow-hidden">
+              <router-link
+                to="/inventory/stocks"
+                class="flex items-center pl-8 pr-4 py-3 mb-1 text-sm font-medium rounded-lg transition-colors"
+                :class="$route.path === '/inventory/stocks' 
+                  ? 'bg-blue-50 text-blue-600' 
+                  : 'text-gray-700 hover:bg-gray-100'"
+              >
+                Stock Levels
+              </router-link>
+              <router-link
+                to="/inventory/transfers"
+                class="flex items-center pl-8 pr-4 py-3 mb-1 text-sm font-medium rounded-lg transition-colors"
+                :class="$route.path === '/inventory/transfers' 
+                  ? 'bg-blue-50 text-blue-600' 
+                  : 'text-gray-700 hover:bg-gray-100'"
+              >
+                Transfers
+              </router-link>
+              <router-link
+                to="/inventory/ledger"
+                class="flex items-center pl-8 pr-4 py-3 mb-1 text-sm font-medium rounded-lg transition-colors"
+                :class="$route.path === '/inventory/ledger' 
+                  ? 'bg-blue-50 text-blue-600' 
+                  : 'text-gray-700 hover:bg-gray-100'"
+              >
+                Ledger
+              </router-link>
+            </div>
+          </transition>
         </div>
         
         <router-link
@@ -84,25 +109,50 @@
         
         <!-- Settings Section -->
         <div v-if="hasSettingsAccess" class="mt-6 pt-4 border-t">
-          <div class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Settings</div>
-          <router-link
-            to="/users"
-            class="flex items-center pl-8 pr-4 py-3 mb-1 text-sm font-medium rounded-lg transition-colors"
-            :class="$route.path === '/users' 
-              ? 'bg-blue-50 text-blue-600' 
-              : 'text-gray-700 hover:bg-gray-100'"
+          <button 
+            @click="settingsExpanded = !settingsExpanded"
+            class="w-full flex items-center justify-between px-4 py-2 text-xs font-semibold text-gray-500 uppercase hover:bg-gray-100 rounded-lg transition-colors"
           >
-            Users
-          </router-link>
-          <router-link
-            to="/inventory/locations"
-            class="flex items-center pl-8 pr-4 py-3 mb-1 text-sm font-medium rounded-lg transition-colors"
-            :class="$route.path === '/inventory/locations' 
-              ? 'bg-blue-50 text-blue-600' 
-              : 'text-gray-700 hover:bg-gray-100'"
+            <span>Settings</span>
+            <svg 
+              class="w-4 h-4 transition-transform duration-200"
+              :class="settingsExpanded ? 'rotate-180' : ''"
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          <transition
+            enter-active-class="transition-all duration-200 ease-out"
+            enter-from-class="opacity-0 -translate-y-2"
+            enter-to-class="opacity-100 translate-y-0"
+            leave-active-class="transition-all duration-200 ease-in"
+            leave-from-class="opacity-100 translate-y-0"
+            leave-to-class="opacity-0 -translate-y-2"
           >
-            Locations
-          </router-link>
+            <div v-show="settingsExpanded" class="overflow-hidden">
+              <router-link
+                to="/users"
+                class="flex items-center pl-8 pr-4 py-3 mb-1 text-sm font-medium rounded-lg transition-colors"
+                :class="$route.path === '/users' 
+                  ? 'bg-blue-50 text-blue-600' 
+                  : 'text-gray-700 hover:bg-gray-100'"
+              >
+                Users
+              </router-link>
+              <router-link
+                to="/inventory/locations"
+                class="flex items-center pl-8 pr-4 py-3 mb-1 text-sm font-medium rounded-lg transition-colors"
+                :class="$route.path === '/inventory/locations' 
+                  ? 'bg-blue-50 text-blue-600' 
+                  : 'text-gray-700 hover:bg-gray-100'"
+              >
+                Locations
+              </router-link>
+            </div>
+          </transition>
         </div>
       </nav>
       
@@ -196,6 +246,8 @@ const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 const showMobileMenu = ref(false)
+const inventoryExpanded = ref(true)
+const settingsExpanded = ref(true)
 
 const mainNavigation = [
   { name: 'Dashboard', path: '/' },
