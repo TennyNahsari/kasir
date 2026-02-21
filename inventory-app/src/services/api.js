@@ -9,9 +9,24 @@ const api = axios.create({
   withCredentials: true // Important: send cookies with requests
 })
 
-// Request interceptor - no need to add token manually, cookies are sent automatically
+// Helper function to get cookie value
+function getCookie(name) {
+  const value = `; ${document.cookie}`
+  const parts = value.split(`; ${name}=`)
+  if (parts.length === 2) {
+    return decodeURIComponent(parts.pop().split(';').shift())
+  }
+  return null
+}
+
+// Request interceptor - add CSRF token from cookie
 api.interceptors.request.use(
   (config) => {
+    // Get XSRF token from cookie and add to header
+    const token = getCookie('XSRF-TOKEN')
+    if (token) {
+      config.headers['X-XSRF-TOKEN'] = token
+    }
     return config
   },
   (error) => {
