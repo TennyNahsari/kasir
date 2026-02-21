@@ -52,13 +52,13 @@ const router = createRouter({
           path: 'settings/products',
           name: 'SettingsProducts',
           component: () => import('@/views/ProductsView.vue'),
-          meta: { roles: ['owner'] }
+          meta: { roles: ['owner', 'supervisor'] }
         },
         {
           path: 'settings/stocks',
           name: 'SettingsStocks',
           component: () => import('@/views/StockManagement.vue'),
-          meta: { roles: ['owner'] }
+          meta: { roles: ['owner', 'supervisor'] }
         },
         {
           path: 'settings/locations',
