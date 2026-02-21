@@ -21,6 +21,7 @@
         </router-link>
         
         <router-link
+          v-if="canAccessMasterProduct"
           to="/inventory/products"
           class="flex items-center px-4 py-3 mb-1 text-sm font-medium rounded-lg transition-colors"
           :class="$route.path === '/inventory/products' 
@@ -270,6 +271,12 @@ const settingsNav = [
   { name: 'Locations', path: '/inventory/locations' }
 ]
 
+const canAccessMasterProduct = computed(() => {
+  const user = authStore.user
+  if (!user) return false
+  return user.role === 'owner' || user.role === 'supervisor'
+})
+
 const hasSettingsAccess = computed(() => {
   const user = authStore.user
   if (!user) return false
@@ -292,6 +299,11 @@ const navigation = computed(() => {
   
   // Flatten mainNavigation for mobile menu
   mainNavigation.forEach(item => {
+    // Skip Master Product if user doesn't have access
+    if (item.path === '/inventory/products' && !canAccessMasterProduct.value) {
+      return
+    }
+    
     if (item.isDropdown && item.children) {
       // Add parent as header (non-clickable)
       nav.push({ name: item.name, isHeader: true })
