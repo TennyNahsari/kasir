@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import axios from 'axios'
 import api from '@/services/api'
 
 export const useAuthStore = defineStore('auth', () => {
@@ -29,9 +30,12 @@ export const useAuthStore = defineStore('auth', () => {
     loading.value = true
     try {
       // IMPORTANT: Get CSRF cookie first for Laravel Sanctum
-      await api.get('/sanctum/csrf-cookie')
+      // Use axios directly (not api instance) because /sanctum is NOT under /api prefix
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+      const sanctumUrl = baseUrl.replace('/api', '/sanctum/csrf-cookie')
+      await axios.get(sanctumUrl, { withCredentials: true })
       
-      // Then login
+      // Then login using api instance (which has /api baseURL)
       const response = await api.post('/login', { email, password })
       user.value = response.data.user
       initialized.value = true
