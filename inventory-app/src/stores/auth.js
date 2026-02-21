@@ -55,10 +55,11 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  const isOwner = () => user.value?.role === 'owner'
+  const isOwner = () => {
+    const role = user.value?.role
+    return role === 'owner' || role === 'inventory'
+  }
   const isSupervisor = () => user.value?.role === 'supervisor'
-  const isKasir = () => user.value?.role === 'kasir'
-  const isKitchen = () => user.value?.role === 'kitchen'
 
   return {
     user,
@@ -68,8 +69,6 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     logout,
     isOwner,
-    isSupervisor,
-    isKasir,
-    isKitchen
+    isSupervisor
   }
 })

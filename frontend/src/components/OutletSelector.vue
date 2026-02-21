@@ -33,9 +33,10 @@ const authStore = useAuthStore()
 const outlets = ref([])
 const selectedLocationId = ref('')
 
-// Show selector only for owner without outlet_id
+// Show selector only for owner/inventory without outlet_id
 const showSelector = computed(() => {
-  return authStore.user?.role === 'owner' && !authStore.user?.outlet_id
+  const role = authStore.user?.role
+  return (role === 'owner' || role === 'inventory') && !authStore.user?.outlet_id
 })
 
 const handleOutletChange = () => {
@@ -159,7 +160,8 @@ onMounted(() => {
 
 // Watch for auth changes
 watch(() => authStore.user, (newUser) => {
-  if (newUser?.role === 'owner' && !newUser?.outlet_id) {
+  const newRole = newUser?.role
+  if ((newRole === 'owner' || newRole === 'inventory') && !newUser?.outlet_id) {
     loadOutlets()
   }
 }, { immediate: true })

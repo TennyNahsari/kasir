@@ -113,7 +113,10 @@ const stats = ref(null)
 const currentOutletId = ref(null)
 const userLocation = ref(null)
 
-const isOwner = computed(() => authStore.user?.role === 'owner' && !authStore.user?.outlet_id)
+const isOwner = computed(() => {
+  const role = authStore.user?.role
+  return (role === 'owner' || role === 'inventory') && !authStore.user?.outlet_id
+})
 const showNoOutletWarning = computed(() => !currentOutletId.value && !stats.value)
 
 // Check if user location is FNB type

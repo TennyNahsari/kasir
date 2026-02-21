@@ -41,31 +41,31 @@ const router = createRouter({
           path: 'reports',
           name: 'Reports',
           component: () => import('@/views/ReportsView.vue'),
-          meta: { roles: ['owner', 'supervisor'] }
+          meta: { roles: ['owner', 'inventory', 'supervisor'] }
         },
         {
           path: 'settings/users',
           name: 'SettingsUsers',
           component: () => import('@/views/UserManagement.vue'),
-          meta: { roles: ['owner'] }
+          meta: { roles: ['owner', 'inventory'] }
         },
         {
           path: 'settings/products',
           name: 'SettingsProducts',
           component: () => import('@/views/ProductsView.vue'),
-          meta: { roles: ['owner', 'supervisor'] }
+          meta: { roles: ['owner', 'inventory', 'supervisor'] }
         },
         {
           path: 'settings/stocks',
           name: 'SettingsStocks',
           component: () => import('@/views/StockManagement.vue'),
-          meta: { roles: ['owner', 'supervisor'] }
+          meta: { roles: ['owner', 'inventory', 'supervisor'] }
         },
         {
           path: 'settings/locations',
           name: 'SettingsLocations',
           component: () => import('@/views/LocationsManagement.vue'),
-          meta: { roles: ['owner'] }
+          meta: { roles: ['owner', 'inventory'] }
         }
       ]
     }

@@ -114,16 +114,16 @@ router.beforeEach(async (to, from, next) => {
   // Inventory App Access Control: Removed - all authenticated users can access
   // Previously restricted to owner and inventory department users only
   
-  // Settings Access Control: Only owner and supervisor with inventory department
+  // Settings Access Control: Only owner, inventory and supervisor with inventory department
   if (requiresAuth && to.meta.requiresSettingsAccess) {
     const user = authStore.user
-    const isOwner = user?.role === 'owner'
+    const isOwnerOrInventory = user?.role === 'owner' || user?.role === 'inventory'
     const isInventorySupervisor = user?.role === 'supervisor' && 
                                   user?.location?.type === 'DEPARTMENT' && 
                                   user?.location?.name?.toLowerCase().includes('inventory')
     
-    if (!isOwner && !isInventorySupervisor) {
-      alert('Access Denied: Only Owner and Inventory Supervisor can access Settings')
+    if (!isOwnerOrInventory && !isInventorySupervisor) {
+      alert('Access Denied: Only Owner, Inventory and Inventory Supervisor can access Settings')
       return next('/')
     }
   }
