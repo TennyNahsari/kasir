@@ -1,9 +1,9 @@
 <template>
   <div class="space-y-4">
-    <!-- Outlet Selector for Owner Only -->
+    <!-- Outlet Selector for Owner & Inventory -->
     <OutletSelector v-if="isOwner" @outlet-changed="handleOutletChange" />
 
-    <!-- Fixed Outlet Display for Kasir/Supervisor -->
+    <!-- Fixed Outlet Display for Staff/Supervisor -->
     <div v-if="!isOwner && userOutletName" class="rounded-lg p-4" 
       :class="isFnbMode ? 'bg-orange-50 border border-orange-200' : 'bg-blue-50 border border-blue-200'">
       <div class="flex items-center justify-between">
@@ -38,8 +38,8 @@
     <!-- No Outlet Warning -->
     <div v-if="showNoOutletWarning" class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
       <p class="text-yellow-800 text-sm">
-        ⚠️ <strong>{{ isOwner ? 'Silakan pilih outlet terlebih dahulu' : 'User tidak memiliki outlet' }}</strong>
-        {{ isOwner ? '' : '- Hubungi admin untuk assign outlet.' }}
+        ⚠️ <strong>{{ isOwner ? 'Silakan pilih location terlebih dahulu' : 'User tidak memiliki location' }}</strong>
+        {{ isOwner ? '' : '- Hubungi admin untuk assign location.' }}
       </p>
     </div>
 
@@ -290,12 +290,15 @@ const debugInfo = ref(null)
 const userOutletName = ref('')
 const outletInfo = ref(null)
 
-const isOwner = computed(() => authStore.user?.role === 'owner' && !authStore.user?.outlet_id)
+const isOwner = computed(() => {
+  const role = authStore.user?.role
+  return (role === 'owner' || role === 'inventory') && !authStore.user?.outlet_id
+})
 const showNoOutletWarning = computed(() => !currentOutletId.value && !loading.value && !isOwner.value)
 
-// Check if current location is valid for POS (OUTLET, FNB, or Owner)
+// Check if current location is valid for POS (OUTLET, FNB, or Owner/Inventory)
 const isValidPosLocation = computed(() => {
-  // Owner can access POS from any location
+  // Owner/Inventory can access POS from any location
   if (isOwner.value) return true
   
   if (!outletInfo.value) return true // Still loading
@@ -313,7 +316,7 @@ const isFnbMode = computed(() => {
 const categories = computed(() => {
   const allCategories = productStore.categories
   
-  // Owner sees all categories
+  // Owner/Inventory sees all categories
   if (isOwner.value) {
     return allCategories
   }
@@ -501,16 +504,16 @@ const loadProductsForOutlet = async (outletId) => {
     // Get location type for later use
     const locationType = outletInfo.value?.type?.toUpperCase()
     
-    // Owner can access from any location type - skip validation
+    // Owner and Inventory can access from any location type - skip validation
     if (!isOwner.value) {
-      // Validate location type for POS (non-owner users)
+      // Validate location type for POS (non-owner/non-inventory users)
       if (locationType !== 'OUTLET' && locationType !== 'FNB') {
         console.warn(`⚠️ Location type "${outletInfo.value?.type}" is not valid for POS. Only OUTLET and FNB are allowed.`)
         loading.value = false
         return
       }
     } else {
-      console.log('👑 Owner mode - showing all categories and products')
+      console.log('👑 Owner/Inventory mode - showing all categories and products')
     }
     
     // Prepare params for fetching products
@@ -578,16 +581,26 @@ const getLocationIdForOutlet = async (outletId) => {
     console.log('Looking up location for outlet:', outletId)
     const response = await api.get('/locations', {
       params: {
-        type: 'OUTLET',
-        outlet_id: outletId
+        outlet_id: outletId,
+        is_active: true
       }
     })
     
     if (response.data && response.data.length > 0) {
-      const location = response.data[0]
-      console.log('Found location:', location)
-      userOutletName.value = location.name // Set outlet name for display
-      return location.id
+      // Filter to only OUTLET or FNB type locations
+      const validLocations = response.data.filter(loc => 
+        loc.type === 'OUTLET' || loc.type === 'FNB'
+      )
+      
+      if (validLocations.length > 0) {
+        const location = validLocations[0]
+        console.log('Found location:', location)
+        userOutletName.value = location.name // Set outlet name for display
+        return location.id
+      } else {
+        console.warn('No OUTLET or FNB type location found for outlet:', outletId)
+        console.log('Available locations:', response.data.map(l => ({id: l.id, name: l.name, type: l.type})))
+      }
     }
     
     console.warn('No location found for outlet:', outletId)
@@ -623,7 +636,7 @@ onMounted(async () => {
         loading.value = false
       }
     } else if (isOwner.value) {
-      // Owner will select location via OutletSelector component
+      // Owner/Inventory will select location via OutletSelector component
       // Check if there's a saved location from previous session
       const savedLocation = localStorage.getItem('owner_selected_location')
       if (savedLocation) {
@@ -633,7 +646,7 @@ onMounted(async () => {
         loading.value = false
       }
     } else {
-      // User has no outlet and is not owner - show error
+      // User has no location and is not owner/inventory - show error
       loading.value = false
     }
   }

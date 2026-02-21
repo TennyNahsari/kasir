@@ -260,6 +260,50 @@ class ProductController extends Controller
             ], 404);
         }
 
+        // Authorization: Check if user can access this location
+        $user = auth()->user();
+        \Log::info('User authorization check', [
+            'user_id' => $user->id,
+            'user_role' => $user->role,
+            'user_location_id' => $user->location_id,
+            'user_outlet_id' => $user->outlet_id,
+            'requested_location_id' => $locationId
+        ]);
+
+        // Owner and inventory can access all locations
+        if (!in_array($user->role, ['owner', 'inventory'])) {
+            $canAccess = false;
+            
+            if ($user->location_id) {
+                // User assigned to specific location - can only access their location
+                $canAccess = ($user->location_id == $locationId);
+            } elseif ($user->outlet_id) {
+                // User assigned to outlet - can access all locations in that outlet
+                $canAccess = ($location->outlet_id == $user->outlet_id);
+            }
+            
+            if (!$canAccess) {
+                \Log::warning('Access denied to location', [
+                    'user_id' => $user->id,
+                    'requested_location_id' => $locationId,
+                    'user_location_id' => $user->location_id,
+                    'user_outlet_id' => $user->outlet_id,
+                    'location_outlet_id' => $location->outlet_id
+                ]);
+                
+                return response()->json([
+                    'message' => 'Access denied. You do not have permission to access this location.',
+                    'debug' => [
+                        'your_role' => $user->role,
+                        'your_location_id' => $user->location_id,
+                        'your_outlet_id' => $user->outlet_id,
+                        'requested_location_id' => $locationId,
+                        'location_outlet_id' => $location->outlet_id
+                    ]
+                ], 403);
+            }
+        }
+
         $query = Product::with(['category'])
             ->join('inventory_stocks', 'products.id', '=', 'inventory_stocks.product_id')
             ->where('inventory_stocks.location_id', $locationId)
