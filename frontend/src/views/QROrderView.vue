@@ -358,16 +358,16 @@ const loadData = async () => {
     
     // Handle paginated response and filter by allowed categories
     const productData = productsRes.data.data || productsRes.data
-    console.log('All products before filtering:', productData.length)
-    console.log('All products data:', productData.map(p => ({
+    console.log('Products from API (already filtered by location stock):', productData.length)
+    console.log('Products data:', productData.map(p => ({
       name: p.name,
       category_id: p.category_id,
       stock: p.stock,
       track_stock: p.track_stock,
-      inventoryStocks: p.inventoryStocks,
       is_active: p.is_active
     })))
     
+    // Backend already filters by location stock, we just need to filter by category
     products.value = productData.filter(p => {
       // Only show active products from allowed categories
       if (!p.is_active || !allowedCategoryIds.includes(p.category_id)) {
@@ -375,27 +375,14 @@ const loadData = async () => {
         return false
       }
       
-      // IMPORTANT: Only show products that have inventory stock for this location
-      // Check if product has inventoryStocks array and it has quantity > 0
-      const hasStock = p.inventoryStocks && p.inventoryStocks.length > 0 && p.inventoryStocks[0].quantity > 0
-      
-      if (!hasStock) {
-        console.log('Filtered out (no stock for this location):', p.name, {
-          inventoryStocks: p.inventoryStocks,
-          stock: p.stock
-        })
-      }
-      
-      return hasStock
+      return true
     })
     
-    console.log('Products loaded:', products.value.length, 'products')
-    console.log('Products with stock info:', products.value.map(p => ({
+    console.log('Products loaded after category filtering:', products.value.length, 'products')
+    console.log('Final products:', products.value.map(p => ({
       name: p.name,
       category: p.category?.name,
-      track_stock: p.track_stock,
-      stock: p.stock,
-      available: !p.track_stock || p.stock > 0
+      stock: p.stock
     })))
   } catch (err) {
     error.value = 'Gagal memuat menu. Silakan refresh halaman.'

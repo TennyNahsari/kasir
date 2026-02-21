@@ -36,9 +36,16 @@ class ProductController extends Controller
                 'image', 'is_active', 'created_at', 'updated_at', 'deleted_at'
             ]);
             
+            // Load inventory stocks for this location
             $query->with(['inventoryStocks' => function($q) use ($request) {
                 $q->where('location_id', $request->location_id);
             }]);
+            
+            // IMPORTANT: Only return products that have inventory stock for this location
+            $query->whereHas('inventoryStocks', function($q) use ($request) {
+                $q->where('location_id', $request->location_id)
+                  ->where('quantity', '>', 0);
+            });
         }
 
         // Filter by product type
