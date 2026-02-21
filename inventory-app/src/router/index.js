@@ -111,30 +111,8 @@ router.beforeEach(async (to, from, next) => {
     return next('/login')
   }
   
-  // Inventory App Access Control: Only owner and users with location type DEPARTMENT and name containing 'inventory'
-  if (requiresAuth && isAuthenticated) {
-    const user = authStore.user
-    const isOwner = user?.role === 'owner'
-    const hasInventoryDept = user?.location?.type === 'DEPARTMENT' && 
-                            user?.location?.name?.toLowerCase().includes('inventory')
-    
-    console.log('Inventory Access Check:', {
-      user: user?.name,
-      role: user?.role,
-      isOwner,
-      location: user?.location,
-      locationType: user?.location?.type,
-      locationName: user?.location?.name,
-      hasInventoryDept
-    })
-    
-    // Owner always has access, others need inventory department
-    if (!isOwner && !hasInventoryDept) {
-      alert('Access Denied: Only Owner and Inventory Department users can access this application')
-      await authStore.logout()
-      return next('/login')
-    }
-  }
+  // Inventory App Access Control: Removed - all authenticated users can access
+  // Previously restricted to owner and inventory department users only
   
   // Settings Access Control: Only owner and supervisor with inventory department
   if (requiresAuth && to.meta.requiresSettingsAccess) {
