@@ -28,14 +28,10 @@ export const useAuthStore = defineStore('auth', () => {
   const login = async (email, password) => {
     loading.value = true
     try {
-      // IMPORTANT: Get CSRF cookie first for Laravel Sanctum
-      // Use api instance with full URL to ensure same session
-      await api.get('/sanctum/csrf-cookie', { 
-        baseURL: '/',
-        withCredentials: true 
-      })
+      // Get CSRF cookie using native fetch (same session guaranteed)
+      await fetch('/sanctum/csrf-cookie', { credentials: 'include' })
       
-      // Then login using api instance
+      // Then login
       const response = await api.post('/login', { email, password })
       user.value = response.data.user
       initialized.value = true
