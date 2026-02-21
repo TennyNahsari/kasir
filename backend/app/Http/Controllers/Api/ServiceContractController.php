@@ -27,8 +27,13 @@ class ServiceContractController extends Controller
 
             // Authorization: owner sees all, non-owner only sees data at their assigned location
             $user = auth()->user();
-            if ($user->role !== 'owner' && $user->location_id) {
-                $query->where('location_id', $user->location_id);
+            if ($user->role !== 'owner') {
+                if ($user->location_id) {
+                    $query->where('location_id', $user->location_id);
+                } else {
+                    // User without location_id cannot see any data
+                    $query->whereRaw('1 = 0');
+                }
             }
 
             // Filter by status

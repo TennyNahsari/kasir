@@ -29,11 +29,16 @@ class InventoryTransferController extends Controller
 
         // Authorization: owner sees all, non-owner only sees transfers involving their location
         $user = auth()->user();
-        if ($user->role !== 'owner' && $user->location_id) {
-            $query->where(function ($q) use ($user) {
-                $q->where('from_location_id', $user->location_id)
-                  ->orWhere('to_location_id', $user->location_id);
-            });
+        if ($user->role !== 'owner') {
+            if ($user->location_id) {
+                $query->where(function ($q) use ($user) {
+                    $q->where('from_location_id', $user->location_id)
+                      ->orWhere('to_location_id', $user->location_id);
+                });
+            } else {
+                // User without location_id cannot see any data
+                $query->whereRaw('1 = 0');
+            }
         }
 
         if ($request->has('status')) {
