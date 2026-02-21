@@ -136,6 +136,14 @@ class ServiceContractController extends Controller
      */
     public function store(Request $request)
     {
+        // Authorization: only owner and supervisor can create service contract
+        $user = auth()->user();
+        if (!in_array($user->role, ['owner', 'supervisor'])) {
+            return response()->json([
+                'message' => 'Access denied. Only Owner and Supervisor can create service contracts.'
+            ], 403);
+        }
+
         try {
             $validated = $request->validate([
                 'product_id' => 'required|exists:products,id',

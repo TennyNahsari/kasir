@@ -92,6 +92,14 @@ class InventoryStockController extends Controller
 
     public function adjust(Request $request)
     {
+        // Authorization: only owner and supervisor can adjust stock
+        $user = auth()->user();
+        if (!in_array($user->role, ['owner', 'supervisor'])) {
+            return response()->json([
+                'message' => 'Access denied. Only Owner and Supervisor can adjust stock.'
+            ], 403);
+        }
+
         $validator = Validator::make($request->all(), [
             'product_id' => 'required|exists:products,id',
             'location_id' => 'required|exists:locations,id',
@@ -125,6 +133,14 @@ class InventoryStockController extends Controller
 
     public function store(Request $request)
     {
+        // Authorization: only owner and supervisor can add stock
+        $user = auth()->user();
+        if (!in_array($user->role, ['owner', 'supervisor'])) {
+            return response()->json([
+                'message' => 'Access denied. Only Owner and Supervisor can add stock.'
+            ], 403);
+        }
+
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
             'location_id' => 'required|exists:locations,id',

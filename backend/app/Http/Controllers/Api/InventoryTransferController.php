@@ -46,6 +46,14 @@ class InventoryTransferController extends Controller
 
     public function store(Request $request)
     {
+        // Authorization: only owner and supervisor can create transfer
+        $user = auth()->user();
+        if (!in_array($user->role, ['owner', 'supervisor'])) {
+            return response()->json([
+                'message' => 'Access denied. Only Owner and Supervisor can create transfers.'
+            ], 403);
+        }
+
         $validator = Validator::make($request->all(), [
             'from_location_id' => 'required|exists:locations,id',
             'to_location_id' => 'required|exists:locations,id|different:from_location_id',
