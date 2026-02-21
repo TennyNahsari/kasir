@@ -225,18 +225,8 @@ class DashboardController extends Controller
         $grnQuery = GoodsReceipt::query();
         
         // Apply filters based on user role and location
-        if ($user->role === 'owner') {
-            // Owner can see all
-        } elseif ($user->role === 'kasir') {
-            // Kasir only sees items created by kasir users
-            $prQuery->whereHas('requestedBy', function($q) {
-                $q->where('role', 'kasir');
-            });
-            $poQuery->whereHas('createdBy', function($q) {
-                $q->where('role', 'kasir');
-            });
-            // GRN doesn't filter by kasir (kasir don't create GRN)
-            $grnQuery->whereRaw('1 = 0'); // Return 0 results
+        if (in_array($user->role, ['owner', 'inventory'])) {
+            // Owner and inventory can see all
         } elseif ($this->isProcurementUser($user)) {
             // Procurement users can see all
         } else {
@@ -284,12 +274,12 @@ class DashboardController extends Controller
             });
         
         // Apply role-based filtering
-        if ($user->role === 'owner') {
-            // Owner can see all
+        if (in_array($user->role, ['owner', 'inventory'])) {
+            // Owner and inventory can see all
         } elseif ($this->isProcurementUser($user)) {
             // Procurement department users can see all
         } else {
-            // Staff/Supervisor from other departments (including kasir) see only their department POs
+            // Staff/Supervisor from other departments see only their department POs
             if ($user->location_id) {
                 $query->where('location_id', $user->location_id);
             }
@@ -332,12 +322,12 @@ class DashboardController extends Controller
         ->whereNotIn('status', ['APPROVED', 'FULLY_ORDERED', 'CANCELLED']);
         
         // Apply role-based filtering
-        if ($user->role === 'owner') {
-            // Owner can see all PRs
+        if (in_array($user->role, ['owner', 'inventory'])) {
+            // Owner and inventory can see all PRs
         } elseif ($this->isProcurementUser($user)) {
             // Procurement department users can see all PRs
         } else {
-            // Staff/Supervisor from other departments (including kasir) see only their department PRs
+            // Staff/Supervisor from other departments see only their department PRs
             if ($user->location_id) {
                 $query->where('location_id', $user->location_id);
             }

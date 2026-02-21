@@ -153,8 +153,8 @@ class LocationController extends Controller
      */
     public function generateQrCodes(Request $request, Location $location)
     {
-        // Only owner and admin can generate QR codes
-        if (!in_array($request->user()->role, ['owner', 'admin'])) {
+        // Only owner, inventory and admin can generate QR codes
+        if (!in_array($request->user()->role, ['owner', 'inventory', 'admin'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 

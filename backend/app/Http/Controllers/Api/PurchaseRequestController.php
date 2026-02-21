@@ -29,13 +29,8 @@ class PurchaseRequestController extends Controller
         ]);
 
         // Rule 1 & 2: Filter PR based on user role and location
-        if ($user->role === 'owner') {
-            // Owner can see all PRs
-        } elseif ($user->role === 'kasir') {
-            // Kasir users see only PRs created by kasir role users
-            $query->whereHas('requestedBy', function($q) {
-                $q->where('role', 'kasir');
-            });
+        if (in_array($user->role, ['owner', 'inventory'])) {
+            // Owner and inventory can see all PRs
         } elseif ($this->isProcurementUser($user)) {
             // Procurement users can see all PRs
         } else {
@@ -175,20 +170,15 @@ class PurchaseRequestController extends Controller
         $user = auth()->user();
         $pr = $purchaseRequest->load('requestedBy');
         
-        // Rule 3: If PR was created by kasir, owner or any kasir can approve (including self)
-        if ($pr->requestedBy && $pr->requestedBy->role === 'kasir') {
-            if ($user->role !== 'owner' && $user->role !== 'kasir') {
-                return response()->json([
-                    'message' => 'Only owner or kasir can approve kasir Purchase Requests'
-                ], 403);
-            }
-            // Kasir can approve their own PR or other kasir's PR
+        // Rule 3: Owner and inventory can approve any PR
+        if (in_array($user->role, ['owner', 'inventory'])) {
+            // Full access to approve any PR
         }
-        // For non-kasir PRs: only supervisor from same department can approve
+        // For other users: only supervisor from same department can approve
         else {
             if ($user->role !== 'supervisor') {
                 return response()->json([
-                    'message' => 'Only supervisors can approve Purchase Requests'
+                    'message' => 'Only supervisors, owner or inventory can approve Purchase Requests'
                 ], 403);
             }
             

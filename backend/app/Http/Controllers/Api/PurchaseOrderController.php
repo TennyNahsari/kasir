@@ -31,13 +31,8 @@ class PurchaseOrderController extends Controller
         ]);
 
         // Filter PO based on user role
-        if ($user->role === 'owner') {
-            // Owner can see all POs
-        } elseif ($user->role === 'kasir') {
-            // Kasir users see only POs created by kasir role users
-            $query->whereHas('createdBy', function($q) {
-                $q->where('role', 'kasir');
-            });
+        if (in_array($user->role, ['owner', 'inventory'])) {
+            // Owner and inventory can see all POs
         } elseif ($this->isProcurementUser($user)) {
             // Procurement users can see all POs
         } else {
@@ -77,10 +72,10 @@ class PurchaseOrderController extends Controller
     {
         $user = auth()->user();
         
-        // Rule 4: Only owner and procurement users can create PO
-        if ($user->role !== 'owner' && !$this->isProcurementUser($user)) {
+        // Rule 4: Only owner, inventory and procurement users can create PO
+        if (!in_array($user->role, ['owner', 'inventory']) && !$this->isProcurementUser($user)) {
             return response()->json([
-                'message' => 'Only Owner and Procurement Department users can create Purchase Orders'
+                'message' => 'Only Owner, Inventory and Procurement Department users can create Purchase Orders'
             ], 403);
         }
         
@@ -195,7 +190,7 @@ class PurchaseOrderController extends Controller
         $user = auth()->user();
         
         // Rule 5: Only owner can approve PO
-        if ($user->role !== 'owner') {
+        if (!in_array($user->role, ['owner', 'inventory'])) {
             return response()->json([
                 'message' => 'Only Owner can approve Purchase Orders'
             ], 403);
@@ -213,10 +208,10 @@ class PurchaseOrderController extends Controller
     {
         $user = auth()->user();
         
-        // Rule 6: Only owner and procurement users can send PO
-        if ($user->role !== 'owner' && !$this->isProcurementUser($user)) {
+        // Rule 6: Only owner, inventory and procurement users can send PO
+        if (!in_array($user->role, ['owner', 'inventory']) && !$this->isProcurementUser($user)) {
             return response()->json([
-                'message' => 'Only Owner and Procurement Department users can send Purchase Orders'
+                'message' => 'Only Owner, Inventory and Procurement Department users can send Purchase Orders'
             ], 403);
         }
         

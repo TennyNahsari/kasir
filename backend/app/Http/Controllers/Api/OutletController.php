@@ -11,8 +11,8 @@ class OutletController extends Controller
 {
     public function index(Request $request)
     {
-        // Only owner can access all outlets
-        if ($request->user()->role !== 'owner') {
+        // Only owner and inventory can access all outlets
+        if (!in_array($request->user()->role, ['owner', 'inventory'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -25,8 +25,8 @@ class OutletController extends Controller
 
     public function store(Request $request)
     {
-        // Only owner can create outlets
-        if ($request->user()->role !== 'owner') {
+        // Only owner and inventory can create outlets
+        if (!in_array($request->user()->role, ['owner', 'inventory'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -46,8 +46,8 @@ class OutletController extends Controller
 
     public function show(Request $request, Outlet $outlet)
     {
-        // Only owner can view outlet details
-        if ($request->user()->role !== 'owner') {
+        // Only owner and inventory can view outlet details
+        if (!in_array($request->user()->role, ['owner', 'inventory'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -59,8 +59,8 @@ class OutletController extends Controller
 
     public function update(Request $request, Outlet $outlet)
     {
-        // Only owner can update outlets
-        if ($request->user()->role !== 'owner') {
+        // Only owner and inventory can update outlets
+        if (!in_array($request->user()->role, ['owner', 'inventory'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -80,8 +80,8 @@ class OutletController extends Controller
 
     public function destroy(Request $request, Outlet $outlet)
     {
-        // Only owner can delete outlets
-        if ($request->user()->role !== 'owner') {
+        // Only owner and inventory can delete outlets
+        if (!in_array($request->user()->role, ['owner', 'inventory'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -99,8 +99,8 @@ class OutletController extends Controller
 
     public function generateQrCodes(Request $request, Outlet $outlet)
     {
-        // Only owner can generate QR codes
-        if ($request->user()->role !== 'owner') {
+        // Only owner and inventory can generate QR codes
+        if (!in_array($request->user()->role, ['owner', 'inventory'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 

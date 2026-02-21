@@ -30,8 +30,8 @@ class GoodsReceiptController extends Controller
         ]);
 
         // Filter GRN based on user role and location
-        if ($user->role === 'owner') {
-            // Owner can see all GRNs
+        if (in_array($user->role, ['owner', 'inventory'])) {
+            // Owner and inventory can see all GRNs
         } elseif ($this->isProcurementUser($user)) {
             // Procurement users can see all GRNs
         } else {
@@ -82,10 +82,10 @@ class GoodsReceiptController extends Controller
     {
         $user = auth()->user();
         
-        // Rule 6: Only owner and procurement users can create GRN
-        if ($user->role !== 'owner' && !$this->isProcurementUser($user)) {
+        // Rule 6: Only owner, inventory and procurement users can create GRN
+        if (!in_array($user->role, ['owner', 'inventory']) && !$this->isProcurementUser($user)) {
             return response()->json([
-                'message' => 'Only Owner and Procurement Department users can create Goods Receipts'
+                'message' => 'Only Owner, Inventory and Procurement Department users can create Goods Receipts'
             ], 403);
         }
         
@@ -194,10 +194,10 @@ class GoodsReceiptController extends Controller
     {
         $user = auth()->user();
         
-        // Only owner and procurement users can submit for quality check
-        if ($user->role !== 'owner' && !$this->isProcurementUser($user)) {
+        // Only owner, inventory and procurement users can submit for quality check
+        if (!in_array($user->role, ['owner', 'inventory']) && !$this->isProcurementUser($user)) {
             return response()->json([
-                'message' => 'Only Owner and Procurement Department users can submit for quality check'
+                'message' => 'Only Owner, Inventory and Procurement Department users can submit for quality check'
             ], 403);
         }
         
@@ -230,10 +230,10 @@ class GoodsReceiptController extends Controller
     {
         $user = auth()->user();
         
-        // Only owner and procurement users can approve quality check
-        if ($user->role !== 'owner' && !$this->isProcurementUser($user)) {
+        // Only owner, inventory and procurement users can approve quality check
+        if (!in_array($user->role, ['owner', 'inventory']) && !$this->isProcurementUser($user)) {
             return response()->json([
-                'message' => 'Only Owner and Procurement Department users can approve quality check'
+                'message' => 'Only Owner, Inventory and Procurement Department users can approve quality check'
             ], 403);
         }
         
@@ -249,10 +249,10 @@ class GoodsReceiptController extends Controller
     {
         $user = auth()->user();
         
-        // Rule 6: Only owner and procurement users can post GRN to inventory
-        if ($user->role !== 'owner' && !$this->isProcurementUser($user)) {
+        // Rule 6: Only owner, inventory and procurement users can post GRN to inventory
+        if (!in_array($user->role, ['owner', 'inventory']) && !$this->isProcurementUser($user)) {
             return response()->json([
-                'message' => 'Only Owner and Procurement Department users can post GRN to inventory'
+                'message' => 'Only Owner, Inventory and Procurement Department users can post GRN to inventory'
             ], 403);
         }
         
