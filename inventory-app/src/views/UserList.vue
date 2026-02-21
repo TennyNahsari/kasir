@@ -141,16 +141,34 @@
             </select>
           </div>
 
-          <div>
+          <div class="relative">
             <label class="label">Location</label>
-            <select v-model="form.location_id" class="input">
-              <option :value="null">-- No Location (for Owner) --</option>
-              <option v-for="outlet in outlets" :key="outlet.location_id" :value="outlet.location_id">
-                {{ outlet.location_name }} ({{ outlet.location_type }})
-              </option>
-            </select>
+            <input 
+              v-model="locationSearch" 
+              @focus="showLocationDropdown = true"
+              @input="filterLocations"
+              @blur="handleLocationBlur"
+              type="text" 
+              class="input"
+              placeholder="Search location by name or type..."
+              autocomplete="off"
+            >
+            <div 
+              v-if="showLocationDropdown && filteredLocations.length > 0" 
+              class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+            >
+              <div 
+                v-for="location in filteredLocations" 
+                :key="location.location_id"
+                @click="selectLocation(location)"
+                class="px-4 py-2 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-0"
+              >
+                <div class="font-medium text-gray-900">{{ location.location_name }}</div>
+                <div class="text-sm text-gray-500">Type: {{ location.location_type }}</div>
+              </div>
+            </div>
             <p class="text-xs text-gray-500 mt-1">
-              Set location untuk user. Owner tidak wajib pilih location.
+              Set location untuk user. Owner tidak wajib pilih location. Leave empty for no location.
             </p>
           </div>
 
@@ -176,6 +194,9 @@ import Pagination from '@/components/Pagination.vue'
 
 const users = ref([])
 const outlets = ref([])
+const locationSearch = ref('')
+const showLocationDropdown = ref(false)
+const filteredLocations = ref([])
 const showModal = ref(false)
 const editingUser = ref(null)
 
@@ -248,22 +269,23 @@ const loadUsers = async (page = 1) => {
 const loadOutlets = async () => {
   try {
     // Load all active locations from inventory
-    const response = await api.get('/locations', {
-      params: {
-        is_active: true
-      }
-    })
+    const response = await api.get('/locations?is_active=true&per_page=100')
     
     console.log('Raw locations response:', response.data)
     
+    // Extract locations array from paginated response
+    const locationsList = response.data.data || response.data
+    
     // Map to outlet format with location info
-    outlets.value = response.data.map(loc => ({
+    outlets.value = locationsList.map(loc => ({
       location_id: loc.id,
       location_name: loc.name,
       location_type: loc.type,
       outlet_id: loc.outlet?.id || null,
       outlet_name: loc.outlet?.name || loc.name
     }))
+    
+    filteredLocations.value = outlets.value
     
     console.log('Loaded locations:', outlets.value)
     console.table(outlets.value)
@@ -272,8 +294,36 @@ const loadOutlets = async () => {
   }
 }
 
+const filterLocations = () => {
+  const search = locationSearch.value.toLowerCase()
+  if (!search) {
+    filteredLocations.value = outlets.value
+  } else {
+    filteredLocations.value = outlets.value.filter(location => 
+      location.location_name.toLowerCase().includes(search) ||
+      location.location_type.toLowerCase().includes(search)
+    )
+  }
+  showLocationDropdown.value = true
+}
+
+const selectLocation = (location) => {
+  form.value.location_id = location.location_id
+  locationSearch.value = location.location_name
+  showLocationDropdown.value = false
+}
+
+const handleLocationBlur = () => {
+  setTimeout(() => {
+    showLocationDropdown.value = false
+  }, 200)
+}
+
 const openAddModal = () => {
   editingUser.value = null
+  locationSearch.value = ''
+  showLocationDropdown.value = false
+  filteredLocations.value = outlets.value
   form.value = {
     name: '',
     email: '',
@@ -288,6 +338,11 @@ const openAddModal = () => {
 
 const openEditModal = (user) => {
   editingUser.value = user
+  // Set location search with current location name
+  const currentLocation = outlets.value.find(o => o.location_id === user.location_id)
+  locationSearch.value = currentLocation ? currentLocation.location_name : ''
+  showLocationDropdown.value = false
+  filteredLocations.value = outlets.value
   form.value = {
     name: user.name,
     email: user.email,

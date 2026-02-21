@@ -181,9 +181,11 @@ onMounted(async () => {
 
 const loadLocations = async () => {
   try {
-    const { data } = await api.get('/locations')
+    const { data } = await api.get('/locations?per_page=100')
+    // Extract locations array from paginated response
+    const locationsList = data.data || data
     // Load stock summary for each location
-    for (const location of data) {
+    for (const location of locationsList) {
       try {
         const { data: summary } = await api.get(`/locations/${location.id}/stock-summary`)
         location.stock_summary = summary
@@ -191,7 +193,7 @@ const loadLocations = async () => {
         console.error(`Failed to load stock summary for location ${location.id}:`, error)
       }
     }
-    locations.value = data
+    locations.value = locationsList
   } catch (error) {
     console.error('Failed to load locations:', error)
   }
