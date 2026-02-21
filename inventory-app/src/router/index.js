@@ -128,6 +128,7 @@ router.beforeEach(async (to, from, next) => {
       hasInventoryDept
     })
     
+    // Owner always has access, others need inventory department
     if (!isOwner && !hasInventoryDept) {
       alert('Access Denied: Only Owner and Inventory Department users can access this application')
       await authStore.logout()
