@@ -235,13 +235,19 @@ class ProductController extends Controller
 
     public function getByLocation(Request $request)
     {
-        $locationId = $request->query('location_id'); // Now receiving actual location_id from inventory
+        // Validate request parameters
+        $validated = $request->validate([
+            'location_id' => 'required|integer|exists:locations,id',
+            'is_active' => 'sometimes|boolean'
+        ]);
         
-        if (!$locationId) {
-            return response()->json(['message' => 'location_id is required'], 400);
-        }
-
-        \Log::info('getByLocation called', ['location_id' => $locationId]);
+        $locationId = $validated['location_id'];
+        
+        \Log::info('getByLocation called', [
+            'location_id' => $locationId,
+            'all_query_params' => $request->query(),
+            'validated' => $validated
+        ]);
 
         // Get location info for debugging
         $location = \App\Models\Location::find($locationId);
