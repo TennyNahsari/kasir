@@ -38,9 +38,12 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Handle 401 Unauthorized errors
     if (error.response?.status === 401) {
+      const currentPath = window.location.pathname
       // Only redirect if not already on login page
-      if (!window.location.pathname.includes('/login')) {
+      if (!currentPath.includes('/login') && !currentPath.includes('/auth')) {
+        console.log('Unauthorized - redirecting to login')
         window.location.href = '/login'
       }
     }

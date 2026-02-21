@@ -14,6 +14,13 @@ export const useAuthStore = defineStore('auth', () => {
     
     initialized.value = true
     loading.value = true
+    
+    // Don't check auth on login page to prevent refresh loop
+    if (window.location.pathname.includes('/login')) {
+      loading.value = false
+      return
+    }
+    
     try {
       // Try to get current user from API (cookie will be sent automatically)
       const response = await api.get('/me')
