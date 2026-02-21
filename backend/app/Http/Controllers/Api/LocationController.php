@@ -13,6 +13,12 @@ class LocationController extends Controller
     {
         $query = Location::with('outlet');
 
+        // Authorization: non-owner users only see locations from their outlet
+        $user = auth()->user();
+        if ($user->role !== 'owner' && $user->outlet_id) {
+            $query->where('outlet_id', $user->outlet_id);
+        }
+
         if ($request->has('type')) {
             $query->where('type', $request->type);
         }
