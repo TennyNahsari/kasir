@@ -340,19 +340,17 @@ const loadData = async () => {
       inventoryStocks: p.inventoryStocks
     })))
 
-    // Filter categories for FNB locations
-    if (locationType === 'FNB') {
-      // For FNB locations, only show FNB categories
-      categories.value = categoriesRes.data.filter(cat => {
-        const name = cat.name.toUpperCase()
-        // Only show: Makanan FNB, Minuman FNB, Snack FNB
-        return name.includes('FNB') && (
-          name.includes('MAKANAN') || 
-          name.includes('MINUMAN') || 
-          name.includes('SNACK')
-        )
-      })
-      console.log('FNB categories filtered:', categories.value.map(c => c.name))
+    // Filter categories for FNB locations (only FNB categories)
+    categories.value = categoriesRes.data.filter(cat => {
+      const name = cat.name.toUpperCase()
+      // Only show: Makanan FNB, Minuman FNB, Snack FNB
+      return name.includes('FNB') && (
+        name.includes('MAKANAN') || 
+        name.includes('MINUMAN') || 
+        name.includes('SNACK')
+      )
+    })
+    console.log('FNB categories filtered:', categories.value.map(c => c.name))
     
     // Get allowed category IDs
     const allowedCategoryIds = categories.value.map(c => c.id)
