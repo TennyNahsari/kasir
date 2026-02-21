@@ -50,9 +50,7 @@ if ($stocksCount === 0) {
             'location_id' => $locationId,
             'quantity' => 100, // Set initial quantity for testing
             'reserved_quantity' => 0,
-            'min_stock' => 10,
-            'max_stock' => 500,
-            'reorder_point' => 20
+            'reorder_level' => 20
         ]);
         $created++;
     }

@@ -43,9 +43,7 @@ foreach ($locations as $location) {
                 'location_id' => $location->id,
                 'quantity' => 0,
                 'reserved_quantity' => 0,
-                'min_stock' => 10,
-                'max_stock' => 100,
-                'reorder_point' => 20
+                'reorder_level' => 20
             ]);
             $created++;
         }
@@ -83,9 +81,7 @@ foreach ($locations as $location) {
                         'location_id' => $location->id,
                         'quantity' => 0,
                         'reserved_quantity' => 0,
-                        'min_stock' => 10,
-                        'max_stock' => 100,
-                        'reorder_point' => 20
+                        'reorder_level' => 20
                     ]);
                     $created++;
                 }
