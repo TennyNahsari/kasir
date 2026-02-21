@@ -3,8 +3,7 @@
     <div class="max-w-md w-full">
       <div class="card">
         <div class="text-center mb-6 sm:mb-8">
-          <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Unified POS</h1>
-          <p class="text-sm sm:text-base text-gray-600 mt-2">Login ke sistem kasir</p>
+          <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Inventory and Asset Management</h1>
         </div>
 
         <form @submit.prevent="handleLogin">
