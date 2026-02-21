@@ -485,15 +485,28 @@ const closeSuccess = () => {
 }
 
 const loadProductsForOutlet = async (outletId) => {
-  if (!outletId) return
+  if (!outletId) {
+    console.warn('⚠️ loadProductsForOutlet called with empty outletId')
+    return
+  }
+  
+  // Ensure outletId is a valid number
+  const validOutletId = Number(outletId)
+  if (isNaN(validOutletId) || validOutletId <= 0) {
+    console.error('❌ Invalid outletId:', outletId, 'Type:', typeof outletId)
+    alert('Invalid outlet ID. Please select a valid outlet.')
+    return
+  }
+  
+  console.log('✅ Loading products for outlet:', validOutletId, 'Type:', typeof validOutletId)
   
   loading.value = true
   debugInfo.value = null
   try {
-    console.log('Loading products for outlet:', outletId)
+    console.log('Loading products for outlet:', validOutletId)
     
     // Fetch location info to get outlet business_type
-    const locationResponse = await api.get(`/locations/${outletId}`)
+    const locationResponse = await api.get(`/locations/${validOutletId}`)
     outletInfo.value = locationResponse.data
     userOutletName.value = locationResponse.data.name // Set outlet name for display
     console.log('Outlet info:', outletInfo.value)
@@ -517,7 +530,15 @@ const loadProductsForOutlet = async (outletId) => {
     }
     
     // Prepare params for fetching products
-    const productParams = { location_id: outletId, is_active: true }
+    const productParams = { 
+      location_id: validOutletId,  // Use validated number
+      is_active: true 
+    }
+    
+    console.log('📦 Product params prepared:', productParams, {
+      location_id_value: productParams.location_id,
+      location_id_type: typeof productParams.location_id
+    })
     
     // Check if FNB mode
     const isFnb = outletInfo.value?.outlet?.business_type === 'fnb' || locationType === 'FNB'

@@ -14,6 +14,13 @@ export const useProductStore = defineStore('product', () => {
       // If location_id is provided, use the new endpoint for inventory stocks
       const endpoint = params.location_id ? '/products-by-location' : '/products'
       console.log('Fetching products from:', endpoint, 'with params:', params)
+      console.log('Params type check:', {
+        location_id: params.location_id,
+        location_id_type: typeof params.location_id,
+        is_active: params.is_active,
+        is_active_type: typeof params.is_active
+      })
+      
       const response = await api.get(endpoint, { params })
       console.log('Products API response:', response.data)
       
