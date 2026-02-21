@@ -697,13 +697,11 @@ const loadUsers = async () => {
 
 const loadAssetProducts = async () => {
   try {
-    const response = await api.get('/products', {
-      params: { 
-        type: 'ASSET',
-        per_page: 500
-      }
-    })
+    // Force query string in URL to ensure params are sent
+    const response = await api.get('/products?type=ASSET&per_page=500')
     assetProducts.value = response.data.data || response.data
+    // CRITICAL: Filter client-side as backup
+    assetProducts.value = assetProducts.value.filter(p => p.type === 'ASSET')
     filteredProducts.value = assetProducts.value
     console.log('Loaded asset products:', assetProducts.value.length, 'items')
     console.log('Product types:', assetProducts.value.map(p => p.type))

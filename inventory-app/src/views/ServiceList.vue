@@ -653,13 +653,11 @@ const loadLocations = async () => {
 
 const loadServiceProducts = async () => {
   try {
-    const { data } = await api.get('/products', { 
-      params: { 
-        type: 'SERVICE', 
-        per_page: 500 
-      } 
-    })
+    // Force query string in URL to ensure params are sent
+    const { data } = await api.get('/products?type=SERVICE&per_page=500')
     serviceProducts.value = data.data || []
+    // CRITICAL: Filter client-side as backup
+    serviceProducts.value = serviceProducts.value.filter(p => p.type === 'SERVICE')
     filteredProducts.value = serviceProducts.value
     console.log('Loaded service products:', serviceProducts.value.length, 'items')
     console.log('Product types:', serviceProducts.value.map(p => p.type))
