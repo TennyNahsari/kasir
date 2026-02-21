@@ -29,8 +29,7 @@ const router = createRouter({
         {
           path: 'pos',
           name: 'POS',
-          component: () => import('@/views/POSView.vue'),
-          meta: { roles: ['kasir', 'owner', 'supervisor'] }
+          component: () => import('@/views/POSView.vue')
         },
         {
           path: 'transactions',
@@ -100,11 +99,13 @@ router.beforeEach(async (to, from, next) => {
     return next('/login')
   }
   
-  // Kasir App Access Control: Only owner and kasir allowed
+  // Kasir App Access Control: Only owner and users with location assignment
   if (requiresAuth && isAuthenticated) {
-    const userRole = authStore.user?.role
-    if (!['owner', 'kasir'].includes(userRole)) {
-      alert('Access Denied: Only Owner and Kasir can access this application')
+    const user = authStore.user
+    const hasLocation = user?.outlet_id || user?.location_id
+    
+    if (user?.role !== 'owner' && !hasLocation) {
+      alert('Access Denied: Only Owner and users with location assignment can access this application')
       await authStore.logout()
       return next('/login')
     }
