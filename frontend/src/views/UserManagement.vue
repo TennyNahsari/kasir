@@ -35,9 +35,8 @@
           <select v-model="filters.role" @change="loadUsers" class="w-full border-gray-300 rounded-lg">
             <option value="">All Roles</option>
             <option value="owner">Owner</option>
+            <option value="inventory">Inventory</option>
             <option value="supervisor">Supervisor</option>
-            <option value="kasir">Kasir</option>
-            <option value="kitchen">Kitchen</option>
             <option value="staff">Staff</option>
           </select>
         </div>
@@ -78,9 +77,8 @@
                 <span class="px-2 py-1 text-xs font-semibold rounded-full"
                   :class="{
                     'bg-purple-100 text-purple-800': user.role === 'owner',
+                    'bg-indigo-100 text-indigo-800': user.role === 'inventory',
                     'bg-blue-100 text-blue-800': user.role === 'supervisor',
-                    'bg-green-100 text-green-800': user.role === 'kasir',
-                    'bg-orange-100 text-orange-800': user.role === 'kitchen',
                     'bg-gray-100 text-gray-800': user.role === 'staff'
                   }">
                   {{ user.role }}
@@ -139,13 +137,12 @@
             <label class="block text-sm font-medium text-gray-700 mb-1">Role *</label>
             <select v-model="userForm.role" class="w-full border-gray-300 rounded-lg" required>
               <option value="owner">Owner</option>
+              <option value="inventory">Inventory</option>
               <option value="supervisor">Supervisor</option>
-              <option value="kasir">Kasir</option>
-              <option value="kitchen">Kitchen</option>
               <option value="staff">Staff</option>
             </select>
           </div>
-          <div v-if="userForm.role !== 'owner'">
+          <div v-if="!['owner', 'inventory'].includes(userForm.role)">
             <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
             <select v-model="userForm.location_id" class="w-full border-gray-300 rounded-lg">
               <option value="">Select Location</option>
@@ -206,7 +203,7 @@ const userForm = ref({
   name: '',
   email: '',
   password: '',
-  role: 'kasir',
+  role: 'staff',
   location_id: '',
   is_active: true
 })
@@ -290,7 +287,7 @@ const openAddModal = () => {
     name: '',
     email: '',
     password: '',
-    role: 'kasir',
+    role: 'staff',
     location_id: '',
     is_active: true
   }
