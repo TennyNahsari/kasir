@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
@@ -26,7 +26,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       // Only redirect if not already on login page
       if (!window.location.pathname.includes('/login')) {
-        window.location.href = '/login'
+        window.location.href = '/kasir/login'
       }
     }
     return Promise.reject(error)
