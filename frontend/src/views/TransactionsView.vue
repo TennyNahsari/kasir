@@ -381,24 +381,28 @@ const loadTransactions = async () => {
     if (dateTo.value) params.date_to = dateTo.value
     if (businessType.value) params.business_type = businessType.value
     if (paymentMethod.value) params.payment_method = paymentMethod.value
-    if (outletFilter.value) params.outlet_id = outletFilter.value
+    // Backend will auto-filter by user's location_id or outlet_id
+    // No need to send outlet_id from frontend
 
+    console.log('Loading transactions with params:', params)
     const response = await api.get('/transactions', { params })
+    console.log('Transactions loaded:', response.data.data?.length || 0, 'transactions')
     transactions.value = response.data.data
   } catch (error) {
     console.error('Failed to load transactions:', error)
   }
 }
 
-const loadOutlets = async () => {
-  if (!isOwner.value) return
-  try {
-    const response = await api.get('/outlets')
-    outlets.value = response.data
-  } catch (error) {
-    console.error('Failed to load outlets:', error)
-  }
-}
+// Remove unused loadOutlets function
+// const loadOutlets = async () => {
+//   if (!isOwner.value) return
+//   try {
+//     const response = await api.get('/outlets')
+//     outlets.value = response.data
+//   } catch (error) {
+//     console.error('Failed to load outlets:', error)
+//   }
+// }
 
 const viewDetail = async (transaction) => {
   try {
