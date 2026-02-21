@@ -147,7 +147,7 @@ onMounted(async () => {
 const loadLocations = async () => {
   try {
     const { data } = await api.get('/locations')
-    locations.value = data
+    locations.value = data.data || data  // Handle pagination response
   } catch (error) {
     console.error('Failed to load locations:', error)
   }
