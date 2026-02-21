@@ -11,6 +11,13 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
+        // Debug logging
+        \Log::info('ProductController::index called', [
+            'type' => $request->type,
+            'search' => $request->search,
+            'all_params' => $request->all()
+        ]);
+
         $query = Product::with('category');
 
         // Filter by product type
