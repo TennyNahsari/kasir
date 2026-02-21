@@ -9,15 +9,22 @@ export const useAuthStore = defineStore('auth', () => {
 
   // Initialize by checking if user is authenticated via cookie
   const initAuth = async () => {
-    if (initialized.value) return
+    console.log('🔧 initAuth called, initialized:', initialized.value)
+    if (initialized.value) {
+      console.log('⏭️ initAuth skipped - already initialized')
+      return
+    }
     
     initialized.value = true
     loading.value = true
     try {
+      console.log('📡 initAuth: Calling GET /me...')
       // Try to get current user from API (cookie will be sent automatically)
       const response = await api.get('/me')
+      console.log('✅ initAuth: GET /me success:', response.data)
       user.value = response.data
     } catch (error) {
+      console.warn('⚠️ initAuth: GET /me failed:', error.message)
       // Not authenticated or session expired
       user.value = null
     } finally {
