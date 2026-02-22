@@ -315,23 +315,40 @@ const isFnbMode = computed(() => {
 // Filter categories based on outlet/location type
 const categories = computed(() => {
   const allCategories = productStore.categories
+  const allProducts = productStore.products
+  
+  // Helper function to check if category has products with stock
+  const hasProductsWithStock = (categoryId) => {
+    return allProducts.some(p => {
+      if (p.category_id !== categoryId) return false
+      
+      // If product doesn't track stock (like F&B items), always show
+      if (!p.track_stock) return true
+      
+      // Check available stock
+      const availableStock = p.available_stock ?? (p.stock - (p.reserved_quantity || 0))
+      return availableStock > 0
+    })
+  }
   
   // Owner/Inventory sees all categories
   if (isOwner.value) {
     return allCategories
   }
   
+  let filteredCategories = allCategories
+  
   // If FNB mode, only show FNB categories
   if (isFnbMode.value) {
-    return allCategories.filter(cat => 
+    filteredCategories = allCategories.filter(cat => 
       cat.name.includes('FNB') || 
       cat.slug.includes('fnb') ||
       cat.slug.includes('FNB')
     )
   }
   
-  // For OUTLET type, show all categories
-  return allCategories
+  // Filter out categories with no products or no stock
+  return filteredCategories.filter(cat => hasProductsWithStock(cat.id))
 })
 
 const products = computed(() => productStore.products)
