@@ -191,12 +191,47 @@
         <div class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Product *</label>
-            <select v-model="addForm.product_id" class="w-full border-gray-300 rounded-lg" required>
-              <option value="">Select Product</option>
-              <option v-for="product in availableProducts" :key="product.id" :value="product.id">
-                {{ product.name }} ({{ product.sku }})
-              </option>
-            </select>
+            <div class="relative">
+              <input 
+                v-model="productSearch" 
+                @focus="showProductDropdown = true"
+                @input="showProductDropdown = true"
+                @blur="() => { setTimeout(() => showProductDropdown = false, 200) }"
+                type="text" 
+                placeholder="Search product by name or SKU..."
+                class="w-full border-gray-300 rounded-lg px-3 py-2 border focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
+                required
+              >
+              
+              <!-- Dropdown list -->
+              <div 
+                v-if="showProductDropdown && filteredProducts.length > 0" 
+                class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+              >
+                <div 
+                  v-for="product in filteredProducts" 
+                  :key="product.id"
+                  @click="selectProduct(product)"
+                  class="px-3 py-2 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                >
+                  <div class="font-medium text-gray-900">{{ product.name }}</div>
+                  <div class="text-sm text-gray-500">SKU: {{ product.sku }}</div>
+                </div>
+              </div>
+              
+              <!-- No results message -->
+              <div 
+                v-if="showProductDropdown && productSearch && filteredProducts.length === 0" 
+                class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg px-3 py-2 text-gray-500 text-sm"
+              >
+                No products found
+              </div>
+              
+              <!-- Selected product display -->
+              <div v-if="selectedProduct" class="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm">
+                <span class="font-medium">Selected:</span> {{ selectedProduct.name }} ({{ selectedProduct.sku }})
+              </div>
+            </div>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Initial Quantity *</label>
@@ -223,7 +258,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import api from '@/services/api'
 import Pagination from '@/components/Pagination.vue'
 
@@ -237,6 +272,11 @@ const showAddModal = ref(false)
 const availableProducts = ref([])
 const errorMessage = ref('')
 const loading = ref(false)
+
+// Autocomplete for product selection
+const productSearch = ref('')
+const showProductDropdown = ref(false)
+const selectedProduct = ref(null)
 
 const pagination = ref({
   currentPage: 1,
@@ -264,6 +304,27 @@ const addForm = ref({
   reorder_level: 0,
   notes: ''
 })
+
+// Computed property for filtered products based on search
+const filteredProducts = computed(() => {
+  if (!productSearch.value) {
+    return availableProducts.value
+  }
+  
+  const search = productSearch.value.toLowerCase()
+  return availableProducts.value.filter(product => 
+    product.name.toLowerCase().includes(search) || 
+    product.sku.toLowerCase().includes(search)
+  )
+})
+
+// Select product from dropdown
+const selectProduct = (product) => {
+  selectedProduct.value = product
+  addForm.value.product_id = product.id
+  productSearch.value = product.name
+  showProductDropdown.value = false
+}
 
 onMounted(async () => {
   await Promise.all([loadLocations(), loadCategories()])
@@ -441,6 +502,11 @@ const openAddModal = async () => {
     loading.value = true
     errorMessage.value = ''
     
+    // Reset autocomplete state
+    productSearch.value = ''
+    selectedProduct.value = null
+    showProductDropdown.value = false
+    
     // Load all products
     const { data } = await api.get('/products')
     // Handle both array and object with data property
@@ -497,5 +563,8 @@ const saveNewStock = async () => {
 const closeAddModal = () => {
   showAddModal.value = false
   availableProducts.value = []
+  productSearch.value = ''
+  selectedProduct.value = null
+  showProductDropdown.value = false
 }
 </script>
