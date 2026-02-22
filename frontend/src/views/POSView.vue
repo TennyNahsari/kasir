@@ -317,22 +317,44 @@ const categories = computed(() => {
   const allCategories = productStore.categories
   const allProducts = productStore.products
   
+  console.log('🏷️ Categories computed - Total categories:', allCategories.length)
+  console.log('📦 Categories computed - Total products for location:', allProducts.length)
+  console.log('📦 Products in store:', allProducts.map(p => ({
+    id: p.id,
+    name: p.name,
+    category_id: p.category_id,
+    stock: p.stock,
+    available_stock: p.available_stock
+  })))
+  
   // Helper function to check if category has products with stock
   const hasProductsWithStock = (categoryId) => {
-    return allProducts.some(p => {
+    const productsInCategory = allProducts.filter(p => p.category_id === categoryId)
+    console.log(`  Category ${categoryId}: ${productsInCategory.length} products`)
+    
+    const hasStock = allProducts.some(p => {
       if (p.category_id !== categoryId) return false
       
       // If product doesn't track stock (like F&B items), always show
-      if (!p.track_stock) return true
+      if (!p.track_stock) {
+        console.log(`    ✅ Product "${p.name}" doesn't track stock - show category`)
+        return true
+      }
       
       // Check available stock
       const availableStock = p.available_stock ?? (p.stock - (p.reserved_quantity || 0))
-      return availableStock > 0
+      const hasPositiveStock = availableStock > 0
+      console.log(`    ${hasPositiveStock ? '✅' : '❌'} Product "${p.name}" has stock: ${availableStock}`)
+      return hasPositiveStock
     })
+    
+    console.log(`  Category ${categoryId} has products with stock: ${hasStock}`)
+    return hasStock
   }
   
   // Owner/Inventory sees all categories
   if (isOwner.value) {
+    console.log('👑 Owner mode - showing all categories')
     return allCategories
   }
   
@@ -345,10 +367,14 @@ const categories = computed(() => {
       cat.slug.includes('fnb') ||
       cat.slug.includes('FNB')
     )
+    console.log('🍽️ FNB mode - filtered to FNB categories:', filteredCategories.map(c => c.name))
   }
   
   // Filter out categories with no products or no stock
-  return filteredCategories.filter(cat => hasProductsWithStock(cat.id))
+  const finalCategories = filteredCategories.filter(cat => hasProductsWithStock(cat.id))
+  console.log('🏷️ Final categories after stock filtering:', finalCategories.map(c => c.name))
+  
+  return finalCategories
 })
 
 const products = computed(() => productStore.products)
