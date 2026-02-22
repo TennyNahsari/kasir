@@ -352,12 +352,6 @@ const categories = computed(() => {
     return hasStock
   }
   
-  // Owner/Inventory sees all categories
-  if (isOwner.value) {
-    console.log('👑 Owner mode - showing all categories')
-    return allCategories
-  }
-  
   let filteredCategories = allCategories
   
   // If FNB mode, only show FNB categories
@@ -370,7 +364,7 @@ const categories = computed(() => {
     console.log('🍽️ FNB mode - filtered to FNB categories:', filteredCategories.map(c => c.name))
   }
   
-  // Filter out categories with no products or no stock
+  // Filter out categories with no products or no stock (applies to ALL users including Owner)
   const finalCategories = filteredCategories.filter(cat => hasProductsWithStock(cat.id))
   console.log('🏷️ Final categories after stock filtering:', finalCategories.map(c => c.name))
   
