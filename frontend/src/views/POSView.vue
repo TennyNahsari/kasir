@@ -545,6 +545,10 @@ const loadProductsForOutlet = async (outletId) => {
   
   loading.value = true
   debugInfo.value = null
+  
+  // Clear products first to prevent showing stale data
+  productStore.clearProducts()
+  
   try {
     console.log('Loading products for outlet:', validOutletId)
     

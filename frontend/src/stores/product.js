@@ -149,6 +149,11 @@ export const useProductStore = defineStore('product', () => {
     }
   }
 
+  const clearProducts = () => {
+    products.value = []
+    console.log('🧹 Products cleared in store')
+  }
+
   return {
     products,
     categories,
@@ -162,6 +167,7 @@ export const useProductStore = defineStore('product', () => {
     deleteProduct,
     addCategory,
     updateCategory,
-    deleteCategory
+    deleteCategory,
+    clearProducts
   }
 })
