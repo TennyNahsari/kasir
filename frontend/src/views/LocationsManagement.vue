@@ -3,7 +3,7 @@
     <div class="mb-6 flex justify-between items-center">
       <div>
         <h1 class="text-3xl font-bold text-gray-800">Locations</h1>
-        <p class="text-gray-600">Manage warehouses, outlets, and F&B locations</p>
+        <p class="text-gray-600">Manage inventory, outlets, and F&B locations</p>
       </div>
       <button @click="showCreateModal = true" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700" :disabled="loading">
         <span class="text-xl mr-1">+</span>
@@ -42,7 +42,7 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
       </svg>
       <p class="text-gray-500 mb-2">No locations found</p>
-      <p class="text-sm text-gray-400 mb-4">Add your first warehouse, outlet, or F&B location</p>
+      <p class="text-sm text-gray-400 mb-4">Add your first inventory, outlet, or F&B location</p>
       <button @click="showCreateModal = true" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
         <span class="text-xl mr-2">+</span>
         Add Location
@@ -129,10 +129,9 @@
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Type *</label>
             <select v-model="locationForm.type" class="w-full border-gray-300 rounded-lg" required :disabled="loading">
-              <option value="WAREHOUSE">Warehouse</option>
+              <option value="INVENTORY">Inventory/Warehouse</option>
               <option value="OUTLET">Outlet</option>
               <option value="FNB">F&B (Food & Beverage)</option>
-              <option value="DEPARTMENT">Department</option>
             </select>
           </div>
           <div>
@@ -211,7 +210,10 @@ const loadLocations = async () => {
     // Handle both paginated and non-paginated responses
     if (data.data && data.meta) {
       // Paginated response
-      locations.value = data.data
+      // Filter only INVENTORY, OUTLET, and FNB types
+      locations.value = (data.data || []).filter(loc => 
+        ['INVENTORY', 'WAREHOUSE', 'OUTLET', 'FNB'].includes(loc.type?.toUpperCase())
+      )
       pagination.value = {
         currentPage: data.meta.current_page,
         lastPage: data.meta.last_page,
@@ -222,11 +224,16 @@ const loadLocations = async () => {
       }
     } else {
       // Non-paginated response (array) or paginated without meta
-      locations.value = data.data || data
+      const allLocations = data.data || data
       
-      if (!Array.isArray(locations.value)) {
-        console.error('Locations data is not an array:', locations.value)
+      if (!Array.isArray(allLocations)) {
+        console.error('Locations data is not an array:', allLocations)
         locations.value = []
+      } else {
+        // Filter only INVENTORY, OUTLET, and FNB types
+        locations.value = allLocations.filter(loc => 
+          ['INVENTORY', 'WAREHOUSE', 'OUTLET', 'FNB'].includes(loc.type?.toUpperCase())
+        )
       }
       
       // Set default pagination for non-paginated response
@@ -262,10 +269,9 @@ const handlePerPageChange = (perPage) => {
 }
 
 const getTypeClass = (type) => {
-  if (type === 'WAREHOUSE') return 'bg-blue-100 text-blue-800'
+  if (type === 'WAREHOUSE' || type === 'INVENTORY') return 'bg-blue-100 text-blue-800'
   if (type === 'OUTLET') return 'bg-green-100 text-green-800'
   if (type === 'FNB') return 'bg-orange-100 text-orange-800'
-  if (type === 'DEPARTMENT') return 'bg-purple-100 text-purple-800'
   return 'bg-gray-100 text-gray-800'
 }
 

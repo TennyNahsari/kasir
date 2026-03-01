@@ -344,11 +344,16 @@ const loadLocations = async () => {
       params: { per_page: 100, is_active: 1 }
     })
     // Handle pagination - extract data array from paginated response
-    locations.value = data.data || data
+    const allLocations = data.data || data
     
-    if (!Array.isArray(locations.value)) {
-      console.error('Locations data is not an array:', locations.value)
+    if (!Array.isArray(allLocations)) {
+      console.error('Locations data is not an array:', allLocations)
       locations.value = []
+    } else {
+      // Filter only INVENTORY, OUTLET, and FNB types
+      locations.value = allLocations.filter(loc => 
+        ['INVENTORY', 'WAREHOUSE', 'OUTLET', 'FNB'].includes(loc.type?.toUpperCase())
+      )
     }
     
     if (locations.value.length === 0) {

@@ -76,8 +76,8 @@ const handleOutletChange = () => {
 const loadOutlets = async () => {
   try {
     console.log('Loading outlets from locations...')
-    // Load outlets that are registered in inventory locations
-    // Include both OUTLET and FNB type locations for POS
+    // Load locations that are active
+    // Include OUTLET, INVENTORY, and FNB type locations
     const response = await api.get('/locations', { 
       params: { 
         is_active: true,
@@ -93,7 +93,7 @@ const loadOutlets = async () => {
     console.log('Locations data:', locationsData)
     
     // Map locations to outlet format (with outlet info)
-    // For POS: Show all locations with type OUTLET or FNB (regardless of outlet_id)
+    // For POS: Show all locations with type OUTLET, INVENTORY, or FNB (regardless of outlet_id)
     const allLocations = locationsData.map(loc => ({
       location_id: loc.id,
       location_name: loc.name,
@@ -101,12 +101,12 @@ const loadOutlets = async () => {
       outlet_name: loc.outlet?.name || 'No Outlet',
       business_type: loc.outlet?.business_type || (loc.type === 'FNB' ? 'fnb' : 'retail'),
       location_type: loc.type,
-      isValidType: loc.type === 'OUTLET' || loc.type === 'FNB'
+      isValidType: ['OUTLET', 'FNB', 'INVENTORY', 'WAREHOUSE'].includes(loc.type?.toUpperCase())
     }))
     
     console.log('All locations before filtering:', allLocations)
     
-    // Filter: Only OUTLET and FNB type locations (for POS app)
+    // Filter: Only OUTLET, INVENTORY, and FNB type locations
     outlets.value = allLocations.filter(loc => loc.isValidType)
     
     console.log('Filtered outlets for POS:', outlets.value)
