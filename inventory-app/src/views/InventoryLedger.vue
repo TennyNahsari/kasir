@@ -1,16 +1,16 @@
 <template>
   <div class="p-6">
     <div class="mb-6">
-      <h1 class="text-3xl font-bold text-gray-800">Inventory Ledger</h1>
-      <p class="text-gray-600">Complete movement history</p>
+      <h1 class="text-3xl font-bold text-gray-800">{{ $t('ledger.title') }}</h1>
+      <p class="text-gray-600">{{ $t('ledger.subtitle') }}</p>
     </div>
 
     <!-- Filters -->
     <div class="bg-white rounded-lg shadow p-4 mb-6">
       <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Product</label>
-          <input v-model="filters.product_search" @input="searchProducts" type="text" placeholder="Search product..." class="w-full border-gray-300 rounded-lg">
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ledger.productLabel') }}</label>
+          <input v-model="filters.product_search" @input="searchProducts" type="text" :placeholder="$t('ledger.searchProductPlaceholder')" class="w-full border-gray-300 rounded-lg">
           <div v-if="productSearchResults.length > 0" class="absolute z-10 mt-1 w-64 bg-white border rounded-lg shadow-lg max-h-40 overflow-y-auto">
             <div v-for="product in productSearchResults" :key="product.id" @click="selectProduct(product)" class="p-2 hover:bg-gray-100 cursor-pointer text-sm">
               {{ product.name }} ({{ product.sku }})
@@ -18,31 +18,31 @@
           </div>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ledger.locationLabel') }}</label>
           <select v-model="filters.location_id" @change="loadLedger" class="w-full border-gray-300 rounded-lg">
-            <option value="">All Locations</option>
+            <option value="">{{ $t('ledger.allLocations') }}</option>
             <option v-for="loc in locations" :key="loc.id" :value="loc.id">{{ loc.name }}</option>
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Movement Type</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ledger.movementTypeLabel') }}</label>
           <select v-model="filters.movement_type" @change="loadLedger" class="w-full border-gray-300 rounded-lg">
-            <option value="">All Types</option>
-            <option value="STOCK_IN">Stock In</option>
-            <option value="STOCK_OUT">Stock Out</option>
-            <option value="TRANSFER_OUT">Transfer Out</option>
-            <option value="TRANSFER_IN">Transfer In</option>
-            <option value="ADJUSTMENT">Adjustment</option>
-            <option value="RESERVED">Reserved</option>
-            <option value="RELEASED">Released</option>
+            <option value="">{{ $t('ledger.allTypes') }}</option>
+            <option value="STOCK_IN">{{ $t('ledger.stockIn') }}</option>
+            <option value="STOCK_OUT">{{ $t('ledger.stockOut') }}</option>
+            <option value="TRANSFER_OUT">{{ $t('ledger.transferOut') }}</option>
+            <option value="TRANSFER_IN">{{ $t('ledger.transferIn') }}</option>
+            <option value="ADJUSTMENT">{{ $t('ledger.adjustment') }}</option>
+            <option value="RESERVED">{{ $t('ledger.reserved') }}</option>
+            <option value="RELEASED">{{ $t('ledger.released') }}</option>
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">From Date</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ledger.fromDateLabel') }}</label>
           <input v-model="filters.from_date" @change="loadLedger" type="date" class="w-full border-gray-300 rounded-lg">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">To Date</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ledger.toDateLabel') }}</label>
           <input v-model="filters.to_date" @change="loadLedger" type="date" class="w-full border-gray-300 rounded-lg">
         </div>
       </div>
@@ -54,14 +54,14 @@
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date/Time</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Movement Type</th>
-              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Quantity</th>
-              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Balance</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reference</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Notes</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ledger.dateTime') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ledger.product') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ledger.location') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ledger.movementType') }}</th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{{ $t('ledger.quantity') }}</th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{{ $t('ledger.balance') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ledger.reference') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('ledger.notes') }}</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -98,7 +98,7 @@
             </tr>
             <tr v-if="ledger.length === 0">
               <td colspan="8" class="px-6 py-4 text-center text-gray-500">
-                No ledger entries found
+                {{ $t('ledger.noEntries') }}
               </td>
             </tr>
           </tbody>
@@ -112,10 +112,12 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import api from '@/services/api'
 import Pagination from '@/components/Pagination.vue'
 
 const route = useRoute()
+const { t } = useI18n()
 
 const ledger = ref([])
 const locations = ref([])
@@ -219,7 +221,16 @@ const getMovementTypeClass = (type) => {
 }
 
 const formatMovementType = (type) => {
-  return type.replace(/_/g, ' ')
+  const types = {
+    'STOCK_IN': t('ledger.stockIn'),
+    'STOCK_OUT': t('ledger.stockOut'),
+    'TRANSFER_OUT': t('ledger.transferOut'),
+    'TRANSFER_IN': t('ledger.transferIn'),
+    'ADJUSTMENT': t('ledger.adjustment'),
+    'RESERVED': t('ledger.reserved'),
+    'RELEASED': t('ledger.released')
+  }
+  return types[type] || type
 }
 
 const formatDateTime = (dateString) => {
