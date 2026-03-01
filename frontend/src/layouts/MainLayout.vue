@@ -51,7 +51,7 @@
         <!-- Settings Section (Owner & Supervisor) -->
         <div v-if="canAccessSettings" class="mt-6 pt-6 border-t">
           <div class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-            Settings
+            {{ $t('nav.settings') }}
           </div>
           <div class="space-y-1 mt-2">
             <router-link
@@ -73,6 +73,31 @@
 
       <!-- Sidebar Footer (User Info) -->
       <div class="p-4 border-t">
+        <!-- Language Switcher Desktop -->
+        <div class="mb-3 relative">
+          <button @click="showLangMenu = !showLangMenu" class="w-full flex items-center justify-between p-2 hover:bg-gray-100 rounded-lg">
+            <div class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/>
+              </svg>
+              <span class="text-sm text-gray-700">{{ currentLocale === 'id' ? '🇮🇩 ID' : '🇬🇧 EN' }}</span>
+            </div>
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+          <div v-if="showLangMenu" class="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-lg shadow-lg border z-50">
+            <button @click="changeLocale('id')" class="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 rounded-t-lg">
+              <span class="text-sm">🇮🇩</span>
+              <span class="text-sm">{{ $t('language.indonesian') }}</span>
+            </button>
+            <button @click="changeLocale('en')" class="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 rounded-b-lg">
+              <span class="text-sm">🇬🇧</span>
+              <span class="text-sm">{{ $t('language.english') }}</span>
+            </button>
+          </div>
+        </div>
+        
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
             <span class="text-primary-600 font-semibold text-sm">
@@ -90,7 +115,7 @@
           @click="handleLogout" 
           class="mt-3 w-full btn btn-secondary text-sm py-2"
         >
-          Logout
+          {{ $t('nav.logout') }}
         </button>
       </div>
     </aside>
@@ -107,7 +132,25 @@
               </svg>
             </button>
             <h1 class="text-lg font-bold text-primary-600">Unified POS</h1>
-            <div class="w-10"></div> <!-- Spacer for centering -->
+            <!-- Language Switcher Mobile -->
+            <div class="relative">
+              <button @click="showLangMenu = !showLangMenu" class="p-2 hover:bg-gray-100 rounded-lg flex items-center gap-1">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/>
+                </svg>
+                <span class="text-xs font-medium">{{ currentLocale.toUpperCase() }}</span>
+              </button>
+              <div v-if="showLangMenu" class="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg border z-50">
+                <button @click="changeLocale('id')" class="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2">
+                  <span class="text-sm">🇮🇩</span>
+                  <span class="text-sm">{{ $t('language.indonesian') }}</span>
+                </button>
+                <button @click="changeLocale('en')" class="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2">
+                  <span class="text-sm">🇬🇧</span>
+                  <span class="text-sm">{{ $t('language.english') }}</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </header>
@@ -124,29 +167,40 @@
 import { computed, ref, h } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useI18n } from 'vue-i18n'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const showMobileMenu = ref(false)
+const showLangMenu = ref(false)
+const { t, locale } = useI18n()
+
+const currentLocale = computed(() => locale.value)
+
+const changeLocale = (newLocale) => {
+  locale.value = newLocale
+  localStorage.setItem('locale', newLocale)
+  showLangMenu.value = false
+}
 
 const navigation = computed(() => {
   const items = [
     { 
-      name: 'Dashboard', 
+      name: t('nav.dashboard'), 
       path: '/',
       icon: () => h('svg', { class: 'w-5 h-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
         h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' })
       ])
     },
     { 
-      name: 'POS Kasir', 
+      name: t('nav.pos'), 
       path: '/pos',
       icon: () => h('svg', { class: 'w-5 h-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
         h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z' })
       ])
     },
     { 
-      name: 'Transaksi', 
+      name: t('nav.transactions'), 
       path: '/transactions',
       icon: () => h('svg', { class: 'w-5 h-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
         h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01' })
@@ -157,9 +211,9 @@ const navigation = computed(() => {
   return items
 })
 
-const settingsMenu = [
+const settingsMenu = computed(() => [
   { 
-    name: 'Users', 
+    name: t('nav.users'), 
     path: '/settings/users',
     roles: ['owner', 'inventory'],
     icon: () => h('svg', { class: 'w-5 h-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
@@ -167,7 +221,7 @@ const settingsMenu = [
     ])
   },
   { 
-    name: 'Products', 
+    name: t('nav.products'), 
     path: '/settings/products',
     roles: ['owner', 'inventory'],
     icon: () => h('svg', { class: 'w-5 h-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
@@ -175,7 +229,7 @@ const settingsMenu = [
     ])
   },
   { 
-    name: 'Stock', 
+    name: t('nav.stocks'), 
     path: '/settings/stocks',
     roles: ['owner', 'inventory', 'supervisor'],
     icon: () => h('svg', { class: 'w-5 h-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
@@ -183,7 +237,7 @@ const settingsMenu = [
     ])
   },
   { 
-    name: 'Locations', 
+    name: t('nav.locations'), 
     path: '/settings/locations',
     roles: ['owner', 'inventory'],
     icon: () => h('svg', { class: 'w-5 h-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
@@ -191,7 +245,7 @@ const settingsMenu = [
       h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M15 11a3 3 0 11-6 0 3 3 0 016 0z' })
     ])
   }
-]
+])
 
 const canAccessSettings = computed(() => {
   const userRole = authStore.user?.role
@@ -200,7 +254,7 @@ const canAccessSettings = computed(() => {
 
 const filteredSettingsMenu = computed(() => {
   const userRole = authStore.user?.role
-  return settingsMenu.filter(item => item.roles.includes(userRole))
+  return settingsMenu.value.filter(item => item.roles.includes(userRole))
 })
 
 const handleLogout = async () => {

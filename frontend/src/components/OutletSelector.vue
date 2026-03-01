@@ -1,23 +1,23 @@
 <template>
   <div v-if="showSelector" class="mb-4">
     <label class="block text-sm font-medium text-gray-700 mb-2">
-      <span class="text-primary-600">👤 Owner/Inventory Mode:</span> Pilih Location (OUTLET/FNB)
+      <span class="text-primary-600">👤 {{ $t('outlet.ownerMode') }}</span> {{ $t('outlet.selectLocationLabel') }}
     </label>
     <select 
       v-model="selectedLocationId" 
       @change="handleOutletChange"
       class="w-full md:w-64 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
     >
-      <option value="">-- Pilih Location --</option>
+      <option value="">{{ $t('outlet.selectLocationPlaceholder') }}</option>
       <option v-for="outlet in outlets" :key="outlet.location_id" :value="outlet.location_id">
         {{ outlet.location_name }} - [{{ outlet.location_type }}]
       </option>
     </select>
     <p v-if="!selectedLocationId" class="mt-1 text-xs text-gray-500">
-      Silakan pilih location untuk melihat produk & stocks
+      {{ $t('outlet.selectLocationInfo') }}
     </p>
     <p v-if="outlets.length === 0 && !selectedLocationId" class="mt-1 text-xs text-orange-600">
-      ⚠️ Tidak ada location OUTLET/FNB. Silakan buat location dengan type OUTLET atau FNB di aplikasi inventory.
+      {{ $t('outlet.noLocationWarning') }}
     </p>
   </div>
 </template>
@@ -25,9 +25,11 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { useI18n } from 'vue-i18n'
 import api from '@/services/api'
 
 const emit = defineEmits(['outlet-changed'])
+const { t } = useI18n()
 
 const authStore = useAuthStore()
 const outlets = ref([])
@@ -52,7 +54,7 @@ const handleOutletChange = () => {
     const isValid = outlets.value.find(o => o.location_id === locationId)
     if (!isValid) {
       console.error('❌ Invalid location selected:', locationId)
-      alert('Location tidak valid. Silakan pilih location lain.')
+      alert(t('outlet.invalidLocation'))
       selectedLocationId.value = ''
       localStorage.removeItem('owner_selected_location')
       return
@@ -98,7 +100,7 @@ const loadOutlets = async () => {
       location_id: loc.id,
       location_name: loc.name,
       outlet_id: loc.outlet_id,
-      outlet_name: loc.outlet?.name || 'No Outlet',
+      outlet_name: loc.outlet?.name || t('outlet.noOutletLabel'),
       business_type: loc.outlet?.business_type || (loc.type === 'FNB' ? 'fnb' : 'retail'),
       location_type: loc.type,
       isValidType: ['OUTLET', 'FNB', 'INVENTORY', 'WAREHOUSE'].includes(loc.type?.toUpperCase())
