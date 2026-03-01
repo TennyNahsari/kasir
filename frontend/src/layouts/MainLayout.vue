@@ -155,6 +155,66 @@
         </div>
       </header>
 
+      <!-- Top Header (Desktop) -->
+      <header class="hidden lg:flex bg-white shadow-sm sticky top-0 z-30">
+        <div class="flex-1 px-6 py-3">
+          <div class="flex items-center justify-end gap-4">
+            <!-- Language Switcher Desktop -->
+            <div class="relative">
+              <button @click="showLangMenu = !showLangMenu" class="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors">
+                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/>
+                </svg>
+                <span class="text-sm font-medium text-gray-700">{{ currentLocale === 'id' ? '🇮🇩 ID' : '🇬🇧 EN' }}</span>
+                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </button>
+              <div v-if="showLangMenu" class="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg border z-50">
+                <button @click="changeLocale('id')" class="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 rounded-t-lg">
+                  <span class="text-sm">🇮🇩</span>
+                  <span class="text-sm">{{ $t('language.indonesian') }}</span>
+                </button>
+                <button @click="changeLocale('en')" class="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 rounded-b-lg">
+                  <span class="text-sm">🇬🇧</span>
+                  <span class="text-sm">{{ $t('language.english') }}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- User Menu -->
+            <div class="relative">
+              <button @click="showUserMenu = !showUserMenu" class="flex items-center gap-3 px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors">
+                <div class="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center">
+                  <span class="text-primary-600 font-semibold text-sm">
+                    {{ authStore.user?.name?.charAt(0).toUpperCase() }}
+                  </span>
+                </div>
+                <div class="text-left">
+                  <p class="text-sm font-medium text-gray-900">{{ authStore.user?.name }}</p>
+                  <p class="text-xs text-gray-500">{{ authStore.user?.role }}</p>
+                </div>
+                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </button>
+              <div v-if="showUserMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border z-50">
+                <div class="px-4 py-3 border-b">
+                  <p class="text-sm font-medium text-gray-900">{{ authStore.user?.name }}</p>
+                  <p class="text-xs text-gray-500">{{ authStore.user?.email }}</p>
+                </div>
+                <button @click="handleLogout" class="w-full text-left px-4 py-2 hover:bg-red-50 flex items-center gap-2 text-red-600 rounded-b-lg">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                  </svg>
+                  <span class="text-sm font-medium">{{ $t('nav.logout') }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
       <!-- Main Content -->
       <main class="flex-1 p-4 lg:p-6 overflow-y-auto">
         <router-view />
@@ -173,6 +233,7 @@ const router = useRouter()
 const authStore = useAuthStore()
 const showMobileMenu = ref(false)
 const showLangMenu = ref(false)
+const showUserMenu = ref(false)
 const { t, locale } = useI18n()
 
 const currentLocale = computed(() => locale.value)
@@ -181,6 +242,12 @@ const changeLocale = (newLocale) => {
   locale.value = newLocale
   localStorage.setItem('locale', newLocale)
   showLangMenu.value = false
+}
+
+const handleLogout = async () => {
+  showUserMenu.value = false
+  await authStore.logout()
+  router.push('/login')
 }
 
 const navigation = computed(() => {
@@ -256,9 +323,4 @@ const filteredSettingsMenu = computed(() => {
   const userRole = authStore.user?.role
   return settingsMenu.value.filter(item => item.roles.includes(userRole))
 })
-
-const handleLogout = async () => {
-  await authStore.logout()
-  router.push('/login')
-}
 </script>
