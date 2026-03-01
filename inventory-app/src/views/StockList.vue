@@ -2,21 +2,21 @@
   <div class="p-6">
     <div class="mb-6 flex justify-between items-center">
       <div>
-        <h1 class="text-3xl font-bold text-gray-800">Stock Levels</h1>
-        <p class="text-gray-600">View inventory across all locations</p>
+        <h1 class="text-3xl font-bold text-gray-800">{{ $t('stocks.title') }}</h1>
+        <p class="text-gray-600">{{ $t('stocks.subtitle') }}</p>
       </div>
       <div class="flex space-x-3">
         <button @click="exportToExcel" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 flex items-center gap-2">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          Export Excel
+          {{ $t('stocks.exportExcel') }}
         </button>
         <button @click="openAddModal" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
-          + Add Stock
+          + {{ $t('stocks.addStock') }}
         </button>
         <button @click="showAdjustModal = true" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-          Adjust Stock
+          {{ $t('stocks.adjustStock') }}
         </button>
       </div>
     </div>
@@ -25,28 +25,28 @@
     <div class="bg-white rounded-lg shadow p-4 mb-6">
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('stocks.locationLabel') }}</label>
           <select v-model="filters.location_id" @change="loadStocks" class="w-full border-gray-300 rounded-lg">
-            <option value="">All Locations</option>
+            <option value="">{{ $t('stocks.allLocations') }}</option>
             <option v-for="loc in locations" :key="loc.id" :value="loc.id">{{ loc.name }}</option>
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Search Product</label>
-          <input v-model="filters.search" @input="loadStocks" type="text" placeholder="Name or SKU..." class="w-full border-gray-300 rounded-lg">
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('stocks.searchProduct') }}</label>
+          <input v-model="filters.search" @input="loadStocks" type="text" :placeholder="$t('stocks.searchPlaceholder')" class="w-full border-gray-300 rounded-lg">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Stock Status</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('stocks.stockStatus') }}</label>
           <select v-model="filters.showLowStock" @change="loadStocks" class="w-full border-gray-300 rounded-lg">
-            <option :value="false">All Stock</option>
-            <option :value="true">Low Stock Only</option>
+            <option :value="false">{{ $t('stocks.allStock') }}</option>
+            <option :value="true">{{ $t('stocks.lowStockOnly') }}</option>
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Display</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('stocks.displayLabel') }}</label>
           <select v-model="filters.hideZeroStock" @change="loadStocks" class="w-full border-gray-300 rounded-lg">
-            <option :value="false">Show All (including 0)</option>
-            <option :value="true">Hide Zero Stock</option>
+            <option :value="false">{{ $t('stocks.showAll') }}</option>
+            <option :value="true">{{ $t('stocks.hideZeroStock') }}</option>
           </select>
         </div>
       </div>
@@ -58,12 +58,12 @@
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
-              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Quantity</th>
-              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Reorder Level</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('stocks.product') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('stocks.location') }}</th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{{ $t('stocks.quantity') }}</th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{{ $t('stocks.reorderLevel') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('stocks.status') }}</th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{{ $t('common.actions') }}</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -87,15 +87,15 @@
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <button @click="printBarcode(stock)" class="text-purple-600 hover:text-purple-900 mr-3">Barcode</button>
-                <button @click="openLedger(stock)" class="text-blue-600 hover:text-blue-900 mr-3">History</button>
-                <button @click="adjustStock(stock)" class="text-green-600 hover:text-green-900 mr-3">Adjust</button>
-                <button @click="deleteStock(stock)" class="text-red-600 hover:text-red-900">Delete</button>
+                <button @click="printBarcode(stock)" class="text-purple-600 hover:text-purple-900 mr-3">{{ $t('stocks.barcode') }}</button>
+                <button @click="openLedger(stock)" class="text-blue-600 hover:text-blue-900 mr-3">{{ $t('stocks.history') }}</button>
+                <button @click="adjustStock(stock)" class="text-green-600 hover:text-green-900 mr-3">{{ $t('stocks.adjust') }}</button>
+                <button @click="deleteStock(stock)" class="text-red-600 hover:text-red-900">{{ $t('common.delete') }}</button>
               </td>
             </tr>
             <tr v-if="stocks.length === 0">
               <td colspan="6" class="px-6 py-4 text-center text-gray-500">
-                No stock data found
+                {{ $t('stocks.noStockData') }}
               </td>
             </tr>
           </tbody>
@@ -105,18 +105,18 @@
     <!-- Adjust Stock Modal -->
     <div v-if="showAdjustModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
       <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-        <h3 class="text-lg font-semibold mb-4">Adjust Stock</h3>
+        <h3 class="text-lg font-semibold mb-4">{{ $t('stocks.modalAdjustTitle') }}</h3>
         <div class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('stocks.locationLabel') }}</label>
             <select v-model="adjustForm.location_id" class="w-full border-gray-300 rounded-lg" required>
-              <option value="">Select Location</option>
+              <option value="">{{ $t('stocks.selectLocation') }}</option>
               <option v-for="loc in locations" :key="loc.id" :value="loc.id">{{ loc.name }}</option>
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Product</label>
-            <input v-model="adjustForm.product_search" @input="searchProducts" type="text" placeholder="Search product..." class="w-full border-gray-300 rounded-lg">
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('stocks.productLabel') }}</label>
+            <input v-model="adjustForm.product_search" @input="searchProducts" type="text" :placeholder="$t('stocks.productSearchPlaceholder')" class="w-full border-gray-300 rounded-lg">
             <div v-if="productSearchResults.length > 0" class="mt-2 border rounded-lg max-h-40 overflow-y-auto">
               <div v-for="product in productSearchResults" :key="product.id" @click="selectProduct(product)" class="p-2 hover:bg-gray-100 cursor-pointer">
                 {{ product.name }} ({{ product.sku }})
@@ -124,21 +124,21 @@
             </div>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">New Quantity</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('stocks.newQuantity') }}</label>
             <input v-model.number="adjustForm.new_quantity" type="number" step="0.01" min="0" class="w-full border-gray-300 rounded-lg" required>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Reorder Level</label>
-            <input v-model.number="adjustForm.reorder_level" type="number" step="0.01" min="0" class="w-full border-gray-300 rounded-lg" placeholder="Set minimum stock level">
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('stocks.reorderLevelLabel') }}</label>
+            <input v-model.number="adjustForm.reorder_level" type="number" step="0.01" min="0" class="w-full border-gray-300 rounded-lg" :placeholder="$t('stocks.reorderPlaceholder')">
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('stocks.notesLabel') }}</label>
             <textarea v-model="adjustForm.notes" rows="3" class="w-full border-gray-300 rounded-lg"></textarea>
           </div>
         </div>
         <div class="mt-6 flex justify-end space-x-3">
-          <button @click="closeAdjustModal" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
-          <button @click="submitAdjustment" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Adjust Stock</button>
+          <button @click="closeAdjustModal" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">{{ $t('common.cancel') }}</button>
+          <button @click="submitAdjustment" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">{{ $t('stocks.adjustStock') }}</button>
         </div>
       </div>
     </div>
@@ -146,41 +146,41 @@
     <!-- Add Stock Modal -->
     <div v-if="showAddModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
       <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-        <h3 class="text-lg font-semibold mb-4">Add New Stock</h3>
+        <h3 class="text-lg font-semibold mb-4">{{ $t('stocks.modalAddTitle') }}</h3>
         <div class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Location *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('stocks.locationRequired') }} <span class="text-red-500">*</span></label>
             <select v-model="addForm.location_id" class="w-full border-gray-300 rounded-lg" required>
-              <option value="">Select Location</option>
+              <option value="">{{ $t('stocks.selectLocation') }}</option>
               <option v-for="loc in locations" :key="loc.id" :value="loc.id">{{ loc.name }}</option>
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Product *</label>
-            <input v-model="addForm.product_search" @input="searchProductsForAdd" type="text" placeholder="Search product..." class="w-full border-gray-300 rounded-lg">
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('stocks.productRequired') }} <span class="text-red-500">*</span></label>
+            <input v-model="addForm.product_search" @input="searchProductsForAdd" type="text" :placeholder="$t('stocks.productSearchPlaceholder')" class="w-full border-gray-300 rounded-lg">
             <div v-if="addProductSearchResults.length > 0" class="mt-2 border rounded-lg max-h-40 overflow-y-auto">
               <div v-for="product in addProductSearchResults" :key="product.id" @click="selectProductForAdd(product)" class="p-2 hover:bg-gray-100 cursor-pointer">
                 {{ product.name }} ({{ product.sku }})
               </div>
             </div>
-            <p v-if="addForm.product_id" class="mt-1 text-sm text-green-600">Selected: {{ addForm.product_search }}</p>
+            <p v-if="addForm.product_id" class="mt-1 text-sm text-green-600">{{ $t('stocks.selectedProduct', { name: addForm.product_search }) }}</p>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Initial Quantity *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('stocks.initialQuantity') }} <span class="text-red-500">*</span></label>
             <input v-model.number="addForm.quantity" type="number" step="0.01" min="0" class="w-full border-gray-300 rounded-lg" required>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Reorder Level</label>
-            <input v-model.number="addForm.reorder_level" type="number" step="0.01" min="0" class="w-full border-gray-300 rounded-lg" placeholder="Optional">
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('stocks.reorderLevelLabel') }}</label>
+            <input v-model.number="addForm.reorder_level" type="number" step="0.01" min="0" class="w-full border-gray-300 rounded-lg" :placeholder="$t('stocks.reorderOptional')">
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-            <textarea v-model="addForm.notes" rows="3" class="w-full border-gray-300 rounded-lg" placeholder="Optional notes..."></textarea>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('stocks.notesLabel') }}</label>
+            <textarea v-model="addForm.notes" rows="3" class="w-full border-gray-300 rounded-lg" :placeholder="$t('stocks.notesPlaceholder')"></textarea>
           </div>
         </div>
         <div class="mt-6 flex justify-end space-x-3">
-          <button @click="closeAddModal" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
-          <button @click="submitAddStock" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Add Stock</button>
+          <button @click="closeAddModal" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">{{ $t('common.cancel') }}</button>
+          <button @click="submitAddStock" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">{{ $t('stocks.addStock') }}</button>
         </div>
       </div>
     </div>
@@ -189,7 +189,7 @@
     <div v-if="showBarcodeModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
       <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
         <div class="flex justify-between items-center mb-4">
-          <h3 class="text-lg font-semibold">Print Barcode</h3>
+          <h3 class="text-lg font-semibold">{{ $t('stocks.modalBarcodeTitle') }}</h3>
           <button @click="closeBarcodeModal" class="text-gray-400 hover:text-gray-600">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -199,21 +199,21 @@
         
         <div class="space-y-4">
           <div>
-            <p class="text-sm text-gray-600">Product: <span class="font-medium text-gray-900">{{ barcodeData.product_name }}</span></p>
-            <p class="text-sm text-gray-600">SKU: <span class="font-medium text-gray-900">{{ barcodeData.sku }}</span></p>
+            <p class="text-sm text-gray-600">{{ $t('stocks.productInfo') }} <span class="font-medium text-gray-900">{{ barcodeData.product_name }}</span></p>
+            <p class="text-sm text-gray-600">{{ $t('stocks.skuInfo') }} <span class="font-medium text-gray-900">{{ barcodeData.sku }}</span></p>
           </div>
           
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Label Size</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('stocks.labelSize') }}</label>
             <select v-model="barcodeData.labelSize" @change="generateBarcodePreview" class="w-full border-gray-300 rounded-lg">
-              <option value="small">Small (30mm x 20mm) - Compact</option>
-              <option value="medium">Medium (50mm x 30mm) - Standard</option>
-              <option value="large">Large (100mm x 50mm) - Wide</option>
+              <option value="small">{{ $t('stocks.labelSmall') }}</option>
+              <option value="medium">{{ $t('stocks.labelMedium') }}</option>
+              <option value="large">{{ $t('stocks.labelLarge') }}</option>
             </select>
           </div>
           
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Number of Labels</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('stocks.numberOfLabels') }}</label>
             <input v-model.number="barcodeData.copies" type="number" min="1" max="100" class="w-full border-gray-300 rounded-lg">
           </div>
           
@@ -229,12 +229,12 @@
         </div>
 
         <div class="flex justify-end space-x-3 mt-6">
-          <button @click="closeBarcodeModal" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
+          <button @click="closeBarcodeModal" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">{{ $t('common.cancel') }}</button>
           <button @click="printBarcodeLabels" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
             </svg>
-            Print
+            {{ $t('stocks.print') }}
           </button>
         </div>
       </div>
@@ -245,12 +245,14 @@
 <script setup>
 import { ref, onMounted, nextTick, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import api from '@/services/api'
 import Pagination from '@/components/Pagination.vue'
 import * as XLSX from 'xlsx'
 import JsBarcode from 'jsbarcode'
 
 const router = useRouter()
+const { t } = useI18n()
 
 const stocks = ref([])
 const locations = ref([])
@@ -387,7 +389,7 @@ const generateBarcodePreview = () => {
     }
   } catch (error) {
     console.error('Failed to generate barcode:', error)
-    alert('Failed to generate barcode. Invalid SKU format.')
+    alert(t('stocks.barcodeGenerateFailed'))
   }
 }
 
@@ -530,7 +532,7 @@ const exportToExcel = () => {
     }))
 
     if (exportData.length === 0) {
-      alert('No data to export')
+      alert(t('stocks.noDataToExport'))
       return
     }
 
@@ -553,10 +555,10 @@ const exportToExcel = () => {
     const filename = `Stock_Levels_${timestamp}.xlsx`
 
     XLSX.writeFile(wb, filename)
-    alert(`Excel file exported successfully: ${filename} (${exportData.length} records)`)
+    alert(t('stocks.exportSuccess', { filename: filename, count: exportData.length }))
   } catch (error) {
     console.error('Export error:', error)
-    alert('Failed to export Excel file: ' + error.message)
+    alert(t('stocks.exportFailed') + ': ' + error.message)
   }
 }
 
@@ -590,9 +592,9 @@ const changePage = (page) => {
 }
 
 const getStockStatus = (stock) => {
-  if (stock.available_quantity <= 0) return 'Out of Stock'
-  if (stock.quantity <= stock.reorder_level) return 'Low Stock'
-  return 'In Stock'
+  if (stock.available_quantity <= 0) return t('stocks.outOfStock')
+  if (stock.quantity <= stock.reorder_level) return t('stocks.lowStock')
+  return t('stocks.inStock')
 }
 
 const getStatusClass = (stock) => {
@@ -645,11 +647,11 @@ const submitAdjustment = async () => {
       reorder_level: adjustForm.value.reorder_level,
       notes: adjustForm.value.notes
     })
-    alert('Stock adjusted successfully')
+    alert(t('stocks.adjustSuccess'))
     closeAdjustModal()
     await loadStocks()
   } catch (error) {
-    alert('Failed to adjust stock: ' + (error.response?.data?.message || error.message))
+    alert(t('stocks.adjustFailed') + ': ' + (error.response?.data?.message || error.message))
   }
 }
 
@@ -717,15 +719,15 @@ const selectProductForAdd = (product) => {
 
 const submitAddStock = async () => {
   if (!addForm.value.product_id) {
-    alert('Please select a product')
+    alert(t('stocks.selectProductError'))
     return
   }
   if (!addForm.value.location_id) {
-    alert('Please select a location')
+    alert(t('stocks.selectLocationError'))
     return
   }
   if (addForm.value.quantity < 0) {
-    alert('Quantity must be 0 or greater')
+    alert(t('stocks.quantityError'))
     return
   }
 
@@ -737,11 +739,11 @@ const submitAddStock = async () => {
       reorder_level: addForm.value.reorder_level || 0,
       notes: addForm.value.notes
     })
-    alert('Stock added successfully')
+    alert(t('stocks.addSuccess'))
     closeAddModal()
     await loadStocks()
   } catch (error) {
-    alert('Failed to add stock: ' + (error.response?.data?.message || error.message))
+    alert(t('stocks.addFailed') + ': ' + (error.response?.data?.message || error.message))
   }
 }
 
@@ -764,11 +766,11 @@ const deleteStock = async (stock) => {
 
   try {
     await api.delete(`/inventory-stocks/${stock.id}`)
-    alert('Stock deleted successfully')
+    alert(t('stocks.deleteSuccess'))
     await loadStocks()
   } catch (error) {
     console.error('Failed to delete stock:', error)
-    alert('Failed to delete stock: ' + (error.response?.data?.message || error.message))
+    alert(t('stocks.deleteFailed') + ': ' + (error.response?.data?.message || error.message))
   }
 }
 </script>
