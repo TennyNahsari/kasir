@@ -83,8 +83,7 @@
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SKU</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
               <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Quantity</th>
-              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Reserved</th>
-              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Available</th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Reorder Level</th>
               <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
             </tr>
           </thead>
@@ -103,10 +102,9 @@
                 <div class="text-sm text-gray-900">{{ stock.quantity }}</div>
               </td>
               <td class="px-6 py-4 text-right">
-                <div class="text-sm text-orange-600">{{ stock.reserved_quantity || 0 }}</div>
-              </td>
-              <td class="px-6 py-4 text-right">
-                <div class="text-sm font-semibold text-green-600">{{ stock.available_quantity || (stock.quantity - (stock.reserved_quantity || 0)) }}</div>
+                <div class="text-sm font-medium" :class="stock.quantity <= stock.reorder_level ? 'text-red-600' : 'text-gray-900'">
+                  {{ stock.reorder_level || 0 }}
+                </div>
               </td>
               <td class="px-6 py-4 text-center">
                 <button @click="openAdjustModal(stock)" class="text-blue-600 hover:text-blue-900 text-sm">
