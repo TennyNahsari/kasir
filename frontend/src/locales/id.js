@@ -148,6 +148,7 @@ export default {
   // Transactions
   transactions: {
     title: 'Riwayat Transaksi',
+    exportExcel: 'Export Excel',
     filter: 'Filter',
     dateFrom: 'Tanggal Dari',
     dateTo: 'Tanggal Sampai',
@@ -197,6 +198,9 @@ export default {
     statusUpdateSuccess: 'Status berhasil diubah',
     statusUpdateFailed: 'Gagal mengubah status',
     customer: 'Customer',
+    noDataToExport: 'Tidak ada data untuk diekspor',
+    exportSuccess: 'File Excel berhasil diekspor ({count} record)',
+    exportFailed: 'Gagal mengekspor file Excel',
   },
 
   // Users Management

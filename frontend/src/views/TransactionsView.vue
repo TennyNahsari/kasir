@@ -1,6 +1,14 @@
 <template>
   <div>
-    <h2 class="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">{{ $t('transactions.title') }}</h2>
+    <div class="flex justify-between items-center mb-4 sm:mb-6">
+      <h2 class="text-xl sm:text-2xl font-bold">{{ $t('transactions.title') }}</h2>
+      <button @click="exportToExcel" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        {{ $t('transactions.exportExcel') }}
+      </button>
+    </div>
 
     <!-- Filter -->
     <div class="card mb-4 sm:mb-6">
@@ -335,6 +343,7 @@ import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import api from '@/services/api'
 import ReceiptPrint from '@/components/ReceiptPrint.vue'
+import * as XLSX from 'xlsx'
 
 const { t } = useI18n()
 const transactions = ref([])
@@ -458,6 +467,76 @@ const deleteTransaction = async (transaction) => {
   } catch (error) {
     console.error('Failed to delete transaction:', error)
     alert(t('transactions.deleteFailed'))
+  }
+}
+
+const exportToExcel = async () => {
+  try {
+    // Use the same filters as the current view
+    const params = {}
+    if (dateFrom.value) params.date_from = dateFrom.value
+    if (dateTo.value) params.date_to = dateTo.value
+    if (businessType.value) params.business_type = businessType.value
+    if (paymentMethod.value) params.payment_method = paymentMethod.value
+
+    // Fetch all transactions for export (no pagination)
+    const response = await api.get('/transactions', { params })
+    const exportData = (response.data.data || []).map(transaction => ({
+      'Transaction No': transaction.transaction_no,
+      'Date': formatDate(transaction.created_at),
+      'Business Type': getBusinessTypeLabel(transaction.business_type),
+      'Cashier': transaction.user?.name || t('transactions.customer'),
+      'Payment Method': transaction.payment_method || '-',
+      'Subtotal': transaction.subtotal,
+      'Discount': transaction.discount || 0,
+      'Tax': transaction.tax || 0,
+      'Total': transaction.total,
+      'Paid Amount': transaction.paid_amount,
+      'Change': transaction.change_amount,
+      'Status': transaction.status,
+      'Notes': transaction.notes || ''
+    }))
+
+    if (exportData.length === 0) {
+      alert(t('transactions.noDataToExport'))
+      return
+    }
+
+    // Create workbook and worksheet
+    const wb = XLSX.utils.book_new()
+    const ws = XLSX.utils.json_to_sheet(exportData)
+
+    // Set column widths
+    ws['!cols'] = [
+      { wch: 20 },  // Transaction No
+      { wch: 20 },  // Date
+      { wch: 15 },  // Business Type
+      { wch: 20 },  // Cashier
+      { wch: 15 },  // Payment Method
+      { wch: 15 },  // Subtotal
+      { wch: 12 },  // Discount
+      { wch: 12 },  // Tax
+      { wch: 15 },  // Total
+      { wch: 15 },  // Paid Amount
+      { wch: 12 },  // Change
+      { wch: 12 },  // Status
+      { wch: 30 }   // Notes
+    ]
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Transactions')
+
+    // Generate filename with date range
+    const fromDate = dateFrom.value || 'all'
+    const toDate = dateTo.value || 'all'
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)
+    const filename = `Transactions_${fromDate}_to_${toDate}_${timestamp}.xlsx`
+
+    // Write file
+    XLSX.writeFile(wb, filename)
+    alert(t('transactions.exportSuccess', { count: exportData.length }))
+  } catch (error) {
+    console.error('Export error:', error)
+    alert(t('transactions.exportFailed'))
   }
 }
 

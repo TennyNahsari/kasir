@@ -148,6 +148,7 @@ export default {
   // Transactions
   transactions: {
     title: 'Transaction History',
+    exportExcel: 'Export Excel',
     filter: 'Filter',
     dateFrom: 'Date From',
     dateTo: 'Date To',
@@ -197,6 +198,9 @@ export default {
     statusUpdateSuccess: 'Status updated successfully',
     statusUpdateFailed: 'Failed to update status',
     customer: 'Customer',
+    noDataToExport: 'No data to export',
+    exportSuccess: 'Excel file exported successfully ({count} records)',
+    exportFailed: 'Failed to export Excel file',
   },
 
   // Users Management
