@@ -153,17 +153,10 @@ class DashboardController extends Controller
             'location_id' => $locationId
         ]);
         
-        // Filter by outlet (all locations in the outlet)
-        if ($outletId) {
-            $query->whereHas('location', function($q) use ($outletId) {
-                $q->where('outlet_id', $outletId);
-            });
-            \Log::info('Dashboard: Filtering by outlet_id', ['outlet_id' => $outletId]);
-        }
-        
-        // If specific location is specified, filter by location
+        // Priority: If specific location is specified, use it. Otherwise use outlet filter
         if ($locationId) {
             $query->where('location_id', $locationId);
+            \Log::info('Dashboard: Filtering by location_id', ['location_id' => $locationId]);
             
             $location = \App\Models\Location::find($locationId);
             
@@ -182,6 +175,12 @@ class DashboardController extends Controller
                     'location_type' => $location->type
                 ]);
             }
+        } elseif ($outletId) {
+            // Filter by outlet (all locations in the outlet)
+            $query->whereHas('location', function($q) use ($outletId) {
+                $q->where('outlet_id', $outletId);
+            });
+            \Log::info('Dashboard: Filtering by outlet_id', ['outlet_id' => $outletId]);
         }
         
         $results = $query->orderBy('quantity', 'asc')

@@ -13,7 +13,7 @@
     </div>
 
     <!-- Stats Cards -->
-    <div v-if="currentOutletId" class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-4 sm:mb-6">
+    <div v-if="currentLocationId" class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-4 sm:mb-6">
       <div class="card p-3 sm:p-6">
         <div class="text-xs sm:text-sm text-gray-600 mb-1">Omzet Hari Ini</div>
         <div class="text-base sm:text-2xl font-bold text-primary-600">
@@ -110,14 +110,14 @@ import api from '@/services/api'
 const dashboardStore = useDashboardStore()
 const authStore = useAuthStore()
 const stats = ref(null)
-const currentOutletId = ref(null)
+const currentLocationId = ref(null)
 const userLocation = ref(null)
 
 const isOwner = computed(() => {
   const role = authStore.user?.role
   return (role === 'owner' || role === 'inventory') && !authStore.user?.outlet_id
 })
-const showNoOutletWarning = computed(() => !currentOutletId.value && !stats.value)
+const showNoOutletWarning = computed(() => !currentLocationId.value && !stats.value)
 
 // Check if user location is FNB type
 const isUserLocationFnb = computed(() => {
@@ -132,19 +132,24 @@ const formatCurrency = (amount) => {
   }).format(amount)
 }
 
-const loadDashboard = async (outletId) => {
-  if (!outletId) return
+const loadDashboard = async (locationId) => {
+  if (!locationId) return
   
   try {
     const params = { 
-      outlet_id: outletId 
+      location_id: locationId 
     }
     
-    // Add location_id if user has one (for FNB filtering)
-    const userLocationId = authStore.user?.location_id
-    if (userLocationId) {
-      params.location_id = userLocationId
-      console.log('Loading dashboard with location_id:', userLocationId)
+    // Get location details to get outlet_id
+    try {
+      const response = await api.get(`/locations/${locationId}`)
+      userLocation.value = response.data
+      if (userLocation.value?.outlet_id) {
+        params.outlet_id = userLocation.value.outlet_id
+      }
+      console.log('Loading dashboard with params:', params)
+    } catch (error) {
+      console.error('Failed to load location details:', error)
     }
     
     stats.value = await dashboardStore.fetchDashboard(params)
@@ -154,10 +159,10 @@ const loadDashboard = async (outletId) => {
   }
 }
 
-const handleOutletChange = (outletId) => {
-  currentOutletId.value = outletId
-  if (outletId) {
-    loadDashboard(outletId)
+const handleOutletChange = (locationId) => {
+  currentLocationId.value = locationId
+  if (locationId) {
+    loadDashboard(locationId)
   }
 }
 
@@ -171,20 +176,17 @@ onMounted(async () => {
       const response = await api.get(`/locations/${userLocationId}`)
       userLocation.value = response.data
       console.log('User location type:', userLocation.value?.type)
+      currentLocationId.value = userLocationId
+      await loadDashboard(userLocationId)
     } catch (error) {
       console.error('Failed to load user location:', error)
     }
-  }
-  
-  if (userOutletId) {
-    currentOutletId.value = userOutletId
-    await loadDashboard(userOutletId)
   } else if (isOwner.value) {
-    // Owner will select outlet via OutletSelector
-    const savedOutlet = localStorage.getItem('owner_selected_outlet')
-    if (savedOutlet) {
-      currentOutletId.value = savedOutlet
-      await loadDashboard(savedOutlet)
+    // Owner will select location via OutletSelector
+    const savedLocation = localStorage.getItem('owner_selected_location')
+    if (savedLocation) {
+      currentLocationId.value = parseInt(savedLocation)
+      await loadDashboard(parseInt(savedLocation))
     }
   }
 })
