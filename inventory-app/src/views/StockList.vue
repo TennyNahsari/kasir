@@ -89,7 +89,8 @@
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <button @click="printBarcode(stock)" class="text-purple-600 hover:text-purple-900 mr-3">Barcode</button>
                 <button @click="openLedger(stock)" class="text-blue-600 hover:text-blue-900 mr-3">History</button>
-                <button @click="adjustStock(stock)" class="text-green-600 hover:text-green-900">Adjust</button>
+                <button @click="adjustStock(stock)" class="text-green-600 hover:text-green-900 mr-3">Adjust</button>
+                <button @click="deleteStock(stock)" class="text-red-600 hover:text-red-900">Delete</button>
               </td>
             </tr>
             <tr v-if="stocks.length === 0">
@@ -741,6 +742,33 @@ const submitAddStock = async () => {
     await loadStocks()
   } catch (error) {
     alert('Failed to add stock: ' + (error.response?.data?.message || error.message))
+  }
+}
+
+const deleteStock = async (stock) => {
+  // Check if stock has quantity
+  if (stock.quantity > 0) {
+    const confirmMsg = `This stock has quantity ${stock.quantity}. You need to adjust quantity to 0 before deleting. Do you want to proceed to adjust?`
+    if (!confirm(confirmMsg)) {
+      return
+    }
+    // Open adjust modal instead
+    adjustStock(stock)
+    return
+  }
+
+  const confirmDelete = confirm(`Are you sure you want to delete stock for "${stock.product_name}" at ${stock.location_name}?`)
+  if (!confirmDelete) {
+    return
+  }
+
+  try {
+    await api.delete(`/inventory-stocks/${stock.id}`)
+    alert('Stock deleted successfully')
+    await loadStocks()
+  } catch (error) {
+    console.error('Failed to delete stock:', error)
+    alert('Failed to delete stock: ' + (error.response?.data?.message || error.message))
   }
 }
 </script>
