@@ -2,12 +2,12 @@
   <div class="p-6">
     <div class="mb-6 flex justify-between items-center">
       <div>
-        <h1 class="text-3xl font-bold text-gray-800">Locations</h1>
-        <p class="text-gray-600">Manage inventory, outlets, and F&B locations</p>
+        <h1 class="text-3xl font-bold text-gray-800">{{ $t('locations.title') }}</h1>
+        <p class="text-gray-600">{{ $t('locations.subtitle') }}</p>
       </div>
       <button @click="showCreateModal = true" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700" :disabled="loading">
         <span class="text-xl mr-1">+</span>
-        Add Location
+        {{ $t('locations.addLocation') }}
       </button>
     </div>
 
@@ -18,7 +18,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
         </svg>
         <div class="flex-1">
-          <h3 class="text-sm font-medium text-red-800">Error</h3>
+          <h3 class="text-sm font-medium text-red-800">{{ $t('common.error') }}</h3>
           <p class="text-sm text-red-700 mt-1">{{ errorMessage }}</p>
         </div>
         <button @click="errorMessage = ''" class="text-red-400 hover:text-red-600">
@@ -32,7 +32,7 @@
     <!-- Loading State -->
     <div v-if="loading" class="bg-white rounded-lg shadow p-12 text-center">
       <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-blue-600"></div>
-      <p class="text-gray-500 mt-4">Loading locations...</p>
+      <p class="text-gray-500 mt-4">{{ $t('locations.loadingLocations') }}</p>
     </div>
 
     <!-- Empty State -->
@@ -41,11 +41,11 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
       </svg>
-      <p class="text-gray-500 mb-2">No locations found</p>
-      <p class="text-sm text-gray-400 mb-4">Add your first inventory, outlet, or F&B location</p>
+      <p class="text-gray-500 mb-2">{{ $t('locations.noLocations') }}</p>
+      <p class="text-sm text-gray-400 mb-4">{{ $t('locations.noLocationsHint') }}</p>
       <button @click="showCreateModal = true" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
         <span class="text-xl mr-2">+</span>
-        Add Location
+        {{ $t('locations.addLocation') }}
       </button>
     </div>
 
@@ -92,7 +92,7 @@
           </div>
           <div>
             <span :class="location.is_active ? 'text-green-600' : 'text-red-600'" class="font-semibold">
-              {{ location.is_active ? '● Active' : '● Inactive' }}
+              {{ location.is_active ? '● ' + $t('locations.status.active') : '● ' + $t('locations.status.inactive') }}
             </span>
           </div>
         </div>
@@ -115,46 +115,46 @@
     <!-- Create/Edit Modal -->
     <div v-if="showCreateModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
       <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-        <h3 class="text-lg font-semibold mb-4">{{ editingLocation ? 'Edit' : 'Add' }} Location</h3>
+        <h3 class="text-lg font-semibold mb-4">{{ editingLocation ? $t('locations.modals.edit') : $t('locations.modals.add') }} {{ $t('locations.location') }}</h3>
         <div class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Code *</label>
-            <input v-model="locationForm.code" type="text" class="w-full border-gray-300 rounded-lg" placeholder="e.g. WH-001, OUT-001, FNB-001" required :disabled="loading">
-            <p class="text-xs text-gray-500 mt-1">Unique code for this location</p>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('locations.code') }} *</label>
+            <input v-model="locationForm.code" type="text" class="w-full border-gray-300 rounded-lg" :placeholder="$t('locations.codePlaceholder')" required :disabled="loading">
+            <p class="text-xs text-gray-500 mt-1">{{ $t('locations.codeHint') }}</p>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('locations.name') }} *</label>
             <input v-model="locationForm.name" type="text" class="w-full border-gray-300 rounded-lg" required :disabled="loading">
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Type *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('locations.type') }} *</label>
             <select v-model="locationForm.type" class="w-full border-gray-300 rounded-lg" required :disabled="loading">
-              <option value="INVENTORY">Inventory/Warehouse</option>
-              <option value="OUTLET">Outlet</option>
-              <option value="FNB">F&B (Food & Beverage)</option>
+              <option value="INVENTORY">{{ $t('locations.types.inventory') }}</option>
+              <option value="OUTLET">{{ $t('locations.types.outlet') }}</option>
+              <option value="FNB">{{ $t('locations.types.fnb') }}</option>
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('locations.address') }}</label>
             <textarea v-model="locationForm.address" rows="3" class="w-full border-gray-300 rounded-lg" :disabled="loading"></textarea>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('locations.phone') }}</label>
             <input v-model="locationForm.phone" type="text" class="w-full border-gray-300 rounded-lg" :disabled="loading">
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Person in Charge</label>
-            <input v-model="locationForm.person_in_charge" type="text" class="w-full border-gray-300 rounded-lg" placeholder="e.g. John Doe" :disabled="loading">
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('locations.personInCharge') }}</label>
+            <input v-model="locationForm.person_in_charge" type="text" class="w-full border-gray-300 rounded-lg" :placeholder="$t('locations.personInChargePlaceholder')" :disabled="loading">
           </div>
           <div class="flex items-center">
             <input v-model="locationForm.is_active" type="checkbox" class="rounded border-gray-300 text-blue-600 mr-2" :disabled="loading">
-            <label class="text-sm font-medium text-gray-700">Active</label>
+            <label class="text-sm font-medium text-gray-700">{{ $t('locations.status.active') }}</label>
           </div>
         </div>
         <div class="mt-6 flex justify-end space-x-3">
-          <button @click="closeModal" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50" :disabled="loading">Cancel</button>
+          <button @click="closeModal" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50" :disabled="loading">{{ $t('common.cancel') }}</button>
           <button @click="saveLocation" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50" :disabled="loading">
-            {{ loading ? 'Saving...' : 'Save' }}
+            {{ loading ? $t('common.saving') : $t('common.save') }}
           </button>
         </div>
       </div>
@@ -164,9 +164,11 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import api from '@/services/api'
 import Pagination from '@/components/Pagination.vue'
 
+const { t } = useI18n()
 const locations = ref([])
 const showCreateModal = ref(false)
 const editingLocation = ref(null)
@@ -250,7 +252,7 @@ const loadLocations = async () => {
     console.log('Loaded locations:', locations.value)
   } catch (error) {
     console.error('Failed to load locations:', error)
-    errorMessage.value = 'Failed to load locations: ' + (error.response?.data?.message || error.message)
+    errorMessage.value = t('locations.alerts.loadError') + ': ' + (error.response?.data?.message || error.message)
     locations.value = []
   } finally {
     loading.value = false
@@ -292,7 +294,7 @@ const editLocation = (location) => {
 const saveLocation = async () => {
   try {
     if (!locationForm.value.code || !locationForm.value.name || !locationForm.value.type) {
-      errorMessage.value = 'Please fill in all required fields (Code, Name, Type)'
+      errorMessage.value = t('locations.alerts.fillRequired')
       return
     }
 
@@ -301,17 +303,17 @@ const saveLocation = async () => {
 
     if (editingLocation.value) {
       await api.put(`/locations/${editingLocation.value.id}`, locationForm.value)
-      alert('Location updated successfully')
+      alert(t('locations.alerts.updateSuccess'))
     } else {
       await api.post('/locations', locationForm.value)
-      alert('Location created successfully')
+      alert(t('locations.alerts.createSuccess'))
     }
 
     closeModal()
     await loadLocations()
   } catch (error) {
     console.error('Save location error:', error)
-    errorMessage.value = 'Failed to save location: ' + (error.response?.data?.message || error.message)
+    errorMessage.value = t('locations.alerts.saveError') + ': ' + (error.response?.data?.message || error.message)
     
     // Show errors object if available
     if (error.response?.data?.errors) {
@@ -324,18 +326,18 @@ const saveLocation = async () => {
 }
 
 const deleteLocation = async (location) => {
-  if (!confirm(`Are you sure you want to delete location "${location.name}"?`)) return
+  if (!confirm(t('locations.confirms.delete', { name: location.name }))) return
   
   try {
     loading.value = true
     errorMessage.value = ''
     
     await api.delete(`/locations/${location.id}`)
-    alert('Location deleted successfully')
+    alert(t('locations.alerts.deleteSuccess'))
     await loadLocations()
   } catch (error) {
     console.error('Delete location error:', error)
-    errorMessage.value = 'Failed to delete location: ' + (error.response?.data?.message || error.message)
+    errorMessage.value = t('locations.alerts.deleteError') + ': ' + (error.response?.data?.message || error.message)
   } finally {
     loading.value = false
   }

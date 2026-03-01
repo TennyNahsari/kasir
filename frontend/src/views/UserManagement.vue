@@ -1,9 +1,9 @@
 <template>
   <div class="p-6 space-y-6">
     <div class="flex justify-between items-center">
-      <h1 class="text-2xl font-bold text-gray-900">User Management</h1>
+      <h1 class="text-2xl font-bold text-gray-900">{{ $t('users.title') }}</h1>
       <button @click="openAddModal" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-        + Add User
+        {{ $t('users.addUser') }}
       </button>
     </div>
 
@@ -27,25 +27,25 @@
     <div class="bg-white rounded-lg shadow p-4">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
-          <input v-model="filters.search" @input="loadUsers" type="text" class="w-full border-gray-300 rounded-lg" placeholder="Name or email...">
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('users.searchLabel') }}</label>
+          <input v-model="filters.search" @input="loadUsers" type="text" class="w-full border-gray-300 rounded-lg" :placeholder="$t('users.searchPlaceholder')">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('users.roleLabel') }}</label>
           <select v-model="filters.role" @change="loadUsers" class="w-full border-gray-300 rounded-lg">
-            <option value="">All Roles</option>
-            <option value="owner">Owner</option>
-            <option value="inventory">Inventory</option>
-            <option value="supervisor">Supervisor</option>
-            <option value="staff">Staff</option>
+            <option value="">{{ $t('users.allRoles') }}</option>
+            <option value="owner">{{ $t('users.owner') }}</option>
+            <option value="inventory">{{ $t('users.inventory') }}</option>
+            <option value="supervisor">{{ $t('users.supervisor') }}</option>
+            <option value="staff">{{ $t('users.staff') }}</option>
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('users.statusLabel') }}</label>
           <select v-model="filters.is_active" @change="loadUsers" class="w-full border-gray-300 rounded-lg">
-            <option value="">All Status</option>
-            <option value="1">Active</option>
-            <option value="0">Inactive</option>
+            <option value="">{{ $t('users.allStatus') }}</option>
+            <option value="1">{{ $t('users.active') }}</option>
+            <option value="0">{{ $t('users.inactive') }}</option>
           </select>
         </div>
       </div>
@@ -57,12 +57,12 @@
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('users.tableHeaderName') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('users.tableHeaderEmail') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('users.tableHeaderRole') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('users.tableHeaderLocation') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('users.tableHeaderStatus') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('users.tableHeaderActions') }}</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -90,12 +90,12 @@
               <td class="px-6 py-4">
                 <span :class="user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'" 
                   class="px-2 py-1 text-xs font-semibold rounded-full">
-                  {{ user.is_active ? 'Active' : 'Inactive' }}
+                  {{ user.is_active ? $t('users.active') : $t('users.inactive') }}
                 </span>
               </td>
               <td class="px-6 py-4 text-sm space-x-2">
-                <button @click="openEditModal(user)" class="text-blue-600 hover:text-blue-900">Edit</button>
-                <button @click="deleteUser(user)" class="text-red-600 hover:text-red-900">Delete</button>
+                <button @click="openEditModal(user)" class="text-blue-600 hover:text-blue-900">{{ $t('users.edit') }}</button>
+                <button @click="deleteUser(user)" class="text-red-600 hover:text-red-900">{{ $t('users.delete') }}</button>
               </td>
             </tr>
           </tbody>
@@ -119,33 +119,33 @@
     <!-- Modal -->
     <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-        <h3 class="text-lg font-semibold mb-4">{{ editingUser ? 'Edit' : 'Add' }} User</h3>
+        <h3 class="text-lg font-semibold mb-4">{{ editingUser ? $t('users.modalTitleEdit') : $t('users.modalTitleAdd') }}</h3>
         <div class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('users.nameLabel') }}</label>
             <input v-model="userForm.name" type="text" class="w-full border-gray-300 rounded-lg" required>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('users.emailLabel') }}</label>
             <input v-model="userForm.email" type="email" class="w-full border-gray-300 rounded-lg" required>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Password {{ editingUser ? '(leave blank to keep)' : '*' }}</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('users.passwordLabel') }} {{ editingUser ? $t('users.passwordLeaveBlank') : $t('users.passwordRequired') }}</label>
             <input v-model="userForm.password" type="password" class="w-full border-gray-300 rounded-lg">
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Role *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('users.roleLabel') }} *</label>
             <select v-model="userForm.role" class="w-full border-gray-300 rounded-lg" required>
-              <option value="owner">Owner</option>
-              <option value="inventory">Inventory</option>
-              <option value="supervisor">Supervisor</option>
-              <option value="staff">Staff</option>
+              <option value="owner">{{ $t('users.owner') }}</option>
+              <option value="inventory">{{ $t('users.inventory') }}</option>
+              <option value="supervisor">{{ $t('users.supervisor') }}</option>
+              <option value="staff">{{ $t('users.staff') }}</option>
             </select>
           </div>
           <div v-if="!['owner', 'inventory'].includes(userForm.role)">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('users.locationLabel') }}</label>
             <select v-model="userForm.location_id" class="w-full border-gray-300 rounded-lg">
-              <option value="">Select Location</option>
+              <option value="">{{ $t('users.selectLocation') }}</option>
               <option v-for="loc in locations" :key="loc.id" :value="loc.id">
                 {{ loc.name }} ({{ loc.type }})
               </option>
@@ -153,17 +153,17 @@
           </div>
           <div class="flex items-center">
             <input v-model="userForm.is_active" type="checkbox" class="rounded border-gray-300 text-blue-600 mr-2">
-            <label class="text-sm font-medium text-gray-700">Active</label>
+            <label class="text-sm font-medium text-gray-700">{{ $t('users.active') }}</label>
           </div>
         </div>
         <div class="mt-6 flex justify-end space-x-3">
-          <button @click="closeModal" :disabled="loading" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Cancel</button>
+          <button @click="closeModal" :disabled="loading" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">{{ $t('users.cancel') }}</button>
           <button @click="saveUser" :disabled="loading" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center">
             <svg v-if="loading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            {{ loading ? 'Saving...' : 'Save' }}
+            {{ loading ? $t('common.loading') : $t('users.save') }}
           </button>
         </div>
       </div>
@@ -173,9 +173,11 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import api from '@/services/api'
 import Pagination from '@/components/Pagination.vue'
 
+const { t } = useI18n()
 const users = ref([])
 const locations = ref([])
 const showModal = ref(false)
@@ -320,10 +322,10 @@ const saveUser = async () => {
     
     if (editingUser.value) {
       await api.put(`/users/${editingUser.value.id}`, payload)
-      successMessage.value = 'User updated successfully'
+      successMessage.value = t('users.updateSuccess')
     } else {
       await api.post('/users', payload)
-      successMessage.value = 'User created successfully'
+      successMessage.value = t('users.createSuccess')
     }
     
     closeModal()
@@ -335,7 +337,7 @@ const saveUser = async () => {
     }, 3000)
   } catch (error) {
     console.error('Save user error:', error)
-    errorMessage.value = 'Failed to save user: ' + (error.response?.data?.message || error.message)
+    errorMessage.value = t('users.' + (editingUser.value ? 'updateFailed' : 'createFailed')) + ': ' + (error.response?.data?.message || error.message)
     if (error.response?.data?.errors) {
       const errors = error.response.data.errors
       const errorList = Object.values(errors).flat().join(', ')
@@ -347,7 +349,7 @@ const saveUser = async () => {
 }
 
 const deleteUser = async (user) => {
-  if (!confirm(`Delete user ${user.name}?`)) return
+  if (!confirm(t('users.deleteConfirm', { name: user.name }))) return
   
   try {
     errorMessage.value = ''
@@ -355,7 +357,7 @@ const deleteUser = async (user) => {
     loading.value = true
     
     await api.delete(`/users/${user.id}`)
-    successMessage.value = 'User deleted successfully'
+    successMessage.value = t('users.deleteSuccess')
     await loadUsers()
     
     // Auto-hide success message after 3 seconds
@@ -364,7 +366,7 @@ const deleteUser = async (user) => {
     }, 3000)
   } catch (error) {
     console.error('Delete user error:', error)
-    errorMessage.value = 'Failed to delete user: ' + (error.response?.data?.message || error.message)
+    errorMessage.value = t('users.deleteFailed') + ': ' + (error.response?.data?.message || error.message)
   } finally {
     loading.value = false
   }
