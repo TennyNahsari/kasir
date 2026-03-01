@@ -144,17 +144,18 @@ class DashboardController extends Controller
 
     private function getLowStockProducts($locationId = null, $limit = 10)
     {
-        $query = Product::with('category')
-            ->where('track_stock', true)
-            ->whereColumn('stock', '<=', 'min_stock');
+        $query = \App\Models\InventoryStock::with(['product.category', 'location'])
+            ->whereColumn('quantity', '<=', 'reorder_level');
         
-        // Check if location is FNB type
+        // If location is specified, filter by location
         if ($locationId) {
+            $query->where('location_id', $locationId);
+            
             $location = \App\Models\Location::find($locationId);
             
             if ($location && strtoupper($location->type) === 'FNB') {
-                // Filter only FNB categories
-                $query->whereHas('category', function($q) {
+                // Filter only FNB categories for FNB locations
+                $query->whereHas('product.category', function($q) {
                     $q->where(function($subQ) {
                         $subQ->where('name', 'like', '%FNB%')
                              ->orWhere('slug', 'like', '%fnb%')
@@ -169,9 +170,20 @@ class DashboardController extends Controller
             }
         }
         
-        return $query->orderBy('stock', 'asc')
+        return $query->orderBy('quantity', 'asc')
             ->limit($limit)
-            ->get();
+            ->get()
+            ->map(function ($stock) {
+                // Transform to match expected structure for frontend
+                return (object) [
+                    'id' => $stock->product->id,
+                    'name' => $stock->product->name,
+                    'sku' => $stock->product->sku,
+                    'stock' => $stock->quantity, // This will show as "Stok: X" in the frontend 
+                    'min_stock' => $stock->reorder_level,
+                    'category' => $stock->product->category,
+                ];
+            });
     }
 
     public function salesReport(Request $request)

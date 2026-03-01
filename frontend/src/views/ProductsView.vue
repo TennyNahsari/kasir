@@ -44,7 +44,6 @@
             <th class="px-4 py-3 text-left text-sm font-semibold">Kategori</th>
             <th class="px-4 py-3 text-right text-sm font-semibold">Harga Modal</th>
             <th class="px-4 py-3 text-right text-sm font-semibold">Harga Jual</th>
-            <th class="px-4 py-3 text-center text-sm font-semibold">Stok</th>
             <th class="px-4 py-3 text-center text-sm font-semibold">Aksi</th>
           </tr>
         </thead>
@@ -56,11 +55,6 @@
             <td class="px-4 py-3 text-sm">{{ product.category?.name }}</td>
             <td class="px-4 py-3 text-sm text-right">{{ formatCurrency(product.cost_price) }}</td>
             <td class="px-4 py-3 text-sm text-right font-semibold">{{ formatCurrency(product.selling_price) }}</td>
-            <td class="px-4 py-3 text-sm text-center">
-              <span :class="product.stock <= product.min_stock ? 'text-red-600 font-bold' : ''">
-                {{ product.track_stock ? product.stock : 'N/A' }}
-              </span>
-            </td>
             <td class="px-4 py-3 text-sm text-center">
               <div class="flex items-center justify-center gap-2">
                 <button @click="editProduct(product)" class="text-blue-600 hover:text-blue-700 font-medium">
@@ -113,18 +107,15 @@
             <span class="font-medium ml-1">{{ product.sku }}</span>
           </div>
           <div>
-            <span class="text-gray-600">Stok:</span>
-            <span :class="['font-medium ml-1', product.stock <= product.min_stock ? 'text-red-600' : '']">
-              {{ product.track_stock ? product.stock : 'N/A' }}
-            </span>
-          </div>
-          <div>
             <span class="text-gray-600">Modal:</span>
             <span class="font-medium ml-1">{{ formatCurrency(product.cost_price) }}</span>
           </div>
           <div>
             <span class="text-gray-600">Jual:</span>
             <span class="font-semibold ml-1 text-primary-600">{{ formatCurrency(product.selling_price) }}</span>
+          </div>
+          <div>
+            <!-- Placeholder for layout consistency -->
           </div>
         </div>
         
@@ -203,13 +194,12 @@
           </div>
 
           <div>
-            <label class="label text-xs sm:text-sm">Stok</label>
-            <input v-model.number="form.stock" type="number" class="input text-sm sm:text-base" min="0">
+            <label class="label">Stok Minimum</label>
+            <input v-model.number="form.min_stock" type="number" class="input" min="0">
           </div>
 
           <div>
-            <label class="label">Stok Minimum</label>
-            <input v-model.number="form.min_stock" type="number" class="input" min="0">
+            <!-- Placeholder for layout consistency -->
           </div>
         </div>
 
@@ -364,7 +354,6 @@ const form = ref({
   description: '',
   cost_price: 0,
   selling_price: 0,
-  stock: 1,
   min_stock: 10,
   track_stock: true,
   image: null
@@ -462,7 +451,6 @@ const saveProduct = async () => {
     
     formData.append('cost_price', parseFloat(form.value.cost_price) || 0)
     formData.append('selling_price', parseFloat(form.value.selling_price) || 0)
-    formData.append('stock', parseInt(form.value.stock) || 0)
     formData.append('min_stock', parseInt(form.value.min_stock) || 10)
     formData.append('track_stock', form.value.track_stock ? '1' : '0')
     
@@ -500,7 +488,6 @@ const closeModal = () => {
     description: '',
     cost_price: 0,
     selling_price: 0,
-    stock: 1,
     min_stock: 10,
     track_stock: true,
     image: null
