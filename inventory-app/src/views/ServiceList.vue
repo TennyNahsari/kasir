@@ -2,21 +2,21 @@
   <div class="p-6">
     <div class="mb-6 flex justify-between items-center">
       <div>
-        <h1 class="text-3xl font-bold text-gray-800 mb-2">Service Contracts</h1>
-        <p class="text-gray-600">Track and manage service contracts, rentals, and subscriptions</p>
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">{{ $t('services.title') }}</h1>
+        <p class="text-gray-600">{{ $t('services.subtitle') }}</p>
       </div>
       <div class="flex space-x-3">
         <button @click="exportToExcel" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          Export Excel
+          {{ $t('services.exportExcel') }}
         </button>
         <button @click="showCreateModal = true" class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 flex items-center">
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
           </svg>
-          Add Service Contract
+          {{ $t('services.addContract') }}
         </button>
       </div>
     </div>
@@ -26,7 +26,7 @@
       <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-gray-600 text-sm">Active</p>
+            <p class="text-gray-600 text-sm">{{ $t('services.statsActive') }}</p>
             <p class="text-2xl font-bold text-green-600">{{ stats.total_active || 0 }}</p>
           </div>
           <div class="bg-green-100 p-3 rounded-full">
@@ -40,7 +40,7 @@
       <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-gray-600 text-sm">Expiring Soon</p>
+            <p class="text-gray-600 text-sm">{{ $t('services.statsExpiringSoon') }}</p>
             <p class="text-2xl font-bold text-yellow-600">{{ stats.expiring_soon || 0 }}</p>
           </div>
           <div class="bg-yellow-100 p-3 rounded-full">
@@ -54,7 +54,7 @@
       <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-gray-600 text-sm">Pending</p>
+            <p class="text-gray-600 text-sm">{{ $t('services.statsPending') }}</p>
             <p class="text-2xl font-bold text-blue-600">{{ stats.total_pending || 0 }}</p>
           </div>
           <div class="bg-blue-100 p-3 rounded-full">
@@ -68,7 +68,7 @@
       <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-gray-600 text-sm">Expired</p>
+            <p class="text-gray-600 text-sm">{{ $t('services.statsExpired') }}</p>
             <p class="text-2xl font-bold text-red-600">{{ stats.expired || 0 }}</p>
           </div>
           <div class="bg-red-100 p-3 rounded-full">
@@ -84,39 +84,39 @@
     <div class="bg-white rounded-lg shadow p-6 mb-6">
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
-          <input v-model="filters.search" type="text" placeholder="Contract number..."
+          <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('services.searchLabel') }}</label>
+          <input v-model="filters.search" type="text" :placeholder="$t('services.searchPlaceholder')"
             class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('services.statusLabel') }}</label>
           <select v-model="filters.status"
             class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-            <option value="">All Status</option>
-            <option value="ACTIVE">Active</option>
-            <option value="PENDING">Pending</option>
-            <option value="EXPIRED">Expired</option>
-            <option value="TERMINATED">Terminated</option>
+            <option value="">{{ $t('services.allStatus') }}</option>
+            <option value="ACTIVE">{{ $t('services.active') }}</option>
+            <option value="PENDING">{{ $t('services.pending') }}</option>
+            <option value="EXPIRED">{{ $t('services.expired') }}</option>
+            <option value="TERMINATED">{{ $t('services.terminated') }}</option>
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Contract Type</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('services.contractTypeLabel') }}</label>
           <select v-model="filters.contract_type"
             class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-            <option value="">All Types</option>
-            <option value="RENTAL">Rental</option>
-            <option value="SUBSCRIPTION">Subscription</option>
-            <option value="MAINTENANCE">Maintenance</option>
-            <option value="CONSULTING">Consulting</option>
-            <option value="UTILITY">Utility</option>
-            <option value="OTHER">Other</option>
+            <option value="">{{ $t('services.allTypes') }}</option>
+            <option value="RENTAL">{{ $t('services.rental') }}</option>
+            <option value="SUBSCRIPTION">{{ $t('services.subscription') }}</option>
+            <option value="MAINTENANCE">{{ $t('services.maintenanceType') }}</option>
+            <option value="CONSULTING">{{ $t('services.consulting') }}</option>
+            <option value="UTILITY">{{ $t('services.utility') }}</option>
+            <option value="OTHER">{{ $t('services.other') }}</option>
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Vendor</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('services.vendorLabel') }}</label>
           <select v-model="filters.vendor_id"
             class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-            <option value="">All Vendors</option>
+            <option value="">{{ $t('services.allVendors') }}</option>
             <option v-for="vendor in vendors" :key="vendor.id" :value="vendor.id">
               {{ vendor.name }}
             </option>
@@ -125,10 +125,10 @@
       </div>
       <div class="flex justify-between items-center mt-4">
         <button @click="resetFilters" class="text-purple-600 hover:text-purple-800">
-          Reset Filters
+          {{ $t('services.resetFilters') }}
         </button>
         <button @click="loadContracts" class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700">
-          Apply Filters
+          {{ $t('services.applyFilters') }}
         </button>
       </div>
     </div>
@@ -139,29 +139,29 @@
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contract</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product/Service</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PIC</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start - End</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('services.contract') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('services.productService') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('services.vendor') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('services.pic') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('services.type') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('services.startEnd') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('services.valueLabel') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('services.statusLabel') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('common.actions') }}</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-if="loading">
-              <td colspan="9" class="px-6 py-4 text-center text-gray-500">Loading...</td>
+              <td colspan="9" class="px-6 py-4 text-center text-gray-500">{{ $t('services.loadingText') }}</td>
             </tr>
             <tr v-else-if="contracts.length === 0">
-              <td colspan="9" class="px-6 py-4 text-center text-gray-500">No contracts found</td>
+              <td colspan="9" class="px-6 py-4 text-center text-gray-500">{{ $t('services.noContracts') }}</td>
             </tr>
             <tr v-else v-for="contract in contracts" :key="contract.id" class="hover:bg-gray-50">
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm font-medium text-gray-900">{{ contract.contract_number }}</div>
                 <div v-if="contract.is_expiring_soon" class="text-xs text-yellow-600 font-medium mt-1">
-                  ⚠️ Expires in {{ contract.days_until_expiry }} days
+                  ⚠️ {{ $t('services.expiresIn', {days: contract.days_until_expiry}) }}
                 </div>
               </td>
               <td class="px-6 py-4">
@@ -193,10 +193,10 @@
               <td class="px-6 py-4 whitespace-nowrap text-sm">
                 <div class="flex gap-2">
                   <button @click="printBarcode(contract)" class="text-purple-600 hover:text-purple-900">
-                    Barcode
+                    {{ $t('services.barcode') }}
                   </button>
                   <button @click="viewContract(contract.id)" class="text-purple-600 hover:text-purple-900">
-                    View Details
+                    {{ $t('services.viewDetails') }}
                   </button>
                 </div>
               </td>
@@ -208,16 +208,16 @@
       <!-- Pagination -->
       <div v-if="pagination.total > 0" class="bg-gray-50 px-6 py-4 flex items-center justify-between border-t">
         <div class="text-sm text-gray-700">
-          Showing {{ pagination.from }} to {{ pagination.to }} of {{ pagination.total }} contracts
+          {{ $t('services.showing') }} {{ pagination.from }} {{ $t('services.to') }} {{ pagination.to }} {{ $t('services.of') }} {{ pagination.total }} {{ $t('services.contractsText') }}
         </div>
         <div class="flex space-x-2">
           <button @click="changePage(pagination.current_page - 1)" :disabled="pagination.current_page === 1"
             class="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
-            Previous
+            {{ $t('services.previous') }}
           </button>
           <button @click="changePage(pagination.current_page + 1)" :disabled="pagination.current_page === pagination.last_page"
             class="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
-            Next
+            {{ $t('services.next') }}
           </button>
         </div>
       </div>
@@ -226,11 +226,11 @@
     <!-- Create Service Contract Modal -->
     <div v-if="showCreateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <h3 class="text-xl font-semibold mb-4">Create Service Contract</h3>
+        <h3 class="text-xl font-semibold mb-4">{{ $t('services.modalCreateTitle') }}</h3>
         <form @submit.prevent="createContract">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="md:col-span-2 relative">
-              <label class="block text-sm font-medium text-gray-700 mb-2">Product/Service *</label>
+              <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('services.productServiceRequired') }} <span class="text-red-500">*</span></label>
               <input 
                 v-model="productSearch" 
                 @focus="showProductDropdown = true"
@@ -239,7 +239,7 @@
                 type="text" 
                 required 
                 class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                placeholder="Search product by name or SKU..."
+                :placeholder="$t('services.productPlaceholder')"
                 autocomplete="off"
               >
               <div 
@@ -259,10 +259,10 @@
             </div>
             
             <div class="md:col-span-2">
-              <label class="block text-sm font-medium text-gray-700 mb-2">Vendor *</label>
+              <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('services.vendorRequired') }} <span class="text-red-500">*</span></label>
               <select v-model="createForm.vendor_id" required
                 class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-                <option value="">-- Select Vendor --</option>
+                <option value="">{{ $t('services.selectVendor') }}</option>
                 <option v-for="vendor in vendors" :key="vendor.id" :value="vendor.id">
                   {{ vendor.name }}
                 </option>
@@ -270,10 +270,10 @@
             </div>
             
             <div class="md:col-span-2">
-              <label class="block text-sm font-medium text-gray-700 mb-2">Location</label>
+              <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('services.locationOptional') }}</label>
               <select v-model="createForm.location_id"
                 class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-                <option value="">-- Select Location (Optional) --</option>
+                <option value="">{{ $t('services.selectLocation') }}</option>
                 <option v-for="location in locations" :key="location.id" :value="location.id">
                   {{ location.name }}
                 </option>
@@ -281,68 +281,68 @@
             </div>
             
             <div class="md:col-span-2">
-              <label class="block text-sm font-medium text-gray-700 mb-2">PIC (Person In Charge)</label>
-              <input v-model="createForm.pic" type="text" placeholder="Name of person in charge..."
+              <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('services.picField') }}</label>
+              <input v-model="createForm.pic" type="text" :placeholder="$t('services.picPlaceholder')"
                 class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
             </div>
             
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Contract Type *</label>
+              <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('services.contractTypeRequired') }} <span class="text-red-500">*</span></label>
               <select v-model="createForm.contract_type" required
                 class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-                <option value="">-- Select Type --</option>
-                <option value="RENTAL">Rental (Sewa)</option>
-                <option value="SUBSCRIPTION">Subscription (Langganan)</option>
-                <option value="MAINTENANCE">Maintenance (Pemeliharaan)</option>
-                <option value="CONSULTING">Consulting (Konsultasi)</option>
-                <option value="UTILITY">Utility (Listrik, Air, Internet)</option>
-                <option value="OTHER">Other (Lainnya)</option>
+                <option value="">{{ $t('services.selectType') }}</option>
+                <option value="RENTAL">{{ $t('services.rentalType') }}</option>
+                <option value="SUBSCRIPTION">{{ $t('services.subscriptionType') }}</option>
+                <option value="MAINTENANCE">{{ $t('services.maintenanceTypeOption') }}</option>
+                <option value="CONSULTING">{{ $t('services.consultingType') }}</option>
+                <option value="UTILITY">{{ $t('services.utilityType') }}</option>
+                <option value="OTHER">{{ $t('services.otherType') }}</option>
               </select>
             </div>
             
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Billing Cycle *</label>
+              <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('services.billingCycleRequired') }} <span class="text-red-500">*</span></label>
               <select v-model="createForm.billing_cycle" required
                 class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-                <option value="MONTHLY">Monthly</option>
-                <option value="QUARTERLY">Quarterly</option>
-                <option value="YEARLY">Yearly</option>
-                <option value="ONE_TIME">One Time</option>
+                <option value="MONTHLY">{{ $t('services.monthly') }}</option>
+                <option value="QUARTERLY">{{ $t('services.quarterly') }}</option>
+                <option value="YEARLY">{{ $t('services.yearly') }}</option>
+                <option value="ONE_TIME">{{ $t('services.oneTime') }}</option>
               </select>
             </div>
             
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Start Date *</label>
+              <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('services.startDateRequired') }} <span class="text-red-500">*</span></label>
               <input v-model="createForm.start_date" type="date" required
                 class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
             </div>
             
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">End Date *</label>
+              <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('services.endDateRequired') }} <span class="text-red-500">*</span></label>
               <input v-model="createForm.end_date" type="date" required
                 class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
             </div>
             
             <div class="md:col-span-2">
-              <label class="block text-sm font-medium text-gray-700 mb-2">Contract Value *</label>
+              <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('services.contractValueRequired') }} <span class="text-red-500">*</span></label>
               <input v-model.number="createForm.contract_value" type="number" step="0.01" required min="0"
                 placeholder="0.00"
                 class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
             </div>
             
             <div class="md:col-span-2">
-              <label class="block text-sm font-medium text-gray-700 mb-2">Notes</label>
-              <textarea v-model="createForm.notes" rows="3"
+              <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('services.description') }}</label>
+              <textarea v-model="createForm.notes" rows="3" :placeholder="$t('services.descriptionPlaceholder')"
                 class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"></textarea>
             </div>
           </div>
           
           <div class="flex justify-end space-x-3 mt-6">
             <button type="button" @click="closeCreateModal" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-              Cancel
+              {{ $t('common.cancel') }}
             </button>
             <button type="submit" :disabled="creating" class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50">
-              {{ creating ? 'Creating...' : 'Create Contract' }}
+              {{ $t('common.save') }}
             </button>
           </div>
         </form>
@@ -410,12 +410,14 @@
 <script setup>
 import { ref, onMounted, watch, nextTick, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import serviceService from '@/services/serviceService'
 import api from '@/services/api'
 import * as XLSX from 'xlsx'
 import JsBarcode from 'jsbarcode'
 
 const router = useRouter()
+const { t } = useI18n()
 
 const contracts = ref([])
 const loading = ref(false)
@@ -537,7 +539,7 @@ const exportToExcel = () => {
     }))
 
     if (exportData.length === 0) {
-      alert('No data to export')
+      alert(t('services.noDataToExport'))
       return
     }
 
@@ -565,10 +567,10 @@ const exportToExcel = () => {
     const filename = `Service_Contracts_${timestamp}.xlsx`
 
     XLSX.writeFile(wb, filename)
-    alert(`Excel file exported successfully: ${filename} (${exportData.length} records)`)
+    alert(t('services.exportSuccess', { filename: filename, count: exportData.length }))
   } catch (error) {
     console.error('Export error:', error)
-    alert('Failed to export Excel file: ' + error.message)
+    alert(t('services.exportFailed') + ': ' + error.message)
   }
 }
 
@@ -627,7 +629,7 @@ const loadContracts = async () => {
   } catch (error) {
     console.error('Failed to load contracts:', error)
     console.error('Error response:', error.response?.data)
-    alert('Failed to load service contracts: ' + (error.response?.data?.message || error.message))
+    alert(t('services.loadFailed') + ': ' + (error.response?.data?.message || error.message))
   } finally {
     loading.value = false
   }
@@ -723,14 +725,14 @@ const viewContract = (id) => {
 const createContract = async () => {
   // Validate end date is after start date
   if (new Date(createForm.value.end_date) <= new Date(createForm.value.start_date)) {
-    alert('End date must be after start date')
+    alert(t('services.endDateError'))
     return
   }
   
   creating.value = true
   try {
     await serviceService.create(createForm.value)
-    alert('Service contract created successfully!')
+    alert(t('services.createSuccess'))
     closeCreateModal()
     await loadContracts()
     await loadStats()
@@ -739,7 +741,7 @@ const createContract = async () => {
     const errorMsg = error.response?.data?.errors 
       ? Object.values(error.response.data.errors).flat().join(', ')
       : error.response?.data?.message || error.message
-    alert('Failed to create contract: ' + errorMsg)
+    alert(t('services.createFailed') + ': ' + errorMsg)
   } finally {
     creating.value = false
   }
@@ -794,7 +796,7 @@ const generateBarcodePreview = () => {
     }
   } catch (error) {
     console.error('Failed to generate barcode:', error)
-    alert('Failed to generate barcode. Invalid Contract Number format.')
+    alert(t('services.barcodeGenerateFailed'))
   }
 }
 

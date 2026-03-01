@@ -1,16 +1,16 @@
 <template>
   <div class="p-4 sm:p-6">
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
-      <h2 class="text-2xl font-bold">Asset Management</h2>
+      <h2 class="text-2xl font-bold">{{ $t('assets.title') }}</h2>
       <div class="flex space-x-3">
         <button @click="exportToExcel" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          Export Excel
+          {{ $t('assets.exportExcel') }}
         </button>
         <button @click="showAddModal = true" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-          + Add Asset
+          + {{ $t('assets.addAsset') }}
         </button>
       </div>
     </div>
@@ -19,39 +19,39 @@
     <div class="card mb-6">
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div>
-          <label class="label text-sm">Search</label>
+          <label class="label text-sm">{{ $t('assets.searchLabel') }}</label>
           <input
             v-model="filters.search"
             type="text"
             class="input"
-            placeholder="Asset tag, serial, product..."
+            :placeholder="$t('assets.searchPlaceholder')"
             @input="loadAssets"
           >
         </div>
         <div>
-          <label class="label text-sm">Status</label>
+          <label class="label text-sm">{{ $t('assets.statusLabel') }}</label>
           <select v-model="filters.status" class="input" @change="loadAssets">
-            <option value="">All Status</option>
-            <option value="AVAILABLE">Available</option>
-            <option value="ASSIGNED">Assigned</option>
-            <option value="IN_USE">In Use</option>
-            <option value="MAINTENANCE">Maintenance</option>
-            <option value="DAMAGED">Damaged</option>
-            <option value="DISPOSED">Disposed</option>
+            <option value="">{{ $t('assets.allStatus') }}</option>
+            <option value="AVAILABLE">{{ $t('assets.available') }}</option>
+            <option value="ASSIGNED">{{ $t('assets.assigned') }}</option>
+            <option value="IN_USE">{{ $t('assets.inUse') }}</option>
+            <option value="MAINTENANCE">{{ $t('assets.maintenance') }}</option>
+            <option value="DAMAGED">{{ $t('assets.damaged') }}</option>
+            <option value="DISPOSED">{{ $t('assets.disposed') }}</option>
           </select>
         </div>
         <div>
-          <label class="label text-sm">Location</label>
+          <label class="label text-sm">{{ $t('assets.locationLabel') }}</label>
           <select v-model="filters.location_id" class="input" @change="loadAssets">
-            <option value="">All Locations</option>
+            <option value="">{{ $t('assets.allLocations') }}</option>
             <option v-for="loc in locations" :key="loc.id" :value="loc.id">
               {{ loc.name }}
             </option>
           </select>
         </div>
         <div>
-          <label class="label text-sm">PIC</label>
-          <input v-model="filters.pic" type="text" class="input" placeholder="Search by PIC..." @input="loadAssets">
+          <label class="label text-sm">{{ $t('assets.picLabel') }}</label>
+          <input v-model="filters.pic" type="text" class="input" :placeholder="$t('assets.picPlaceholder')" @input="loadAssets">
         </div>
       </div>
     </div>
@@ -61,14 +61,14 @@
       <table class="w-full">
         <thead class="bg-gray-50">
           <tr>
-            <th class="px-4 py-3 text-left text-sm font-semibold">Asset Tag</th>
-            <th class="px-4 py-3 text-left text-sm font-semibold">Product</th>
-            <th class="px-4 py-3 text-left text-sm font-semibold">Serial Number</th>
-            <th class="px-4 py-3 text-left text-sm font-semibold">Location</th>
-            <th class="px-4 py-3 text-left text-sm font-semibold">PIC</th>
-            <th class="px-4 py-3 text-left text-sm font-semibold">Status</th>
-            <th class="px-4 py-3 text-left text-sm font-semibold">Condition</th>
-            <th class="px-4 py-3 text-center text-sm font-semibold">Actions</th>
+            <th class="px-4 py-3 text-left text-sm font-semibold">{{ $t('assets.assetTag') }}</th>
+            <th class="px-4 py-3 text-left text-sm font-semibold">{{ $t('assets.product') }}</th>
+            <th class="px-4 py-3 text-left text-sm font-semibold">{{ $t('assets.serialNumber') }}</th>
+            <th class="px-4 py-3 text-left text-sm font-semibold">{{ $t('assets.location') }}</th>
+            <th class="px-4 py-3 text-left text-sm font-semibold">{{ $t('assets.pic') }}</th>
+            <th class="px-4 py-3 text-left text-sm font-semibold">{{ $t('assets.status') }}</th>
+            <th class="px-4 py-3 text-left text-sm font-semibold">{{ $t('assets.condition') }}</th>
+            <th class="px-4 py-3 text-center text-sm font-semibold">{{ $t('common.actions') }}</th>
           </tr>
         </thead>
         <tbody class="divide-y">
@@ -93,13 +93,13 @@
             <td class="px-4 py-3 text-sm text-center">
               <div class="flex gap-2 justify-center">
                 <button @click="printBarcode(asset)" class="text-purple-600 hover:text-purple-900 font-medium">
-                  Barcode
+                  {{ $t('assets.barcode') }}
                 </button>
                 <button @click="printQRCode(asset)" class="text-green-600 hover:text-green-900 font-medium">
-                  QR Code
+                  {{ $t('assets.qrCode') }}
                 </button>
                 <button @click="viewAsset(asset)" class="text-blue-600 hover:text-blue-700 font-medium">
-                  View
+                  {{ $t('assets.view') }}
                 </button>
               </div>
             </td>
@@ -108,11 +108,11 @@
       </table>
 
       <div v-if="!loading && assets.length === 0" class="text-center py-8 text-gray-500">
-        No assets found
+        {{ $t('assets.noAssets') }}
       </div>
 
       <div v-if="loading" class="text-center py-8 text-gray-500">
-        Loading assets...
+        {{ $t('assets.loading') }}
       </div>
     </div>
 
@@ -137,46 +137,46 @@
         
         <div class="grid grid-cols-2 gap-2 text-xs mb-3">
           <div>
-            <span class="text-gray-600">Location:</span>
+            <span class="text-gray-600">{{ $t('assets.location') }}:</span>
             <span class="font-medium ml-1">{{ asset.location?.name }}</span>
           </div>
           <div>
-            <span class="text-gray-600">PIC:</span>
+            <span class="text-gray-600">{{ $t('assets.pic') }}:</span>
             <span class="font-medium ml-1">{{ asset.pic || '-' }}</span>
           </div>
           <div>
-            <span class="text-gray-600">Purchase Date:</span>
+            <span class="text-gray-600">{{ $t('assets.purchaseDate') }}:</span>
             <span class="font-medium ml-1">{{ formatDate(asset.purchase_date) }}</span>
           </div>
           <div>
-            <span class="text-gray-600">Value:</span>
+            <span class="text-gray-600">{{ $t('assets.value') }}:</span>
             <span class="font-medium ml-1">{{ formatCurrency(asset.current_value) }}</span>
           </div>
         </div>
         
         <div class="flex gap-2">
           <button @click="printBarcode(asset)" class="flex-1 py-2 text-sm font-medium text-purple-600 bg-purple-50 rounded-lg hover:bg-purple-100">
-            Barcode
+            {{ $t('assets.barcode') }}
           </button>
           <button @click="viewAsset(asset)" class="flex-1 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100">
-            View Details
+            {{ $t('assets.viewDetails') }}
           </button>
         </div>
       </div>
 
       <div v-if="!loading && assets.length === 0" class="card p-8 text-center text-gray-500">
-        No assets found
+        {{ $t('assets.noAssets') }}
       </div>
 
       <div v-if="loading" class="card p-8 text-center text-gray-500">
-        Loading assets...
+        {{ $t('assets.loading') }}
       </div>
     </div>
 
     <!-- Pagination -->
     <div v-if="pagination.total > pagination.per_page" class="flex justify-between items-center mt-6">
       <div class="text-sm text-gray-600">
-        Showing {{ pagination.from }} to {{ pagination.to }} of {{ pagination.total }} assets
+        {{ $t('assets.showing') }} {{ pagination.from }} {{ $t('assets.to') }} {{ pagination.to }} {{ $t('assets.of') }} {{ pagination.total }} {{ $t('assets.assetsText') }}
       </div>
       <div class="flex gap-2">
         <button
@@ -184,14 +184,14 @@
           :disabled="pagination.current_page === 1"
           class="btn btn-secondary text-sm disabled:opacity-50"
         >
-          Previous
+          {{ $t('assets.previous') }}
         </button>
         <button
           @click="loadAssets(pagination.current_page + 1)"
           :disabled="pagination.current_page === pagination.last_page"
           class="btn btn-secondary text-sm disabled:opacity-50"
         >
-          Next
+          {{ $t('assets.next') }}
         </button>
       </div>
     </div>
@@ -201,7 +201,7 @@
       <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div class="p-6">
           <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-bold">Add New Asset</h3>
+            <h3 class="text-xl font-bold">{{ $t('assets.modalAddTitle') }}</h3>
             <button @click="closeAddModal" class="text-gray-400 hover:text-gray-600">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -212,7 +212,7 @@
           <form @submit.prevent="createAsset" class="space-y-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="relative">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Product *</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('assets.productRequired') }} <span class="text-red-500">*</span></label>
                 <input 
                   v-model="productSearch" 
                   @focus="showProductDropdown = true"
@@ -221,7 +221,7 @@
                   type="text" 
                   required 
                   class="w-full border-gray-300 rounded-lg"
-                  placeholder="Search product by name or SKU..."
+                  :placeholder="$t('assets.productPlaceholder')"
                   autocomplete="off"
                 >
                 <div 
@@ -240,66 +240,66 @@
                 </div>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Serial Number *</label>
-                <input v-model="assetForm.serial_number" type="text" required class="w-full border-gray-300 rounded-lg" placeholder="Enter serial number">
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('assets.serialNumberRequired') }} <span class="text-red-500">*</span></label>
+                <input v-model="assetForm.serial_number" type="text" required class="w-full border-gray-300 rounded-lg" :placeholder="$t('assets.serialNumberPlaceholder')">
               </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Location *</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('assets.locationRequired') }} <span class="text-red-500">*</span></label>
                 <select v-model="assetForm.location_id" required class="w-full border-gray-300 rounded-lg">
-                  <option value="">Select Location</option>
+                  <option value="">{{ $t('assets.selectLocation') }}</option>
                   <option v-for="loc in locations" :key="loc.id" :value="loc.id">
                     {{ loc.name }}
                   </option>
                 </select>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Condition *</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('assets.conditionRequired') }} <span class="text-red-500">*</span></label>
                 <select v-model="assetForm.condition" required class="w-full border-gray-300 rounded-lg">
-                  <option value="NEW">New</option>
-                  <option value="GOOD">Good</option>
-                  <option value="FAIR">Fair</option>
-                  <option value="POOR">Poor</option>
-                  <option value="BROKEN">Broken</option>
+                  <option value="NEW">{{ $t('assets.conditionNew') }}</option>
+                  <option value="GOOD">{{ $t('assets.conditionGood') }}</option>
+                  <option value="FAIR">{{ $t('assets.conditionFair') }}</option>
+                  <option value="POOR">{{ $t('assets.conditionPoor') }}</option>
+                  <option value="BROKEN">{{ $t('assets.conditionBroken') }}</option>
                 </select>
               </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Purchase Date *</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('assets.purchaseDateRequired') }} <span class="text-red-500">*</span></label>
                 <input v-model="assetForm.purchase_date" type="date" required class="w-full border-gray-300 rounded-lg">
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Purchase Price *</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('assets.purchasePriceRequired') }} <span class="text-red-500">*</span></label>
                 <input v-model="assetForm.purchase_price" type="number" step="0.01" required class="w-full border-gray-300 rounded-lg" placeholder="0">
               </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Useful Life (years)</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('assets.usefulLife') }}</label>
                 <input v-model="assetForm.useful_life_years" type="number" step="1" class="w-full border-gray-300 rounded-lg" placeholder="5">
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Warranty Expiry</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('assets.warrantyExpiry') }}</label>
                 <input v-model="assetForm.warranty_expiry" type="date" class="w-full border-gray-300 rounded-lg">
               </div>
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-              <textarea v-model="assetForm.notes" rows="3" class="w-full border-gray-300 rounded-lg" placeholder="Additional notes..."></textarea>
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('assets.notes') }}</label>
+              <textarea v-model="assetForm.notes" rows="3" class="w-full border-gray-300 rounded-lg" :placeholder="$t('assets.notesPlaceholder')"></textarea>
             </div>
 
             <div class="flex gap-3 justify-end pt-4">
               <button type="button" @click="closeAddModal" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                Cancel
+                {{ $t('common.cancel') }}
               </button>
               <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                Create Asset
+                {{ $t('common.save') }}
               </button>
             </div>
           </form>
@@ -430,6 +430,7 @@
 <script setup>
 import { ref, onMounted, nextTick, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import assetService from '@/services/assetService'
 import locationService from '@/services/locationService'
 import userService from '@/services/userService'
@@ -439,6 +440,7 @@ import JsBarcode from 'jsbarcode'
 import QRCode from 'qrcode'
 
 const router = useRouter()
+const { t } = useI18n()
 
 const assets = ref([])
 const locations = ref([])
@@ -604,7 +606,7 @@ const exportToExcel = () => {
     }))
 
     if (exportData.length === 0) {
-      alert('No data to export')
+      alert(t('assets.noDataToExport'))
       return
     }
 
@@ -632,10 +634,10 @@ const exportToExcel = () => {
     const filename = `Assets_${timestamp}.xlsx`
 
     XLSX.writeFile(wb, filename)
-    alert(`Excel file exported successfully: ${filename} (${exportData.length} records)`)
+    alert(t('assets.exportSuccess', { filename: filename, count: exportData.length }))
   } catch (error) {
     console.error('Export error:', error)
-    alert('Failed to export Excel file: ' + error.message)
+    alert(t('assets.exportFailed') + ': ' + error.message)
   }
 }
 
@@ -671,8 +673,8 @@ const loadAssets = async (page = 1) => {
     }
   } catch (error) {
     console.error('Failed to load assets:', error)
-    alert('Failed to load assets: ' + (error.response?.data?.message || error.message))
-  } finally {
+    alert(t('assets.loadFailed') + ': ' + (error.response?.data?.message || error.message))
+  }  finally {
     loading.value = false
   }
 }
@@ -739,12 +741,12 @@ const createAsset = async () => {
   try {
     loading.value = true
     await assetService.createAsset(assetForm.value)
-    alert('Asset created successfully!')
+    alert(t('assets.createSuccess'))
     closeAddModal()
     await loadAssets()
   } catch (error) {
     console.error('Failed to create asset:', error)
-    alert('Failed to create asset: ' + (error.response?.data?.message || error.message))
+    alert(t('assets.createFailed') + ': ' + (error.response?.data?.message || error.message))
   } finally {
     loading.value = false
   }
@@ -797,7 +799,7 @@ const generateBarcodePreview = () => {
     }
   } catch (error) {
     console.error('Failed to generate barcode:', error)
-    alert('Failed to generate barcode. Invalid Asset Tag format.')
+    alert(t('assets.barcodeGenerateFailed'))
   }
 }
 
@@ -963,7 +965,7 @@ const generateQRPreview = async () => {
     }
   } catch (error) {
     console.error('Failed to generate QR code:', error)
-    alert('Failed to generate QR code.')
+    alert(t('assets.qrGenerateFailed'))
   }
 }
 
