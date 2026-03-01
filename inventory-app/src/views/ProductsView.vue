@@ -1,13 +1,13 @@
 <template>
   <div>
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
-      <h2 class="text-xl sm:text-2xl font-bold">Manajemen Produk</h2>
+      <h2 class="text-xl sm:text-2xl font-bold">{{ $t('products.title') }}</h2>
       <div class="flex gap-2 w-full sm:w-auto">
         <button @click="showCategoryModal = true" class="btn btn-secondary flex-1 sm:flex-none text-sm sm:text-base">
-          + Kategori
+          + {{ $t('products.addCategory') }}
         </button>
         <button @click="showAddModal = true" class="btn btn-primary flex-1 sm:flex-none text-sm sm:text-base">
-          + Tambah Produk
+          + {{ $t('products.addProduct') }}
         </button>
       </div>
     </div>
@@ -19,16 +19,16 @@
           v-model="searchQuery"
           type="text"
           class="input flex-1 text-sm sm:text-base"
-          placeholder="Cari produk..."
+          :placeholder="$t('products.searchPlaceholder')"
         >
         <select v-model="filterCategory" class="input sm:w-48 text-sm sm:text-base">
-          <option value="">Semua Kategori</option>
+          <option value="">{{ $t('products.allCategories') }}</option>
           <option v-for="cat in categories" :key="cat.id" :value="cat.id">
             {{ cat.name }}
           </option>
         </select>
         <button @click="loadProducts" class="btn btn-primary text-sm sm:text-base">
-          Cari
+          {{ $t('common.search') }}
         </button>
       </div>
     </div>
@@ -38,14 +38,14 @@
       <table class="w-full">
         <thead class="bg-gray-50">
           <tr>
-            <th class="px-4 py-3 text-left text-sm font-semibold">SKU</th>
-            <th class="px-4 py-3 text-left text-sm font-semibold">Barcode</th>
-            <th class="px-4 py-3 text-left text-sm font-semibold">Nama Produk</th>
-            <th class="px-4 py-3 text-left text-sm font-semibold">Kategori</th>
-            <th class="px-4 py-3 text-right text-sm font-semibold">Harga Modal</th>
-            <th class="px-4 py-3 text-right text-sm font-semibold">Harga Jual</th>
-            <th class="px-4 py-3 text-center text-sm font-semibold">Stok</th>
-            <th class="px-4 py-3 text-center text-sm font-semibold">Aksi</th>
+            <th class="px-4 py-3 text-left text-sm font-semibold">{{ $t('products.sku') }}</th>
+            <th class="px-4 py-3 text-left text-sm font-semibold">{{ $t('products.barcode') }}</th>
+            <th class="px-4 py-3 text-left text-sm font-semibold">{{ $t('products.productName') }}</th>
+            <th class="px-4 py-3 text-left text-sm font-semibold">{{ $t('products.category') }}</th>
+            <th class="px-4 py-3 text-right text-sm font-semibold">{{ $t('products.costPrice') }}</th>
+            <th class="px-4 py-3 text-right text-sm font-semibold">{{ $t('products.sellingPrice') }}</th>
+            <th class="px-4 py-3 text-center text-sm font-semibold">{{ $t('products.stock') }}</th>
+            <th class="px-4 py-3 text-center text-sm font-semibold">{{ $t('common.actions') }}</th>
           </tr>
         </thead>
         <tbody class="divide-y">
@@ -64,13 +64,13 @@
             <td class="px-4 py-3 text-sm text-center">
               <div class="flex items-center justify-center gap-2">
                 <button @click="editProduct(product)" class="text-blue-600 hover:text-blue-700 font-medium">
-                  Edit
+                  {{ $t('products.edit') }}
                 </button>
                 <button @click="printBarcode(product)" class="text-green-600 hover:text-green-700 font-medium">
-                  Print Label
+                  {{ $t('products.printLabel') }}
                 </button>
                 <button @click="deleteProduct(product)" class="text-red-600 hover:text-red-700 font-medium">
-                  Hapus
+                  {{ $t('common.delete') }}
                 </button>
               </div>
             </td>
@@ -79,7 +79,7 @@
       </table>
 
       <div v-if="products.length === 0" class="text-center py-8 text-gray-500 text-sm">
-        Tidak ada produk
+        {{ $t('products.noProducts') }}
       </div>
     </div>
 
@@ -117,19 +117,19 @@
         
         <div class="flex gap-2">
           <button @click="editProduct(product)" class="flex-1 py-2 text-xs font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100">
-            Edit
+            {{ $t('products.edit') }}
           </button>
           <button @click="printBarcode(product)" class="flex-1 py-2 text-xs font-medium text-green-600 bg-green-50 rounded-lg hover:bg-green-100">
-            Label
+            {{ $t('products.printLabel').replace('Print ', '') }}
           </button>
           <button @click="deleteProduct(product)" class="flex-1 py-2 text-xs font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100">
-            Hapus
+            {{ $t('common.delete') }}
           </button>
         </div>
       </div>
       
       <div v-if="products.length === 0" class="text-center py-8 text-gray-500 text-sm">
-        Tidak ada produk
+        {{ $t('products.noProducts') }}
       </div>
     </div>
   </div>
@@ -137,19 +137,19 @@
   <!-- Add/Edit Modal -->
   <div v-if="showAddModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4 overflow-y-auto">
     <div class="card max-w-2xl w-full my-4 sm:my-8 max-h-[95vh] overflow-y-auto">
-      <h3 class="text-lg sm:text-xl font-bold mb-3 sm:mb-4">{{ editingProduct ? 'Edit' : 'Tambah' }} Produk</h3>
+      <h3 class="text-lg sm:text-xl font-bold mb-3 sm:mb-4">{{ editingProduct ? $t('products.modalEditTitle') : $t('products.modalAddTitle') }}</h3>
       
       <form @submit.prevent="saveProduct" class="space-y-3 sm:space-y-4">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <div>
-            <label class="label text-xs sm:text-sm">Nama Produk *</label>
+            <label class="label text-xs sm:text-sm">{{ $t('products.name') }} *</label>
             <input v-model="form.name" type="text" class="input text-sm sm:text-base" required>
           </div>
           
           <div>
-            <label class="label text-xs sm:text-sm">Kategori *</label>
+            <label class="label text-xs sm:text-sm">{{ $t('products.category') }} *</label>
             <select v-model.number="form.category_id" class="input text-sm sm:text-base" required>
-              <option value="">Pilih Kategori</option>
+              <option value="">{{ $t('products.category') }}</option>
               <option v-for="cat in categories" :key="cat.id" :value="cat.id">
                 {{ cat.name }}
               </option>
@@ -167,28 +167,28 @@
           </div>
 
           <div>
-            <label class="label text-xs sm:text-sm">Harga Modal *</label>
+            <label class="label text-xs sm:text-sm">{{ $t('products.costPrice') }} *</label>
             <input v-model.number="form.cost_price" type="number" class="input text-sm sm:text-base" required min="0">
           </div>
 
           <div>
-            <label class="label text-xs sm:text-sm">Harga Jual *</label>
+            <label class="label text-xs sm:text-sm">{{ $t('products.sellingPrice') }} *</label>
             <input v-model.number="form.selling_price" type="number" class="input text-sm sm:text-base" required min="0">
           </div>
 
           <div>
-            <label class="label text-xs sm:text-sm">Stok</label>
+            <label class="label text-xs sm:text-sm">{{ $t('products.stock') }}</label>
             <input v-model.number="form.stock" type="number" class="input text-sm sm:text-base" min="0">
           </div>
 
           <div>
-            <label class="label">Stok Minimum</label>
+            <label class="label">{{ $t('products.minStock') }}</label>
             <input v-model.number="form.min_stock" type="number" class="input" min="0">
           </div>
         </div>
 
         <div>
-          <label class="label">Upload Gambar Produk</label>
+          <label class="label">{{ $t('products.image') }}</label>
           <input 
             type="file" 
             @change="handleImageUpload" 
@@ -208,16 +208,16 @@
         </div>
 
         <div>
-          <label class="label">Deskripsi</label>
+          <label class="label">{{ $t('products.description') }}</label>
           <textarea v-model="form.description" class="input" rows="3"></textarea>
         </div>
 
         <div class="flex gap-3">
           <button type="submit" class="btn btn-primary flex-1">
-            Simpan
+            {{ $t('common.save') }}
           </button>
           <button type="button" @click="closeModal" class="btn btn-secondary flex-1">
-            Batal
+            {{ $t('common.cancel') }}
           </button>
         </div>
       </form>
@@ -228,7 +228,7 @@
   <div v-if="showCategoryModal" class="modal-overlay" @click.self="closeCategoryModal">
     <div class="modal-content max-w-4xl">
       <div class="flex justify-between items-center mb-6">
-        <h3 class="text-xl font-bold">Kelola Kategori</h3>
+        <h3 class="text-xl font-bold">{{ $t('products.categoryModalTitle') }}</h3>
         <button @click="closeCategoryModal" class="text-gray-500 hover:text-gray-700">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -239,10 +239,10 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Form Add/Edit Category -->
         <div class="border-r pr-6">
-          <h4 class="text-lg font-semibold mb-4">{{ editingCategory ? 'Edit' : 'Tambah' }} Kategori</h4>
+          <h4 class="text-lg font-semibold mb-4">{{ editingCategory ? $t('common.edit') : $t('common.add') }} {{ $t('products.category') }}</h4>
           <form @submit.prevent="saveCategory">
             <div class="mb-4">
-              <label class="label">Nama Kategori *</label>
+              <label class="label">{{ $t('products.categoryName') }} *</label>
               <input v-model="categoryForm.name" type="text" class="input" required>
             </div>
 
@@ -305,9 +305,11 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useProductStore } from '@/stores/product'
 import BarcodeLabelPrint from '@/components/BarcodeLabelPrint.vue'
 
+const { t } = useI18n()
 const productStore = useProductStore()
 
 const searchQuery = ref('')
@@ -416,12 +418,12 @@ const saveProduct = async () => {
       await productStore.createProduct(formData)
     }
     
-    alert('Produk berhasil disimpan')
+    alert(t('products.saveSuccess'))
     closeModal()
     loadProducts()
   } catch (error) {
     console.error('Error saving product:', error)
-    alert('Gagal menyimpan produk: ' + (error.response?.data?.message || error.message))
+    alert(t('products.saveFailed') + ': ' + (error.response?.data?.message || error.message))
   }
 }
 
@@ -447,7 +449,7 @@ const closeModal = () => {
 
 const printBarcode = (product) => {
   if (!product.barcode) {
-    alert('Produk tidak memiliki barcode. Silakan generate barcode terlebih dahulu.')
+    alert(t('products.noBarcodeMessage'))
     return
   }
   
@@ -469,15 +471,15 @@ const saveCategory = async () => {
   try {
     if (editingCategory.value) {
       await productStore.updateCategory(editingCategory.value.id, categoryForm.value)
-      alert('Kategori berhasil diupdate!')
+      alert(t('products.categorySaveSuccess'))
     } else {
-      await productStore.addCategory(categoryForm.value)
-      alert('Kategori berhasil ditambahkan!')
+      await productStore.createCategory(categoryForm.value)
+      alert(t('products.categorySaveSuccess'))
     }
     cancelEditCategory()
     await productStore.fetchCategories()
   } catch (error) {
-    alert('Gagal menyimpan kategori: ' + (error.response?.data?.message || error.message))
+    alert(t('products.categorySaveFailed') + ': ' + (error.response?.data?.message || error.message))
   }
 }
 
@@ -500,14 +502,14 @@ const cancelEditCategory = () => {
 }
 
 const deleteCategory = async (category) => {
-  if (!confirm(`Hapus kategori "${category.name}"?`)) return
+  if (!confirm(t('products.categoryDeleteConfirm', { name: category.name }))) return
   
   try {
     await productStore.deleteCategory(category.id)
-    alert('Kategori berhasil dihapus!')
+    alert(t('products.categoryDeleteSuccess'))
     await productStore.fetchCategories()
   } catch (error) {
-    alert('Gagal menghapus kategori: ' + (error.response?.data?.message || error.message))
+    alert(t('products.categoryDeleteFailed') + ': ' + (error.response?.data?.message || error.message))
   }
 }
 

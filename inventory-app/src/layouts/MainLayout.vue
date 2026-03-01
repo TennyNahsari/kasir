@@ -4,7 +4,7 @@
     <aside class="hidden lg:flex lg:flex-col lg:w-64 bg-white border-r">
       <!-- Logo/Header -->
       <div class="h-16 flex items-center px-6 border-b">
-        <h1 class="text-lg font-bold text-blue-600">Inventory</h1>
+        <h1 class="text-lg font-bold text-blue-600">{{ $t('header.inventoryTitle') }}</h1>
       </div>
       
       <!-- Navigation -->
@@ -17,7 +17,7 @@
             ? 'bg-blue-50 text-blue-600' 
             : 'text-gray-700 hover:bg-gray-100'"
         >
-          Dashboard
+          {{ $t('nav.dashboard') }}
         </router-link>
         
         <router-link
@@ -28,7 +28,7 @@
             ? 'bg-blue-50 text-blue-600' 
             : 'text-gray-700 hover:bg-gray-100'"
         >
-          Master Product
+          {{ $t('nav.masterProduct') }}
         </router-link>
         
         <!-- Inventory Section -->
@@ -37,7 +37,7 @@
             @click="inventoryExpanded = !inventoryExpanded"
             class="w-full flex items-center justify-between px-4 py-2 text-xs font-semibold text-gray-500 uppercase hover:bg-gray-100 rounded-lg transition-colors"
           >
-            <span>Inventory</span>
+            <span>{{ $t('nav.inventory') }}</span>
             <svg 
               class="w-4 h-4 transition-transform duration-200"
               :class="inventoryExpanded ? 'rotate-180' : ''"
@@ -64,7 +64,7 @@
                   ? 'bg-blue-50 text-blue-600' 
                   : 'text-gray-700 hover:bg-gray-100'"
               >
-                Stock Levels
+                {{ $t('nav.stockLevels') }}
               </router-link>
               <router-link
                 to="/inventory/transfers"
@@ -73,7 +73,7 @@
                   ? 'bg-blue-50 text-blue-600' 
                   : 'text-gray-700 hover:bg-gray-100'"
               >
-                Transfers
+                {{ $t('nav.transfers') }}
               </router-link>
               <router-link
                 to="/inventory/ledger"
@@ -82,7 +82,7 @@
                   ? 'bg-blue-50 text-blue-600' 
                   : 'text-gray-700 hover:bg-gray-100'"
               >
-                Ledger
+                {{ $t('nav.ledger') }}
               </router-link>
             </div>
           </transition>
@@ -95,7 +95,7 @@
             ? 'bg-blue-50 text-blue-600' 
             : 'text-gray-700 hover:bg-gray-100'"
         >
-          Assets
+          {{ $t('nav.assets') }}
         </router-link>
         
         <router-link
@@ -105,7 +105,7 @@
             ? 'bg-blue-50 text-blue-600' 
             : 'text-gray-700 hover:bg-gray-100'"
         >
-          Services
+          {{ $t('nav.services') }}
         </router-link>
         
         <!-- Settings Section -->
@@ -114,7 +114,7 @@
             @click="settingsExpanded = !settingsExpanded"
             class="w-full flex items-center justify-between px-4 py-2 text-xs font-semibold text-gray-500 uppercase hover:bg-gray-100 rounded-lg transition-colors"
           >
-            <span>Settings</span>
+            <span>{{ $t('nav.settings') }}</span>
             <svg 
               class="w-4 h-4 transition-transform duration-200"
               :class="settingsExpanded ? 'rotate-180' : ''"
@@ -141,7 +141,7 @@
                   ? 'bg-blue-50 text-blue-600' 
                   : 'text-gray-700 hover:bg-gray-100'"
               >
-                Users
+                {{ $t('nav.users') }}
               </router-link>
               <router-link
                 to="/inventory/locations"
@@ -150,7 +150,7 @@
                   ? 'bg-blue-50 text-blue-600' 
                   : 'text-gray-700 hover:bg-gray-100'"
               >
-                Locations
+                {{ $t('nav.locations') }}
               </router-link>
             </div>
           </transition>
@@ -164,7 +164,7 @@
           <span class="text-xs text-gray-500">({{ authStore.user?.role }})</span>
         </div>
         <button @click="handleLogout" class="w-full bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">
-          Logout
+          {{ $t('nav.logout') }}
         </button>
       </div>
     </aside>
@@ -178,7 +178,7 @@
       <div class="bg-white w-64 h-full" @click.stop>
         <div class="p-4 border-b">
           <div class="flex items-center justify-between">
-            <span class="font-semibold text-gray-900">Menu</span>
+            <span class="font-semibold text-gray-900">{{ $t('nav.menu') }}</span>
             <button @click="showMobileMenu = false" class="p-2">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -217,15 +217,47 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <h1 class="text-xl font-bold text-blue-600 lg:hidden">Inventory</h1>
+          <h1 class="text-xl font-bold text-blue-600 lg:hidden">{{ $t('header.inventoryTitle') }}</h1>
         </div>
         
         <div class="flex items-center gap-4">
+          <!-- Language Switcher -->
+          <div class="relative">
+            <button
+              @click="showLangDropdown = !showLangDropdown"
+              class="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+              </svg>
+              <span class="hidden sm:inline">{{ currentLanguage }}</span>
+            </button>
+            <div
+              v-show="showLangDropdown"
+              class="absolute right-0 mt-2 w-32 bg-white rounded-lg shadow-lg border z-50"
+            >
+              <button
+                @click="changeLanguage('id')"
+                class="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 first:rounded-t-lg"
+                :class="locale === 'id' ? 'bg-blue-50 text-blue-600' : 'text-gray-700'"
+              >
+                Indonesia
+              </button>
+              <button
+                @click="changeLanguage('en')"
+                class="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 last:rounded-b-lg"
+                :class="locale === 'en' ? 'bg-blue-50 text-blue-600' : 'text-gray-700'"
+              >
+                English
+              </button>
+            </div>
+          </div>
+          
           <span class="hidden lg:inline text-sm text-gray-600">
             {{ authStore.user?.name }} <span class="text-gray-500">({{ authStore.user?.role }})</span>
           </span>
           <button @click="handleLogout" class="lg:hidden bg-gray-600 text-white px-3 py-1.5 rounded-lg hover:bg-gray-700 text-sm">
-            Logout
+            {{ $t('nav.logout') }}
           </button>
         </div>
       </header>
@@ -241,14 +273,27 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
+const { locale, t } = useI18n()
 const showMobileMenu = ref(false)
+const showLangDropdown = ref(false)
 const inventoryExpanded = ref(true)
 const settingsExpanded = ref(true)
+
+const currentLanguage = computed(() => {
+  return locale.value === 'id' ? 'Indonesia' : 'English'
+})
+
+const changeLanguage = (lang) => {
+  locale.value = lang
+  localStorage.setItem('locale', lang)
+  showLangDropdown.value = false
+}
 
 const mainNavigation = [
   { name: 'Dashboard', path: '/' },

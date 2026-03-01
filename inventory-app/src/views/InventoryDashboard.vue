@@ -1,8 +1,8 @@
 <template>
   <div class="p-6">
     <div class="mb-6">
-      <h1 class="text-3xl font-bold text-gray-800">Inventory Dashboard</h1>
-      <p class="text-gray-600">Manage your stock levels across all locations</p>
+      <h1 class="text-3xl font-bold text-gray-800">{{ $t('dashboard.title') }}</h1>
+      <p class="text-gray-600">{{ $t('dashboard.subtitle') }}</p>
     </div>
 
     <!-- Stats Cards -->
@@ -10,7 +10,7 @@
       <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center">
           <div class="flex-1">
-            <p class="text-gray-600 text-sm">Total Master Product</p>
+            <p class="text-gray-600 text-sm">{{ $t('dashboard.totalMasterProduct') }}</p>
             <p class="text-2xl font-bold text-gray-800">{{ stats.totalProducts }}</p>
           </div>
           <div class="bg-blue-100 p-3 rounded-full">
@@ -24,7 +24,7 @@
       <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center">
           <div class="flex-1">
-            <p class="text-gray-600 text-sm">Total Stock</p>
+            <p class="text-gray-600 text-sm">{{ $t('dashboard.totalStock') }}</p>
             <p class="text-2xl font-bold text-indigo-600">{{ stats.totalStocks }}</p>
           </div>
           <div class="bg-indigo-100 p-3 rounded-full">
@@ -38,7 +38,7 @@
       <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center">
           <div class="flex-1">
-            <p class="text-gray-600 text-sm">Total Asset</p>
+            <p class="text-gray-600 text-sm">{{ $t('dashboard.totalAsset') }}</p>
             <p class="text-2xl font-bold text-orange-600">{{ stats.totalAssets }}</p>
           </div>
           <div class="bg-orange-100 p-3 rounded-full">
@@ -52,7 +52,7 @@
       <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center">
           <div class="flex-1">
-            <p class="text-gray-600 text-sm">Total Locations</p>
+            <p class="text-gray-600 text-sm">{{ $t('dashboard.totalLocations') }}</p>
             <p class="text-2xl font-bold text-gray-800">{{ stats.totalLocations }}</p>
           </div>
           <div class="bg-green-100 p-3 rounded-full">
@@ -67,7 +67,7 @@
       <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center">
           <div class="flex-1">
-            <p class="text-gray-600 text-sm">Total Services</p>
+            <p class="text-gray-600 text-sm">{{ $t('dashboard.totalServices') }}</p>
             <p class="text-2xl font-bold text-purple-600">{{ stats.totalServices }}</p>
           </div>
           <div class="bg-purple-100 p-3 rounded-full">
@@ -83,9 +83,9 @@
     <div v-if="expiringServices.length > 0" class="bg-white rounded-lg shadow mb-8">
       <div class="p-6 border-b border-gray-200">
         <div class="flex items-center justify-between">
-          <h2 class="text-xl font-semibold text-gray-800">Service Contracts Expiring Soon</h2>
+          <h2 class="text-xl font-semibold text-gray-800">{{ $t('dashboard.expiringServices') }}</h2>
           <router-link to="/services" class="text-sm text-purple-600 hover:text-purple-800">
-            View All →
+            {{ $t('dashboard.viewAll') }}
           </router-link>
         </div>
       </div>
@@ -93,13 +93,13 @@
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contract</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product/Service</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Vendor</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">PIC</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">End Date</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Days Left</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('dashboard.contract') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('dashboard.productService') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('dashboard.vendor') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('dashboard.pic') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('dashboard.endDate') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('dashboard.daysLeft') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('common.actions') }}</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -140,16 +140,16 @@
     <!-- Low Stock Alerts -->
     <div v-if="lowStockItems.length > 0" class="bg-white rounded-lg shadow">
       <div class="p-6 border-b border-gray-200">
-        <h2 class="text-xl font-semibold text-gray-800">Low Stock Alerts</h2>
+        <h2 class="text-xl font-semibold text-gray-800">{{ $t('dashboard.lowStockAlert') }}</h2>
       </div>
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Current Stock</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reorder Level</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('dashboard.product') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('dashboard.location') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('dashboard.currentStock') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('dashboard.reorderLevel') }}</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
             </tr>
           </thead>
@@ -213,10 +213,12 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import api from '@/services/api'
 import serviceService from '@/services/serviceService'
 
 const router = useRouter()
+const { t } = useI18n()
 
 const stats = ref({
   totalProducts: 0,
