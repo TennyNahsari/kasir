@@ -70,54 +70,6 @@
           </div>
         </div>
       </nav>
-
-      <!-- Sidebar Footer (User Info) -->
-      <div class="p-4 border-t">
-        <!-- Language Switcher Desktop -->
-        <div class="mb-3 relative">
-          <button @click="showLangMenu = !showLangMenu" class="w-full flex items-center justify-between p-2 hover:bg-gray-100 rounded-lg">
-            <div class="flex items-center gap-2">
-              <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/>
-              </svg>
-              <span class="text-sm text-gray-700">{{ currentLocale === 'id' ? '🇮🇩 ID' : '🇬🇧 EN' }}</span>
-            </div>
-            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
-          </button>
-          <div v-if="showLangMenu" class="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-lg shadow-lg border z-50">
-            <button @click="changeLocale('id')" class="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 rounded-t-lg">
-              <span class="text-sm">🇮🇩</span>
-              <span class="text-sm">{{ $t('language.indonesian') }}</span>
-            </button>
-            <button @click="changeLocale('en')" class="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 rounded-b-lg">
-              <span class="text-sm">🇬🇧</span>
-              <span class="text-sm">{{ $t('language.english') }}</span>
-            </button>
-          </div>
-        </div>
-        
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
-            <span class="text-primary-600 font-semibold text-sm">
-              {{ authStore.user?.name?.charAt(0).toUpperCase() }}
-            </span>
-          </div>
-          <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-gray-900 truncate">
-              {{ authStore.user?.name }}
-            </p>
-            <p class="text-xs text-gray-500">{{ authStore.user?.role }}</p>
-          </div>
-        </div>
-        <button 
-          @click="handleLogout" 
-          class="mt-3 w-full btn btn-secondary text-sm py-2"
-        >
-          {{ $t('nav.logout') }}
-        </button>
-      </div>
     </aside>
 
     <!-- Main Content Area -->

@@ -10,36 +10,36 @@
         <p :class="isFnbMode ? 'text-orange-800' : 'text-blue-800'" class="text-sm">
           <span v-if="isFnbMode">🍽️</span>
           <span v-else>🏪</span>
-          <strong>Outlet:</strong> {{ userOutletName }}
+          <strong>{{ $t('pos.outlet') }}:</strong> {{ userOutletName }}
           <span v-if="isFnbMode" class="ml-2 px-2 py-1 bg-orange-200 rounded text-xs font-semibold">
-            F&B Mode
+            {{ $t('pos.fnbMode') }}
           </span>
           <span v-else class="ml-2 px-2 py-1 bg-blue-200 rounded text-xs font-semibold">
-            Retail/Outlet
+            {{ $t('pos.retailOutlet') }}
           </span>
         </p>
       </div>
       <p v-if="isFnbMode" class="text-orange-700 text-xs mt-1">
-        📋 Hanya menampilkan produk F&B ({{ categories.length }} kategori)
+        {{ $t('pos.onlyShowingFnbProducts', { count: categories.length }) }}
       </p>
     </div>
 
     <!-- Invalid Location Type Warning -->
     <div v-if="outletInfo && !isValidPosLocation" class="bg-red-50 border border-red-200 rounded-lg p-4">
       <p class="text-red-800 text-sm">
-        ⚠️ <strong>Location Type "{{ outletInfo.type }}" tidak dapat menggunakan POS Kasir</strong>
+        <strong>{{ $t('pos.invalidLocationType', { type: outletInfo.type }) }}</strong>
       </p>
       <p class="text-red-600 text-xs mt-1">
-        POS Kasir hanya tersedia untuk Location Type: <strong>OUTLET</strong> atau <strong>FNB</strong><br>
-        Location Type {{ outletInfo.type }} (Warehouse/Department) menggunakan sistem inventory.
+        {{ $t('pos.posOnlyForOutletFnb') }}<br>
+        {{ $t('pos.locationTypeUseInventory', { type: outletInfo.type }) }}
       </p>
     </div>
 
     <!-- No Outlet Warning -->
     <div v-if="showNoOutletWarning" class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
       <p class="text-yellow-800 text-sm">
-        ⚠️ <strong>{{ isOwner ? 'Silakan pilih location terlebih dahulu' : 'User tidak memiliki location' }}</strong>
-        {{ isOwner ? '' : '- Hubungi admin untuk assign location.' }}
+        <strong>{{ isOwner ? $t('pos.pleaseSelectLocation') : $t('pos.userNoLocation') }}</strong>
+        {{ isOwner ? '' : `- ${$t('pos.contactAdmin')}` }}
       </p>
     </div>
 
@@ -55,11 +55,11 @@
             @keyup.enter="handleBarcodeSearch"
             type="text"
             class="input flex-1"
-            placeholder="Scan barcode atau cari produk..."
+            :placeholder="$t('pos.scanOrSearch')"
             autofocus
           >
           <button @click="handleBarcodeSearch" class="btn btn-primary">
-            Cari
+            {{ $t('pos.search') }}
           </button>
         </div>
       </div>
@@ -72,7 +72,7 @@
             class="btn"
             :class="selectedCategory === null ? 'btn-primary' : 'btn-secondary'"
           >
-            Semua
+            {{ $t('pos.all') }}
           </button>
           <button
             v-for="category in categories"
@@ -108,19 +108,19 @@
             {{ formatCurrency(product.selling_price) }}
           </p>
           <p v-if="product.track_stock" class="text-xs" :class="getAvailableStock(product) <= 0 ? 'text-red-500' : 'text-gray-500'">
-            Stok: {{ getAvailableStock(product) }}
-            <span v-if="product.reserved_quantity > 0" class="text-orange-500"> ({{ product.reserved_quantity }} reserved)</span>
+            {{ $t('pos.stock') }}: {{ getAvailableStock(product) }}
+            <span v-if="product.reserved_quantity > 0" class="text-orange-500"> ({{ product.reserved_quantity }} {{ $t('pos.reserved') }})</span>
           </p>
         </div>
       </div>
 
       <div v-if="loading" class="text-center py-8">
-        <p class="text-gray-500">Loading products...</p>
+        <p class="text-gray-500">{{ $t('pos.loading') }}</p>
       </div>
 
       <div v-if="!loading && products.length === 0 && currentOutletId && isValidPosLocation" class="text-center py-8">
-        <p class="text-gray-500 mb-2">⚠️ Tidak ada produk tersedia</p>
-        <p class="text-xs text-gray-400">Pastikan outlet sudah terdaftar di inventory dan memiliki stock produk</p>
+        <p class="text-gray-500 mb-2">{{ $t('pos.noProducts') }}</p>
+        <p class="text-xs text-gray-400">{{ $t('pos.ensureOutletRegistered') }}</p>
         <div v-if="debugInfo" class="mt-4 p-4 bg-gray-50 rounded text-left text-xs">
           <p class="font-bold mb-2">Debug Info:</p>
           <p>Location: {{ debugInfo.location_name }} (ID: {{ debugInfo.location_id }})</p>
@@ -133,7 +133,7 @@
 
     <!-- Cart (Right) -->
     <div class="card h-fit sticky top-6">
-      <h3 class="text-xl font-bold mb-4">Keranjang</h3>
+      <h3 class="text-xl font-bold mb-4">{{ $t('pos.cart') }}</h3>
 
       <!-- Cart Items -->
       <div class="space-y-3 mb-4 max-h-96 overflow-y-auto">
@@ -172,18 +172,18 @@
         </div>
 
         <div v-if="cartStore.items.length === 0" class="text-center py-8 text-gray-500">
-          Keranjang kosong
+          {{ $t('pos.cartEmpty') }}
         </div>
       </div>
 
       <!-- Summary -->
       <div class="border-t pt-4 space-y-2">
         <div class="flex justify-between text-sm">
-          <span>Subtotal</span>
+          <span>{{ $t('pos.subtotal') }}</span>
           <span>{{ formatCurrency(cartStore.subtotal) }}</span>
         </div>
         <div class="flex justify-between text-sm">
-          <span>Diskon</span>
+          <span>{{ $t('pos.discount') }}</span>
           <input
             v-model.number="discount"
             @change="cartStore.setDiscount(discount)"
@@ -193,7 +193,7 @@
           >
         </div>
         <div class="flex justify-between font-bold text-lg border-t pt-2">
-          <span>Total</span>
+          <span>{{ $t('pos.total') }}</span>
           <span class="text-primary-600">{{ formatCurrency(cartStore.total) }}</span>
         </div>
       </div>
@@ -201,17 +201,17 @@
       <!-- Payment -->
       <div class="mt-4 space-y-3">
         <div>
-          <label class="label">Metode Pembayaran</label>
+          <label class="label">{{ $t('pos.paymentMethod') }}</label>
           <select v-model="paymentMethod" class="input">
-            <option value="cash">Tunai</option>
-            <option value="qris">QRIS</option>
-            <option value="transfer">Transfer</option>
-            <option value="ewallet">E-Wallet</option>
+            <option value="cash">{{ $t('pos.cash') }}</option>
+            <option value="qris">{{ $t('pos.qris') }}</option>
+            <option value="transfer">{{ $t('pos.transfer') }}</option>
+            <option value="ewallet">{{ $t('pos.ewallet') }}</option>
           </select>
         </div>
 
         <div>
-          <label class="label">Jumlah Bayar</label>
+          <label class="label">{{ $t('pos.amountPaid') }}</label>
           <input
             v-model.number="paidAmount"
             type="number"
@@ -222,7 +222,7 @@
         </div>
 
         <div v-if="changeAmount > 0" class="p-3 bg-green-50 rounded">
-          <div class="text-sm text-gray-600">Kembalian</div>
+          <div class="text-sm text-gray-600">{{ $t('pos.change') }}</div>
           <div class="text-xl font-bold text-green-600">
             {{ formatCurrency(changeAmount) }}
           </div>
@@ -236,13 +236,13 @@
           :disabled="cartStore.items.length === 0 || paidAmount < cartStore.total"
           class="btn btn-primary w-full"
         >
-          Bayar & Cetak
+          {{ $t('pos.payAndPrint') }}
         </button>
         <button
           @click="cartStore.clear()"
           class="btn btn-danger w-full"
         >
-          Clear
+          {{ $t('pos.clear') }}
         </button>
       </div>
     </div>
@@ -253,10 +253,10 @@
     <div class="card max-w-md">
       <div class="text-center">
         <div class="text-6xl mb-4">✅</div>
-        <h3 class="text-2xl font-bold mb-2">Transaksi Berhasil!</h3>
+        <h3 class="text-2xl font-bold mb-2">{{ $t('pos.transactionSuccess') }}</h3>
         <p class="text-gray-600 mb-4">{{ successMessage }}</p>
         <button @click="closeSuccess" class="btn btn-primary">
-          OK
+          {{ $t('pos.ok') }}
         </button>
       </div>
     </div>
@@ -266,12 +266,14 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import OutletSelector from '@/components/OutletSelector.vue'
 import { useProductStore } from '@/stores/product'
 import { useCartStore } from '@/stores/cart'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/services/api'
 
+const { t } = useI18n()
 const productStore = useProductStore()
 const cartStore = useCartStore()
 const authStore = useAuthStore()
@@ -421,14 +423,14 @@ const addToCart = (product) => {
   const availableStock = product.available_stock ?? (product.stock - (product.reserved_quantity || 0))
   
   if (product.track_stock && availableStock <= 0) {
-    alert('Stok habis!')
+    alert(t('pos.stockOut', 'Stok habis!'))
     return
   }
   
   // Check if adding one more would exceed available stock
   const currentCartQuantity = cartStore.items.find(item => item.product_id === product.id)?.quantity || 0
   if (product.track_stock && currentCartQuantity >= availableStock) {
-    alert(`Stok tidak cukup! Stok tersedia: ${availableStock}`)
+    alert(t('pos.insufficientStock', `Stok tidak cukup! Stok tersedia: ${availableStock}`))
     return
   }
   
@@ -459,12 +461,12 @@ const handleBarcodeSearch = async () => {
 
 const processCheckout = async () => {
   if (paidAmount.value < cartStore.total) {
-    alert('Jumlah bayar kurang!')
+    alert(t('pos.insufficientPayment', 'Jumlah bayar kurang!'))
     return
   }
 
   if (!currentOutletId.value) {
-    alert('Silakan pilih outlet terlebih dahulu!')
+    alert(t('pos.selectOutletFirst', 'Silakan pilih outlet terlebih dahulu!'))
     return
   }
 
@@ -531,7 +533,7 @@ const loadProductsForOutlet = async (outletId) => {
   const validOutletId = Number(outletId)
   if (isNaN(validOutletId) || validOutletId <= 0) {
     console.error('❌ Invalid outletId:', outletId, 'Type:', typeof outletId)
-    alert('Invalid outlet ID. Please select a valid outlet.')
+    alert(t('pos.selectOutletFirst'))
     return
   }
   
@@ -612,7 +614,7 @@ const loadProductsForOutlet = async (outletId) => {
       debugInfo.value = error.response.data.debug
     }
     
-    alert('Gagal load data: ' + (error.response?.data?.message || error.message))
+    alert(t('pos.loadDataFailed') + ': ' + (error.response?.data?.message || error.message))
   } finally {
     loading.value = false
   }
@@ -694,7 +696,7 @@ onMounted(async () => {
         currentOutletId.value = locationId
         await loadProductsForOutlet(locationId)
       } else {
-        alert('Outlet belum terdaftar di inventory. Hubungi admin.')
+        alert(t('pos.outletNotRegistered', 'Outlet belum terdaftar di inventory. Hubungi admin.'))
         loading.value = false
       }
     } else if (isOwner.value) {

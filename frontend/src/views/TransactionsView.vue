@@ -1,40 +1,40 @@
 <template>
   <div>
-    <h2 class="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Riwayat Transaksi</h2>
+    <h2 class="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">{{ $t('transactions.title') }}</h2>
 
     <!-- Filter -->
     <div class="card mb-4 sm:mb-6">
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4">
         <div>
-          <label class="label text-xs sm:text-sm">Tanggal Dari</label>
+          <label class="label text-xs sm:text-sm">{{ $t('transactions.dateFrom') }}</label>
           <input v-model="dateFrom" type="date" class="input text-sm">
         </div>
         <div>
-          <label class="label text-xs sm:text-sm">Tanggal Sampai</label>
+          <label class="label text-xs sm:text-sm">{{ $t('transactions.dateTo') }}</label>
           <input v-model="dateTo" type="date" class="input text-sm">
         </div>
         <div>
-          <label class="label text-xs sm:text-sm">Tipe Bisnis</label>
+          <label class="label text-xs sm:text-sm">{{ $t('transactions.businessType') }}</label>
           <select v-model="businessType" class="input text-sm">
-            <option value="">Semua</option>
-            <option value="retail">Retail</option>
-            <option value="minimarket">Minimarket</option>
-            <option value="fnb">F&B</option>
+            <option value="">{{ $t('transactions.all') }}</option>
+            <option value="retail">{{ $t('transactions.retail') }}</option>
+            <option value="minimarket">{{ $t('transactions.minimarket') }}</option>
+            <option value="fnb">{{ $t('transactions.fnb') }}</option>
           </select>
         </div>
         <div>
-          <label class="label text-xs sm:text-sm">Metode Pembayaran</label>
+          <label class="label text-xs sm:text-sm">{{ $t('transactions.paymentMethod') }}</label>
           <select v-model="paymentMethod" class="input text-sm">
-            <option value="">Semua</option>
-            <option value="cash">Tunai</option>
-            <option value="qris">QRIS</option>
-            <option value="transfer">Transfer</option>
-            <option value="ewallet">E-Wallet</option>
+            <option value="">{{ $t('transactions.all') }}</option>
+            <option value="cash">{{ $t('transactions.cash') }}</option>
+            <option value="qris">{{ $t('transactions.qris') }}</option>
+            <option value="transfer">{{ $t('transactions.transfer') }}</option>
+            <option value="ewallet">{{ $t('transactions.ewallet') }}</option>
           </select>
         </div>
         <div class="flex items-end">
           <button @click="loadTransactions" class="btn btn-primary w-full text-sm">
-            Filter
+            {{ $t('transactions.filter') }}
           </button>
         </div>
       </div>
@@ -45,14 +45,14 @@
       <table class="w-full">
         <thead class="bg-gray-50">
           <tr>
-            <th class="px-4 py-3 text-left text-sm font-semibold">No. Transaksi</th>
-            <th class="px-4 py-3 text-left text-sm font-semibold">Tanggal</th>
-            <th class="px-4 py-3 text-left text-sm font-semibold">Tipe</th>
-            <th class="px-4 py-3 text-left text-sm font-semibold">Kasir</th>
-            <th class="px-4 py-3 text-left text-sm font-semibold">Pembayaran</th>
-            <th class="px-4 py-3 text-right text-sm font-semibold">Total</th>
-            <th class="px-4 py-3 text-center text-sm font-semibold">Status</th>
-            <th class="px-4 py-3 text-center text-sm font-semibold">Aksi</th>
+            <th class="px-4 py-3 text-left text-sm font-semibold">{{ $t('transactions.transactionNo') }}</th>
+            <th class="px-4 py-3 text-left text-sm font-semibold">{{ $t('transactions.date') }}</th>
+            <th class="px-4 py-3 text-left text-sm font-semibold">{{ $t('transactions.type') }}</th>
+            <th class="px-4 py-3 text-left text-sm font-semibold">{{ $t('transactions.cashier') }}</th>
+            <th class="px-4 py-3 text-left text-sm font-semibold">{{ $t('transactions.payment') }}</th>
+            <th class="px-4 py-3 text-right text-sm font-semibold">{{ $t('transactions.total') }}</th>
+            <th class="px-4 py-3 text-center text-sm font-semibold">{{ $t('transactions.status') }}</th>
+            <th class="px-4 py-3 text-center text-sm font-semibold">{{ $t('transactions.actions') }}</th>
           </tr>
         </thead>
         <tbody class="divide-y">
@@ -69,7 +69,7 @@
                 {{ getBusinessTypeLabel(transaction.business_type) }}
               </span>
             </td>
-            <td class="px-4 py-3 text-sm">{{ transaction.user?.name || 'Customer' }}</td>
+            <td class="px-4 py-3 text-sm">{{ transaction.user?.name || $t('transactions.customer') }}</td>
             <td class="px-4 py-3 text-sm capitalize">{{ transaction.payment_method || '-' }}</td>
             <td class="px-4 py-3 text-sm text-right font-semibold">
               {{ formatCurrency(transaction.total) }}
@@ -92,17 +92,17 @@
             <td class="px-4 py-3 text-sm text-center">
               <div class="flex items-center justify-center gap-2">
                 <button @click="viewDetail(transaction)" class="text-blue-600 hover:text-blue-700 font-medium">
-                  Detail
+                  {{ $t('transactions.detail') }}
                 </button>
                 <button 
                   v-if="transaction.business_type === 'fnb' && ['pending', 'processed', 'delivered'].includes(transaction.status)"
                   @click="showStatusModal(transaction)" 
                   class="text-green-600 hover:text-green-700 font-medium"
                 >
-                  Ubah Status
+                  {{ $t('transactions.changeStatus') }}
                 </button>
                 <button @click="deleteTransaction(transaction)" class="text-red-600 hover:text-red-700 font-medium">
-                  Hapus
+                  {{ $t('transactions.delete') }}
                 </button>
               </div>
             </td>
@@ -111,7 +111,7 @@
       </table>
 
       <div v-if="transactions.length === 0" class="text-center py-8 text-gray-500 text-sm">
-        Tidak ada transaksi
+        {{ $t('transactions.noTransactions') }}
       </div>
     </div>
 
@@ -135,11 +135,11 @@
 
         <div class="grid grid-cols-2 gap-2 text-xs mb-3">
           <div>
-            <span class="text-gray-600">Kasir:</span>
-            <span class="font-medium ml-1">{{ transaction.user?.name || 'Customer' }}</span>
+            <span class="text-gray-600">{{ $t('transactions.cashier') }}:</span>
+            <span class="font-medium ml-1">{{ transaction.user?.name || $t('transactions.customer') }}</span>
           </div>
           <div>
-            <span class="text-gray-600">Pembayaran:</span>
+            <span class="text-gray-600">{{ $t('transactions.payment') }}:</span>
             <span class="font-medium ml-1 capitalize">{{ transaction.payment_method || '-' }}</span>
           </div>
         </div>
@@ -151,7 +151,7 @@
 
         <div class="flex justify-between items-center pt-3 border-t">
           <div>
-            <div class="text-xs text-gray-600">Total</div>
+            <div class="text-xs text-gray-600">{{ $t('transactions.total') }}</div>
             <div class="text-base font-bold text-primary-600">{{ formatCurrency(transaction.total) }}</div>
           </div>
           <div class="flex items-center gap-2">
@@ -171,20 +171,20 @@
               @click="showStatusModal(transaction)" 
               class="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-lg hover:bg-green-100"
             >
-              Ubah
+              {{ $t('transactions.changeStatus') }}
             </button>
             <button @click="viewDetail(transaction)" class="text-xs font-medium text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100">
-              Detail
+              {{ $t('transactions.detail') }}
             </button>
             <button @click="deleteTransaction(transaction)" class="text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded-lg hover:bg-red-100">
-              Hapus
+              {{ $t('transactions.delete') }}
             </button>
           </div>
         </div>
       </div>
 
       <div v-if="transactions.length === 0" class="text-center py-8 text-gray-500 text-sm">
-        Tidak ada transaksi
+        {{ $t('transactions.noTransactions') }}
       </div>
     </div>
 
@@ -193,7 +193,7 @@
     <div class="card max-w-2xl w-full max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-start mb-4">
         <div>
-          <h3 class="text-xl font-bold">Detail Transaksi</h3>
+          <h3 class="text-xl font-bold">{{ $t('transactions.detailTitle') }}</h3>
           <p class="text-sm text-gray-600">{{ selectedTransaction.transaction_no }}</p>
         </div>
         <button @click="showDetail = false" class="text-gray-500 hover:text-gray-700 text-2xl">
@@ -204,31 +204,31 @@
       <div class="space-y-4">
         <div class="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <div class="text-gray-600">Tanggal</div>
+            <div class="text-gray-600">{{ $t('transactions.date') }}</div>
             <div class="font-medium">{{ formatDate(selectedTransaction.created_at) }}</div>
           </div>
           <div>
-            <div class="text-gray-600">Kasir</div>
-            <div class="font-medium">{{ selectedTransaction.user?.name || 'Customer' }}</div>
+            <div class="text-gray-600">{{ $t('transactions.cashier') }}</div>
+            <div class="font-medium">{{ selectedTransaction.user?.name || $t('transactions.customer') }}</div>
           </div>
           <div>
-            <div class="text-gray-600">Metode Pembayaran</div>
+            <div class="text-gray-600">{{ $t('transactions.paymentMethod') }}</div>
             <div class="font-medium capitalize">{{ selectedTransaction.payment_method || '-' }}</div>
           </div>
           <div>
-            <div class="text-gray-600">Status</div>
+            <div class="text-gray-600">{{ $t('transactions.status') }}</div>
             <div class="font-medium capitalize">{{ selectedTransaction.status }}</div>
           </div>
         </div>
 
         <!-- Notes Section -->
         <div v-if="selectedTransaction.notes" class="bg-blue-50 border border-blue-200 rounded-lg p-3">
-          <div class="text-xs text-blue-600 font-semibold mb-1">Catatan:</div>
+          <div class="text-xs text-blue-600 font-semibold mb-1">{{ $t('transactions.notes') }}:</div>
           <div class="text-sm text-gray-700">{{ selectedTransaction.notes }}</div>
         </div>
 
         <div class="border-t pt-4">
-          <h4 class="font-semibold mb-3">Item Transaksi</h4>
+          <h4 class="font-semibold mb-3">{{ $t('transactions.items') }}</h4>
           <div class="space-y-2">
             <div
               v-for="item in selectedTransaction.items"
@@ -250,34 +250,34 @@
 
         <div class="border-t pt-4 space-y-2">
           <div class="flex justify-between text-sm">
-            <span>Subtotal</span>
+            <span>{{ $t('transactions.subtotal') }}</span>
             <span>{{ formatCurrency(selectedTransaction.subtotal) }}</span>
           </div>
           <div v-if="selectedTransaction.discount > 0" class="flex justify-between text-sm">
-            <span>Diskon</span>
+            <span>{{ $t('transactions.discount') }}</span>
             <span class="text-red-600">-{{ formatCurrency(selectedTransaction.discount) }}</span>
           </div>
           <div v-if="selectedTransaction.tax > 0" class="flex justify-between text-sm">
-            <span>Pajak</span>
+            <span>{{ $t('transactions.tax') }}</span>
             <span>{{ formatCurrency(selectedTransaction.tax) }}</span>
           </div>
           <div class="flex justify-between font-bold text-lg border-t pt-2">
-            <span>Total</span>
+            <span>{{ $t('transactions.total') }}</span>
             <span class="text-primary-600">{{ formatCurrency(selectedTransaction.total) }}</span>
           </div>
           <div class="flex justify-between text-sm">
-            <span>Dibayar</span>
+            <span>{{ $t('transactions.paid') }}</span>
             <span>{{ formatCurrency(selectedTransaction.paid_amount) }}</span>
           </div>
           <div class="flex justify-between text-sm">
-            <span>Kembalian</span>
+            <span>{{ $t('transactions.change') }}</span>
             <span class="text-green-600">{{ formatCurrency(selectedTransaction.change_amount) }}</span>
           </div>
         </div>
 
         <div class="border-t pt-4">
           <button @click="printReceipt" class="btn btn-primary w-full">
-            Print Ulang Struk
+            {{ $t('transactions.printReceipt') }}
           </button>
         </div>
       </div>
@@ -289,7 +289,7 @@
     <div class="card max-w-md w-full">
       <div class="flex justify-between items-start mb-4">
         <div>
-          <h3 class="text-xl font-bold">Ubah Status Pesanan</h3>
+          <h3 class="text-xl font-bold">{{ $t('transactions.changeStatusTitle') }}</h3>
           <p class="text-sm text-gray-600">{{ statusTransaction.transaction_no }}</p>
         </div>
         <button @click="showStatusUpdate = false" class="text-gray-500 hover:text-gray-700 text-2xl">
@@ -299,26 +299,26 @@
 
       <div class="space-y-4">
         <div>
-          <label class="label">Status Saat Ini</label>
+          <label class="label">{{ $t('transactions.currentStatus') }}</label>
           <div class="font-medium text-lg capitalize">{{ statusTransaction.status }}</div>
         </div>
 
         <div>
-          <label class="label">Ubah ke Status</label>
+          <label class="label">{{ $t('transactions.changeToStatus') }}</label>
           <select v-model="newStatus" class="input">
-            <option value="pending">Pending (Menunggu)</option>
-            <option value="processed">Processed (Diproses)</option>
-            <option value="delivered">Delivered (Diantar)</option>
-            <option value="completed">Completed (Selesai)</option>
+            <option value="pending">{{ $t('transactions.statusPending') }}</option>
+            <option value="processed">{{ $t('transactions.statusProcessed') }}</option>
+            <option value="delivered">{{ $t('transactions.statusDelivered') }}</option>
+            <option value="completed">{{ $t('transactions.statusCompleted') }}</option>
           </select>
         </div>
 
         <div class="flex gap-3">
           <button @click="showStatusUpdate = false" class="btn btn-secondary flex-1">
-            Batal
+            {{ $t('transactions.cancel') }}
           </button>
           <button @click="updateStatus" class="btn btn-primary flex-1">
-            Simpan
+            {{ $t('transactions.save') }}
           </button>
         </div>
       </div>
@@ -332,9 +332,11 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import api from '@/services/api'
 import ReceiptPrint from '@/components/ReceiptPrint.vue'
 
+const { t } = useI18n()
 const transactions = ref([])
 const dateFrom = ref('')
 const dateTo = ref('')
@@ -437,25 +439,25 @@ const updateStatus = async () => {
     showStatusUpdate.value = false
     statusTransaction.value = null
     await loadTransactions()
-    alert('Status berhasil diubah')
+    alert(t('transactions.statusUpdateSuccess'))
   } catch (error) {
     console.error('Failed to update status:', error)
-    alert('Gagal mengubah status')
+    alert(t('transactions.statusUpdateFailed'))
   }
 }
 
 const deleteTransaction = async (transaction) => {
-  if (!confirm(`Hapus transaksi ${transaction.transaction_no}?`)) {
+  if (!confirm(t('transactions.deleteConfirm', { no: transaction.transaction_no }))) {
     return
   }
 
   try {
     await api.delete(`/transactions/${transaction.id}`)
     await loadTransactions()
-    alert('Transaksi berhasil dihapus')
+    alert(t('transactions.deleteSuccess'))
   } catch (error) {
     console.error('Failed to delete transaction:', error)
-    alert('Gagal menghapus transaksi')
+    alert(t('transactions.deleteFailed'))
   }
 }
 
