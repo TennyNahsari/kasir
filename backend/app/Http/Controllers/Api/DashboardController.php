@@ -33,8 +33,8 @@ class DashboardController extends Controller
         // Payment method breakdown
         $paymentBreakdown = $this->getPaymentBreakdown($outletId, $dateFrom, $dateTo);
 
-        // Low stock products (filtered by location type if FNB)
-        $lowStockProducts = $this->getLowStockProducts($locationId);
+        // Low stock products (filtered by outlet or location)
+        $lowStockProducts = $this->getLowStockProducts($outletId, $locationId);
 
         return response()->json([
             'today' => $todayStats,
@@ -142,12 +142,19 @@ class DashboardController extends Controller
             ->get();
     }
 
-    private function getLowStockProducts($locationId = null, $limit = 10)
+    private function getLowStockProducts($outletId = null, $locationId = null, $limit = 10)
     {
         $query = \App\Models\InventoryStock::with(['product.category', 'location'])
             ->whereColumn('quantity', '<=', 'reorder_level');
         
-        // If location is specified, filter by location
+        // Filter by outlet (all locations in the outlet)
+        if ($outletId) {
+            $query->whereHas('location', function($q) use ($outletId) {
+                $q->where('outlet_id', $outletId);
+            });
+        }
+        
+        // If specific location is specified, filter by location
         if ($locationId) {
             $query->where('location_id', $locationId);
             
