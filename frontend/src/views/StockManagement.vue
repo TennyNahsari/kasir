@@ -107,9 +107,14 @@
                 </div>
               </td>
               <td class="px-6 py-4 text-center">
-                <button @click="openAdjustModal(stock)" class="text-blue-600 hover:text-blue-900 text-sm">
-                  Adjust
-                </button>
+                <div class="flex items-center justify-center gap-3">
+                  <button @click="openAdjustModal(stock)" class="text-blue-600 hover:text-blue-900 text-sm font-medium">
+                    Adjust
+                  </button>
+                  <button @click="deleteStock(stock)" class="text-red-600 hover:text-red-900 text-sm font-medium">
+                    Delete
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -566,6 +571,38 @@ const saveNewStock = async () => {
   } catch (error) {
     console.error('Add stock error:', error)
     errorMessage.value = 'Failed to add stock: ' + (error.response?.data?.message || error.message)
+  } finally {
+    loading.value = false
+  }
+}
+
+const deleteStock = async (stock) => {
+  // Confirm before deleting
+  const confirmMessage = stock.quantity > 0 
+    ? `This stock has quantity ${stock.quantity}. You need to adjust quantity to 0 before deleting. Do you want to proceed to adjust?`
+    : `Are you sure you want to delete stock for "${stock.product_name}" at this location?`
+  
+  if (!confirm(confirmMessage)) {
+    return
+  }
+  
+  // If quantity > 0, show adjustment modal instead
+  if (stock.quantity > 0) {
+    openAdjustModal(stock)
+    return
+  }
+  
+  try {
+    loading.value = true
+    errorMessage.value = ''
+    
+    await api.delete(`/inventory-stocks/${stock.id}`)
+    
+    alert('Stock deleted successfully')
+    await loadStocks()
+  } catch (error) {
+    console.error('Delete stock error:', error)
+    errorMessage.value = 'Failed to delete stock: ' + (error.response?.data?.message || error.message)
   } finally {
     loading.value = false
   }
