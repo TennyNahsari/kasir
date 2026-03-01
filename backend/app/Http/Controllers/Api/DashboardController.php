@@ -145,13 +145,20 @@ class DashboardController extends Controller
     private function getLowStockProducts($outletId = null, $locationId = null, $limit = 10)
     {
         $query = \App\Models\InventoryStock::with(['product.category', 'location'])
-            ->whereColumn('quantity', '<=', 'reorder_level');
+            ->whereRaw('quantity <= reorder_level')
+            ->where('reorder_level', '>', 0); // Only check products with reorder level set
+        
+        \Log::info('Dashboard getLowStockProducts: start', [
+            'outlet_id' => $outletId,
+            'location_id' => $locationId
+        ]);
         
         // Filter by outlet (all locations in the outlet)
         if ($outletId) {
             $query->whereHas('location', function($q) use ($outletId) {
                 $q->where('outlet_id', $outletId);
             });
+            \Log::info('Dashboard: Filtering by outlet_id', ['outlet_id' => $outletId]);
         }
         
         // If specific location is specified, filter by location
@@ -177,10 +184,23 @@ class DashboardController extends Controller
             }
         }
         
-        return $query->orderBy('quantity', 'asc')
+        $results = $query->orderBy('quantity', 'asc')
             ->limit($limit)
-            ->get()
-            ->map(function ($stock) {
+            ->get();
+        
+        \Log::info('Dashboard getLowStockProducts: results', [
+            'count' => $results->count(),
+            'items' => $results->map(function($s) {
+                return [
+                    'product' => $s->product->name,
+                    'quantity' => $s->quantity,
+                    'reorder_level' => $s->reorder_level,
+                    'location_id' => $s->location_id
+                ];
+            })->toArray()
+        ]);
+        
+        return $results->map(function ($stock) {
                 // Transform to match expected structure for frontend
                 return (object) [
                     'id' => $stock->product->id,
