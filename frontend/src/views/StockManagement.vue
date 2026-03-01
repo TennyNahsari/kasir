@@ -163,6 +163,11 @@
             <input v-model.number="adjustForm.quantity" type="number" min="0" class="w-full border-gray-300 rounded-lg" required>
           </div>
           <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Reorder Level</label>
+            <input v-model.number="adjustForm.reorder_level" type="number" min="0" class="w-full border-gray-300 rounded-lg" placeholder="Minimum stock level before reorder">
+            <p class="text-xs text-gray-500 mt-1">Current: {{ adjustingStock?.reorder_level || 0 }}</p>
+          </div>
+          <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Reason</label>
             <textarea v-model="adjustForm.reason" rows="2" class="w-full border-gray-300 rounded-lg" placeholder="Optional notes..."></textarea>
           </div>
@@ -295,6 +300,7 @@ const filters = ref({
 const adjustForm = ref({
   type: 'add',
   quantity: 0,
+  reorder_level: 0,
   reason: ''
 })
 
@@ -441,6 +447,7 @@ const openAdjustModal = (stock) => {
   adjustForm.value = {
     type: 'add',
     quantity: 0,
+    reorder_level: stock.reorder_level || 0,
     reason: ''
   }
   showAdjustModal.value = true
@@ -475,6 +482,7 @@ const saveAdjustment = async () => {
       location_id: selectedLocationId.value,
       product_id: adjustingStock.value.product_id,
       new_quantity: newQuantity,
+      reorder_level: adjustForm.value.reorder_level,
       notes: adjustForm.value.reason || 'Manual adjustment'
     })
     
