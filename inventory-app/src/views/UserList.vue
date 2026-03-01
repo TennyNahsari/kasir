@@ -1,9 +1,9 @@
 <template>
   <div class="space-y-6">
     <div class="flex justify-between items-center">
-      <h1 class="text-2xl font-bold text-gray-900">User Management</h1>
+      <h1 class="text-2xl font-bold text-gray-900">{{ $t('users.title') }}</h1>
       <button @click="openAddModal" class="btn btn-primary">
-        + Add User
+        + {{ $t('users.addUser') }}
       </button>
     </div>
 
@@ -11,34 +11,34 @@
     <div class="card">
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
-          <label class="label">Search</label>
-          <input v-model="filters.search" @input="loadUsers" type="text" class="input" placeholder="Name or email...">
+          <label class="label">{{ $t('users.searchLabel') }}</label>
+          <input v-model="filters.search" @input="loadUsers" type="text" class="input" :placeholder="$t('users.searchPlaceholder')">
         </div>
         <div>
-          <label class="label">Role</label>
+          <label class="label">{{ $t('users.roleLabel') }}</label>
           <select v-model="filters.role" @change="loadUsers" class="input">
-            <option value="">All Roles</option>
-            <option value="owner">Owner</option>
-            <option value="inventory">Inventory</option>
-            <option value="supervisor">Supervisor</option>
-            <option value="staff">Staff</option>
+            <option value="">{{ $t('users.allRoles') }}</option>
+            <option value="owner">{{ $t('users.owner') }}</option>
+            <option value="inventory">{{ $t('users.inventory') }}</option>
+            <option value="supervisor">{{ $t('users.supervisor') }}</option>
+            <option value="staff">{{ $t('users.staff') }}</option>
           </select>
         </div>
         <div>
-          <label class="label">Outlet</label>
+          <label class="label">{{ $t('users.outletLabel') }}</label>
           <select v-model="filters.outlet_id" @change="loadUsers" class="input">
-            <option value="">All Outlets</option>
+            <option value="">{{ $t('users.allOutlets') }}</option>
             <option v-for="outlet in outlets" :key="outlet.outlet_id" :value="outlet.outlet_id">
               {{ outlet.location_name }}
             </option>
           </select>
         </div>
         <div>
-          <label class="label">Status</label>
+          <label class="label">{{ $t('users.statusLabel') }}</label>
           <select v-model="filters.is_active" @change="loadUsers" class="input">
-            <option value="">All Status</option>
-            <option value="1">Active</option>
-            <option value="0">Inactive</option>
+            <option value="">{{ $t('users.allStatus') }}</option>
+            <option value="1">{{ $t('users.active') }}</option>
+            <option value="0">{{ $t('users.inactive') }}</option>
           </select>
         </div>
       </div>
@@ -50,12 +50,12 @@
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Outlet</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('users.name') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('users.email') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('users.role') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('users.outlet') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('users.status') }}</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('common.actions') }}</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -83,12 +83,12 @@
               <td class="px-6 py-4 whitespace-nowrap">
                 <span :class="user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'" 
                   class="px-2 py-1 text-xs font-semibold rounded-full">
-                  {{ user.is_active ? 'Active' : 'Inactive' }}
+                  {{ user.is_active ? $t('users.active') : $t('users.inactive') }}
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm">
-                <button @click="openEditModal(user)" class="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
-                <button @click="deleteUser(user)" class="text-red-600 hover:text-red-900">Delete</button>
+                <button @click="openEditModal(user)" class="text-blue-600 hover:text-blue-900 mr-3">{{ $t('common.edit') }}</button>
+                <button @click="deleteUser(user)" class="text-red-600 hover:text-red-900">{{ $t('common.delete') }}</button>
               </td>
             </tr>
           </tbody>
@@ -109,37 +109,37 @@
     <!-- Add/Edit Modal -->
     <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-lg max-w-md w-full p-6">
-        <h2 class="text-xl font-bold mb-4">{{ editingUser ? 'Edit User' : 'Add User' }}</h2>
+        <h2 class="text-xl font-bold mb-4">{{ editingUser ? $t('users.modalEditTitle') : $t('users.modalAddTitle') }}</h2>
 
         <form @submit.prevent="saveUser" class="space-y-4">
           <div>
-            <label class="label">Name *</label>
+            <label class="label">{{ $t('users.name') }} *</label>
             <input v-model="form.name" type="text" class="input" required>
           </div>
 
           <div>
-            <label class="label">Email *</label>
+            <label class="label">{{ $t('users.email') }} *</label>
             <input v-model="form.email" type="email" class="input" required>
           </div>
 
           <div>
-            <label class="label">Password {{ editingUser ? '(leave blank to keep current)' : '*' }}</label>
+            <label class="label">{{ $t('users.password') }} {{ editingUser ? $t('users.passwordHintEdit') : $t('users.passwordRequired') }}</label>
             <input v-model="form.password" type="password" class="input" :required="!editingUser" minlength="6">
           </div>
 
           <div>
-            <label class="label">Role *</label>
+            <label class="label">{{ $t('users.role') }} *</label>
             <select v-model="form.role" class="input" required>
-              <option value="">-- Select Role --</option>
-              <option value="owner">Owner</option>
-              <option value="inventory">Inventory</option>
-              <option value="supervisor">Supervisor</option>
-              <option value="staff">Staff</option>
+              <option value="">{{ $t('users.selectRole') }}</option>
+              <option value="owner">{{ $t('users.owner') }}</option>
+              <option value="inventory">{{ $t('users.inventory') }}</option>
+              <option value="supervisor">{{ $t('users.supervisor') }}</option>
+              <option value="staff">{{ $t('users.staff') }}</option>
             </select>
           </div>
 
           <div class="relative">
-            <label class="label">Location</label>
+            <label class="label">{{ $t('users.location') }}</label>
             <input 
               v-model="locationSearch" 
               @focus="showLocationDropdown = true"
@@ -147,7 +147,7 @@
               @blur="handleLocationBlur"
               type="text" 
               class="input"
-              placeholder="Search location by name or type..."
+              :placeholder="$t('users.locationPlaceholder')"
               autocomplete="off"
             >
             <div 
@@ -165,18 +165,18 @@
               </div>
             </div>
             <p class="text-xs text-gray-500 mt-1">
-              Set location untuk user. Owner tidak wajib pilih location. Leave empty for no location.
+              {{ $t('users.locationHelper') }}
             </p>
           </div>
 
           <div class="flex items-center">
             <input v-model="form.is_active" type="checkbox" class="rounded border-gray-300 text-blue-600">
-            <label class="ml-2 text-sm text-gray-700">Active</label>
+            <label class="ml-2 text-sm text-gray-700">{{ $t('users.active') }}</label>
           </div>
 
           <div class="flex justify-end gap-2 pt-4 border-t">
-            <button type="button" @click="closeModal" class="btn btn-secondary">Cancel</button>
-            <button type="submit" class="btn btn-primary">{{ editingUser ? 'Update' : 'Create' }}</button>
+            <button type="button" @click="closeModal" class="btn btn-secondary">{{ $t('common.cancel') }}</button>
+            <button type="submit" class="btn btn-primary">{{ editingUser ? $t('users.update') : $t('users.create') }}</button>
           </div>
         </form>
       </div>
@@ -186,9 +186,11 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import api from '@/services/api'
 import Pagination from '@/components/Pagination.vue'
 
+const { t } = useI18n()
 const users = ref([])
 const outlets = ref([])
 const locationSearch = ref('')
@@ -259,7 +261,7 @@ const loadUsers = async (page = 1) => {
       to: response.data.to
     }
   } catch (error) {
-    alert('Failed to load users: ' + (error.response?.data?.message || error.message))
+    alert(t('users.loadFailed') + ': ' + (error.response?.data?.message || error.message))
   }
 }
 
@@ -392,30 +394,30 @@ const saveUser = async () => {
       console.log('Updated user outlet_id:', response.data.outlet_id)
       console.log('Updated user outlet:', response.data.outlet)
       console.log('Response full JSON:', JSON.stringify(response.data, null, 2))
-      alert('User updated successfully')
+      alert(t('users.updateSuccess'))
     } else {
       const response = await api.post('/users', data)
       console.log('Create response:', response.data)
-      alert('User created successfully')
+      alert(t('users.createSuccess'))
     }
     
     closeModal()
     await loadUsers()
   } catch (error) {
     console.error('Save user error:', error)
-    alert('Failed to save user: ' + (error.response?.data?.message || error.message))
+    alert(t('users.saveFailed') + ': ' + (error.response?.data?.message || error.message))
   }
 }
 
 const deleteUser = async (user) => {
-  if (!confirm(`Are you sure you want to delete ${user.name}?`)) return
+  if (!confirm(t('users.deleteConfirm', { name: user.name }))) return
 
   try {
     await api.delete(`/users/${user.id}`)
-    alert('User deleted successfully')
+    alert(t('users.deleteSuccess'))
     await loadUsers()
   } catch (error) {
-    alert('Failed to delete user: ' + (error.response?.data?.message || error.message))
+    alert(t('users.deleteFailed') + ': ' + (error.response?.data?.message || error.message))
   }
 }
 
