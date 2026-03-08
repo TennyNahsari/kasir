@@ -1,11 +1,11 @@
 <template>
-  <div class="p-6 space-y-6">
-    <div class="flex justify-between items-center">
+  <div class="p-4 sm:p-6 space-y-4 sm:space-y-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900">{{ $t('stocks.title') }}</h1>
-        <p class="text-sm text-gray-500 mt-1">{{ $t('stocks.subtitle') }}</p>
+        <h1 class="text-xl sm:text-2xl font-bold text-gray-900">{{ $t('stocks.title') }}</h1>
+        <p class="text-xs sm:text-sm text-gray-500 mt-1">{{ $t('stocks.subtitle') }}</p>
       </div>
-      <button v-if="selectedLocationId" @click="openAddModal" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+      <button v-if="selectedLocationId" @click="openAddModal" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 text-sm sm:text-base">
         <span class="text-xl">+</span>
         {{ $t('stocks.addStock') }}
       </button>
@@ -30,11 +30,11 @@
     </div>
 
     <!-- Filters -->
-    <div class="bg-white rounded-lg shadow p-4">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('stocks.location') }} *</label>
-          <select v-model="selectedLocationId" @change="loadStocks" class="w-full border-gray-300 rounded-lg" :disabled="loading">
+    <div class="bg-white rounded-lg shadow p-3 sm:p-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        <div class="sm:col-span-2 lg:col-span-1">
+          <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('stocks.location') }} *</label>
+          <select v-model="selectedLocationId" @change="loadStocks" class="w-full border-gray-300 rounded-lg text-sm" :disabled="loading">
             <option value="">{{ $t('stocks.selectLocation') }}</option>
             <option v-for="loc in locations" :key="loc.id" :value="loc.id">
               {{ loc.name }} ({{ loc.type }})
@@ -45,12 +45,12 @@
           </p>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('common.search') }}</label>
-          <input v-model="filters.search" @input="loadStocks" type="text" class="w-full border-gray-300 rounded-lg" :placeholder="$t('stocks.searchPlaceholder')" :disabled="!selectedLocationId || loading">
+          <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('common.search') }}</label>
+          <input v-model="filters.search" @input="loadStocks" type="text" class="w-full border-gray-300 rounded-lg text-sm" :placeholder="$t('stocks.searchPlaceholder')" :disabled="!selectedLocationId || loading">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('common.category') }}</label>
-          <select v-model="filters.category_id" @change="loadStocks" class="w-full border-gray-300 rounded-lg" :disabled="!selectedLocationId || loading">
+          <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('common.category') }}</label>
+          <select v-model="filters.category_id" @change="loadStocks" class="w-full border-gray-300 rounded-lg text-sm" :disabled="!selectedLocationId || loading">
             <option value="">{{ $t('stocks.allCategories') }}</option>
             <option v-for="cat in categories" :key="cat.id" :value="cat.id">
               {{ cat.name }}
@@ -61,57 +61,62 @@
     </div>
 
     <!-- Loading State -->
-    <div v-if="loading" class="bg-white rounded-lg shadow p-12 text-center">
-      <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-blue-600"></div>
-      <p class="text-gray-500 mt-4">{{ $t('common.loading') }}</p>
+    <div v-if="loading" class="bg-white rounded-lg shadow p-6 sm:p-12 text-center">
+      <div class="inline-block animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-4 border-gray-200 border-t-blue-600"></div>
+      <p class="text-sm sm:text-base text-gray-500 mt-4">{{ $t('common.loading') }}</p>
     </div>
 
     <!-- Stock Table -->
     <div v-if="selectedLocationId && !loading" class="bg-white rounded-lg shadow overflow-hidden">
-      <div v-if="stocks.length === 0" class="p-12 text-center">
-        <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div v-if="stocks.length === 0" class="p-6 sm:p-12 text-center">
+        <svg class="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
         </svg>
-        <p class="text-gray-500 mb-2">{{ $t('stocks.noStocksForLocation') }}</p>
-        <p class="text-sm text-gray-400">{{ $t('stocks.noStocksHint') }}</p>
+        <p class="text-sm sm:text-base text-gray-500 mb-2">{{ $t('stocks.noStocksForLocation') }}</p>
+        <p class="text-xs sm:text-sm text-gray-400">{{ $t('stocks.noStocksHint') }}</p>
       </div>
-      <div v-else class="overflow-x-auto">
+      <div v-else class="overflow-x-auto -mx-4 sm:mx-0">
+        <div class="inline-block min-w-full align-middle">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('stocks.tableHeaders.product') }}</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('stocks.tableHeaders.sku') }}</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('stocks.tableHeaders.category') }}</th>
-              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{{ $t('stocks.tableHeaders.quantity') }}</th>
-              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{{ $t('stocks.tableHeaders.reorderLevel') }}</th>
-              <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">{{ $t('stocks.tableHeaders.actions') }}</th>
+              <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">{{ $t('stocks.tableHeaders.product') }}</th>
+              <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap hidden sm:table-cell">{{ $t('stocks.tableHeaders.sku') }}</th>
+              <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap hidden md:table-cell">{{ $t('stocks.tableHeaders.category') }}</th>
+              <th class="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase whitespace-nowrap">{{ $t('stocks.tableHeaders.quantity') }}</th>
+              <th class="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase whitespace-nowrap hidden lg:table-cell">{{ $t('stocks.tableHeaders.reorderLevel') }}</th>
+              <th class="px-3 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase whitespace-nowrap">{{ $t('stocks.tableHeaders.actions') }}</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="stock in stocks" :key="stock.id">
-              <td class="px-6 py-4">
-                <div class="text-sm font-medium text-gray-900">{{ stock.product_name }}</div>
+              <td class="px-3 sm:px-6 py-3 sm:py-4">
+                <div class="text-xs sm:text-sm font-medium text-gray-900">{{ stock.product_name }}</div>
+                <div class="text-xs text-gray-500 mt-1 sm:hidden">{{ stock.sku || '-' }}</div>
               </td>
-              <td class="px-6 py-4">
+              <td class="px-3 sm:px-6 py-3 sm:py-4 hidden sm:table-cell">
                 <div class="text-sm text-gray-500">{{ stock.sku || '-' }}</div>
               </td>
-              <td class="px-6 py-4">
+              <td class="px-3 sm:px-6 py-3 sm:py-4 hidden md:table-cell">
                 <div class="text-sm text-gray-500">{{ stock.category }}</div>
               </td>
-              <td class="px-6 py-4 text-right">
-                <div class="text-sm text-gray-900">{{ stock.quantity }}</div>
+              <td class="px-3 sm:px-6 py-3 sm:py-4 text-right">
+                <div class="text-sm font-semibold text-gray-900">{{ stock.quantity }}</div>
+                <div class="text-xs text-gray-500 mt-1 lg:hidden" :class="stock.quantity <= stock.reorder_level ? 'text-red-600 font-medium' : ''">
+                  Min: {{ stock.reorder_level || 0 }}
+                </div>
               </td>
-              <td class="px-6 py-4 text-right">
+              <td class="px-3 sm:px-6 py-3 sm:py-4 text-right hidden lg:table-cell">
                 <div class="text-sm font-medium" :class="stock.quantity <= stock.reorder_level ? 'text-red-600' : 'text-gray-900'">
                   {{ stock.reorder_level || 0 }}
                 </div>
               </td>
-              <td class="px-6 py-4 text-center">
-                <div class="flex items-center justify-center gap-3">
-                  <button @click="openAdjustModal(stock)" class="text-blue-600 hover:text-blue-900 text-sm font-medium">
+              <td class="px-3 sm:px-6 py-3 sm:py-4 text-center">
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
+                  <button @click="openAdjustModal(stock)" class="text-blue-600 hover:text-blue-900 text-xs sm:text-sm font-medium whitespace-nowrap">
                     {{ $t('stocks.adjustStock') }}
                   </button>
-                  <button @click="deleteStock(stock)" class="text-red-600 hover:text-red-900 text-sm font-medium">
+                  <button @click="deleteStock(stock)" class="text-red-600 hover:text-red-900 text-xs sm:text-sm font-medium">
                     {{ $t('common.delete') }}
                   </button>
                 </div>
@@ -119,6 +124,7 @@
             </tr>
           </tbody>
         </table>
+        </div>
       </div>
       
       <!-- Pagination -->
@@ -135,44 +141,44 @@
       />
     </div>
 
-    <div v-else-if="!selectedLocationId && !loading" class="bg-white rounded-lg shadow p-12 text-center">
-      <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div v-else-if="!selectedLocationId && !loading" class="bg-white rounded-lg shadow p-6 sm:p-12 text-center">
+      <svg class="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
       </svg>
-      <p class="text-gray-500">{{ $t('stocks.selectLocationPrompt') }}</p>
+      <p class="text-sm sm:text-base text-gray-500">{{ $t('stocks.selectLocationPrompt') }}</p>
     </div>
 
     <!-- Adjust Modal -->
-    <div v-if="showAdjustModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-        <h3 class="text-lg font-semibold mb-4">{{ $t('stocks.modals.adjustStock.title') }} - {{ adjustingStock?.product_name }}</h3>
+    <div v-if="showAdjustModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-lg shadow-xl p-4 sm:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <h3 class="text-base sm:text-lg font-semibold mb-4">{{ $t('stocks.modals.adjustStock.title') }} - {{ adjustingStock?.product_name }}</h3>
         <div class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('stocks.modals.adjustStock.currentQuantity') }}</label>
-            <div class="text-2xl font-bold text-gray-900">{{ adjustingStock?.quantity }}</div>
+            <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('stocks.modals.adjustStock.currentQuantity') }}</label>
+            <div class="text-xl sm:text-2xl font-bold text-gray-900">{{ adjustingStock?.quantity }}</div>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('stocks.modals.adjustStock.adjustmentType') }} *</label>
-            <select v-model="adjustForm.type" class="w-full border-gray-300 rounded-lg" required>
+            <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('stocks.modals.adjustStock.adjustmentType') }} *</label>
+            <select v-model="adjustForm.type" class="w-full border-gray-300 rounded-lg text-sm" required>
               <option value="add">{{ $t('stocks.modals.adjustStock.addStock') }}</option>
               <option value="subtract">{{ $t('stocks.modals.adjustStock.reduceStock') }}</option>
               <option value="set">{{ $t('stocks.modals.adjustStock.setAmount') }}</option>
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
+            <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
               {{ adjustForm.type === 'set' ? $t('stocks.modals.adjustStock.newQuantity') : $t('stocks.modals.adjustStock.amount') }} *
             </label>
-            <input v-model.number="adjustForm.quantity" type="number" min="0" class="w-full border-gray-300 rounded-lg" required>
+            <input v-model.number="adjustForm.quantity" type="number" min="0" class="w-full border-gray-300 rounded-lg text-sm" required>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('stocks.modals.adjustStock.reorderLevel') }}</label>
-            <input v-model.number="adjustForm.reorder_level" type="number" min="0" class="w-full border-gray-300 rounded-lg" :placeholder="$t('stocks.modals.adjustStock.reorderLevelPlaceholder')">
+            <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('stocks.modals.adjustStock.reorderLevel') }}</label>
+            <input v-model.number="adjustForm.reorder_level" type="number" min="0" class="w-full border-gray-300 rounded-lg text-sm" :placeholder="$t('stocks.modals.adjustStock.reorderLevelPlaceholder')">
             <p class="text-xs text-gray-500 mt-1">{{ $t('stocks.modals.adjustStock.current') }}: {{ adjustingStock?.reorder_level || 0 }}</p>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('stocks.modals.adjustStock.reason') }}</label>
-            <textarea v-model="adjustForm.reason" rows="2" class="w-full border-gray-300 rounded-lg" :placeholder="$t('stocks.modals.adjustStock.reasonPlaceholder')"></textarea>
+            <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('stocks.modals.adjustStock.reason') }}</label>
+            <textarea v-model="adjustForm.reason" rows="2" class="w-full border-gray-300 rounded-lg text-sm" :placeholder="$t('stocks.modals.adjustStock.reasonPlaceholder')"></textarea>
           </div>
           <div v-if="adjustForm.type !== 'set'" class="bg-blue-50 p-3 rounded-lg">
             <div class="text-sm text-gray-700">
@@ -183,9 +189,9 @@
             </div>
           </div>
         </div>
-        <div class="mt-6 flex justify-end space-x-3">
-          <button @click="closeAdjustModal" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50" :disabled="loading">{{ $t('common.cancel') }}</button>
-          <button @click="saveAdjustment" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50" :disabled="loading">
+        <div class="mt-6 flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
+          <button @click="closeAdjustModal" class="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm" :disabled="loading">{{ $t('common.cancel') }}</button>
+          <button @click="saveAdjustment" class="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm" :disabled="loading">
             {{ loading ? $t('common.saving') : $t('common.save') }}
           </button>
         </div>
@@ -193,12 +199,12 @@
     </div>
 
     <!-- Add Stock Modal -->
-    <div v-if="showAddModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-        <h3 class="text-lg font-semibold mb-4">{{ $t('stocks.modals.addStock.title') }}</h3>
-        <div class="space-y-4">
+    <div v-if="showAddModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-lg shadow-xl p-4 sm:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <h3 class="text-base sm:text-lg font-semibold mb-4">{{ $t('stocks.modals.addStock.title') }}</h3>
+        <div class="space-y-3 sm:space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('stocks.modals.addStock.product') }} *</label>
+            <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('stocks.modals.addStock.product') }} *</label>
             <div class="relative">
               <input 
                 v-model="productSearch" 
@@ -207,14 +213,14 @@
                 @blur="() => { setTimeout(() => showProductDropdown = false, 200) }"
                 type="text" 
                 :placeholder="$t('stocks.modals.addStock.searchPlaceholder')"
-                class="w-full border-gray-300 rounded-lg px-3 py-2 border focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
+                class="w-full border-gray-300 rounded-lg px-3 py-2 text-sm border focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
                 required
               >
               
               <!-- Dropdown list -->
               <div 
                 v-if="showProductDropdown && filteredProducts.length > 0" 
-                class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 sm:max-h-60 overflow-y-auto"
               >
                 <div 
                   v-for="product in filteredProducts" 
@@ -222,8 +228,8 @@
                   @click="selectProduct(product)"
                   class="px-3 py-2 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
                 >
-                  <div class="font-medium text-gray-900">{{ product.name }}</div>
-                  <div class="text-sm text-gray-500">SKU: {{ product.sku }}</div>
+                  <div class="font-medium text-gray-900 text-sm">{{ product.name }}</div>
+                  <div class="text-xs text-gray-500">SKU: {{ product.sku }}</div>
                 </div>
               </div>
               
@@ -242,20 +248,20 @@
             </div>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('stocks.modals.addStock.initialQuantity') }} *</label>
-            <input v-model.number="addForm.quantity" type="number" min="0" class="w-full border-gray-300 rounded-lg" required>
+            <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('stocks.modals.addStock.initialQuantity') }} *</label>
+            <input v-model.number="addForm.quantity" type="number" min="0" class="w-full border-gray-300 rounded-lg text-sm" required>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('stocks.modals.addStock.reorderLevel') }}</label>
-            <input v-model.number="addForm.reorder_level" type="number" min="0" class="w-full border-gray-300 rounded-lg">
+            <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('stocks.modals.addStock.reorderLevel') }}</label>
+            <input v-model.number="addForm.reorder_level" type="number" min="0" class="w-full border-gray-300 rounded-lg text-sm">
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('stocks.modals.addStock.notes') }}</label>
-            <textarea v-model="addForm.notes" class="w-full border-gray-300 rounded-lg" rows="3" :placeholder="$t('stocks.modals.addStock.notesPlaceholder')"></textarea>
+            <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('stocks.modals.addStock.notes') }}</label>
+            <textarea v-model="addForm.notes" class="w-full border-gray-300 rounded-lg text-sm" rows="3" :placeholder="$t('stocks.modals.addStock.notesPlaceholder')"></textarea>
           </div>
-          <div class="flex gap-2 justify-end pt-4">
-            <button @click="closeAddModal" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50" :disabled="loading">{{ $t('common.cancel') }}</button>
-            <button @click="saveNewStock" :disabled="!addForm.product_id || addForm.quantity == null || loading" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+          <div class="flex flex-col sm:flex-row gap-2 justify-end pt-4">
+            <button @click="closeAddModal" class="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm" :disabled="loading">{{ $t('common.cancel') }}</button>
+            <button @click="saveNewStock" :disabled="!addForm.product_id || addForm.quantity == null || loading" class="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm">
               {{ loading ? $t('common.adding') : $t('stocks.addStock') }}
             </button>
           </div>

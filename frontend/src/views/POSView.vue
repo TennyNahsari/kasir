@@ -43,33 +43,33 @@
       </p>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 relative">
       <!-- Product Selection (Left) -->
       <div class="lg:col-span-2 space-y-4">
         <!-- Search & Scanner -->
-        <div class="card">
-        <div class="flex gap-3">
+        <div class="card p-3 sm:p-4">
+        <div class="flex gap-2 sm:gap-3">
           <input
             ref="barcodeInput"
             v-model="searchQuery"
             @keyup.enter="handleBarcodeSearch"
             type="text"
-            class="input flex-1"
+            class="input flex-1 text-sm sm:text-base"
             :placeholder="$t('pos.scanOrSearch')"
             autofocus
           >
-          <button @click="handleBarcodeSearch" class="btn btn-primary">
+          <button @click="handleBarcodeSearch" class="btn btn-primary px-3 sm:px-4 text-sm sm:text-base">
             {{ $t('pos.search') }}
           </button>
         </div>
       </div>
 
       <!-- Categories -->
-      <div class="card">
+      <div class="card p-3 sm:p-4">
         <div class="flex gap-2 flex-wrap">
           <button
             @click="selectedCategory = null"
-            class="btn"
+            class="btn text-xs sm:text-sm px-3 py-2"
             :class="selectedCategory === null ? 'btn-primary' : 'btn-secondary'"
           >
             {{ $t('pos.all') }}
@@ -78,7 +78,7 @@
             v-for="category in categories"
             :key="category.id"
             @click="selectedCategory = category.id"
-            class="btn"
+            class="btn text-xs sm:text-sm px-3 py-2"
             :class="selectedCategory === category.id ? 'btn-primary' : 'btn-secondary'"
           >
             {{ category.name }}
@@ -87,12 +87,12 @@
       </div>
 
       <!-- Products Grid -->
-      <div v-if="isValidPosLocation" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div v-if="isValidPosLocation" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 pb-24 lg:pb-0">
         <div
           v-for="product in filteredProducts"
           :key="product.id"
           @click="addToCart(product)"
-          class="card cursor-pointer hover:shadow-md transition-shadow"
+          class="card cursor-pointer hover:shadow-md transition-all active:scale-95 p-2 sm:p-3"
         >
           <div class="aspect-square bg-gray-100 rounded mb-2 flex items-center justify-center overflow-hidden">
             <img 
@@ -101,10 +101,10 @@
               :alt="product.name"
               class="w-full h-full object-cover"
             >
-            <span v-else class="text-4xl">📦</span>
+            <span v-else class="text-3xl sm:text-4xl">📦</span>
           </div>
-          <h4 class="font-medium text-sm mb-1 truncate">{{ product.name }}</h4>
-          <p class="text-primary-600 font-semibold">
+          <h4 class="font-medium text-xs sm:text-sm mb-1 truncate" :title="product.name">{{ product.name }}</h4>
+          <p class="text-primary-600 font-semibold text-sm sm:text-base">
             {{ formatCurrency(product.selling_price) }}
           </p>
           <p v-if="product.track_stock" class="text-xs" :class="getAvailableStock(product) <= 0 ? 'text-red-500' : 'text-gray-500'">
@@ -131,8 +131,8 @@
       </div>
     </div>
 
-    <!-- Cart (Right) -->
-    <div class="card h-fit sticky top-6">
+    <!-- Cart (Right) - Desktop -->
+    <div class="hidden lg:block card h-fit sticky top-6">
       <h3 class="text-xl font-bold mb-4">{{ $t('pos.cart') }}</h3>
 
       <!-- Cart Items -->
@@ -246,16 +246,172 @@
         </button>
       </div>
     </div>
+
+    <!-- Mobile Cart Drawer -->
+    <div
+      v-if="showMobileCart"
+      class="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-50"
+      @click="showMobileCart = false"
+    ></div>
+    
+    <div
+      class="lg:hidden fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl z-50 transition-transform duration-300"
+      :class="showMobileCart ? 'translate-y-0' : 'translate-y-full'"
+      style="max-height: 85vh;"
+    >
+      <!-- Drawer Header -->
+      <div class="flex items-center justify-between p-4 border-b sticky top-0 bg-white">
+        <h3 class="text-lg font-bold">{{ $t('pos.cart') }} ({{ cartStore.items.length }})</h3>
+        <button @click="showMobileCart = false" class="p-2 hover:bg-gray-100 rounded-lg">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Drawer Content -->
+      <div class="overflow-y-auto" style="max-height: calc(85vh - 280px);">
+        <!-- Cart Items -->
+        <div class="p-4 space-y-3">
+          <div
+            v-for="item in cartStore.items"
+            :key="item.product_id"
+            class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+          >
+            <div class="flex-1 min-w-0 mr-3">
+              <div class="font-medium text-sm truncate">{{ item.product_name }}</div>
+              <div class="text-xs text-gray-600">
+                {{ formatCurrency(item.price) }} x {{ item.quantity }}
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button
+                @click="updateQuantity(item.product_id, item.quantity - 1)"
+                class="w-8 h-8 bg-gray-200 rounded-lg hover:bg-gray-300 active:scale-95 flex items-center justify-center font-bold"
+              >
+                -
+              </button>
+              <span class="w-10 text-center font-medium text-sm">{{ item.quantity }}</span>
+              <button
+                @click="updateQuantity(item.product_id, item.quantity + 1)"
+                class="w-8 h-8 bg-primary-600 text-white rounded-lg hover:bg-primary-700 active:scale-95 flex items-center justify-center font-bold"
+              >
+                +
+              </button>
+              <button
+                @click="cartStore.removeItem(item.product_id)"
+                class="ml-1 text-red-600 hover:text-red-700 p-2"
+              >
+                🗑️
+              </button>
+            </div>
+          </div>
+
+          <div v-if="cartStore.items.length === 0" class="text-center py-8 text-gray-500">
+            {{ $t('pos.cartEmpty') }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Drawer Footer -->
+      <div class="border-t bg-white p-4 space-y-3">
+        <!-- Summary -->
+        <div class="space-y-2">
+          <div class="flex justify-between text-sm">
+            <span>{{ $t('pos.subtotal') }}</span>
+            <span class="font-medium">{{ formatCurrency(cartStore.subtotal) }}</span>
+          </div>
+          <div class="flex justify-between text-sm items-center">
+            <span>{{ $t('pos.discount') }}</span>
+            <input
+              v-model.number="discount"
+              @change="cartStore.setDiscount(discount)"
+              type="number"
+              class="input w-24 text-right text-sm py-1"
+              min="0"
+            >
+          </div>
+          <div class="flex justify-between font-bold text-lg border-t pt-2">
+            <span>{{ $t('pos.total') }}</span>
+            <span class="text-primary-600">{{ formatCurrency(cartStore.total) }}</span>
+          </div>
+        </div>
+
+        <!-- Payment Method -->
+        <div>
+          <label class="label text-sm">{{ $t('pos.paymentMethod') }}</label>
+          <select v-model="paymentMethod" class="input text-sm">
+            <option value="cash">{{ $t('pos.cash') }}</option>
+            <option value="qris">{{ $t('pos.qris') }}</option>
+            <option value="transfer">{{ $t('pos.transfer') }}</option>
+            <option value="ewallet">{{ $t('pos.ewallet') }}</option>
+          </select>
+        </div>
+
+        <!-- Amount Paid -->
+        <div>
+          <label class="label text-sm">{{ $t('pos.amountPaid') }}</label>
+          <input
+            v-model.number="paidAmount"
+            type="number"
+            class="input text-sm"
+            :min="cartStore.total"
+            placeholder="0"
+          >
+        </div>
+
+        <div v-if="changeAmount > 0" class="p-3 bg-green-50 rounded-lg">
+          <div class="text-xs text-gray-600">{{ $t('pos.change') }}</div>
+          <div class="text-lg font-bold text-green-600">
+            {{ formatCurrency(changeAmount) }}
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="space-y-2">
+          <button
+            @click="processCheckout"
+            :disabled="cartStore.items.length === 0 || paidAmount < cartStore.total"
+            class="btn btn-primary w-full"
+          >
+            {{ $t('pos.payAndPrint') }}
+          </button>
+          <button
+            @click="cartStore.clear()"
+            class="btn btn-danger w-full"
+          >
+            {{ $t('pos.clear') }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Floating Cart Button (Mobile) -->
+    <button
+      v-if="cartStore.items.length > 0"
+      @click="showMobileCart = true"
+      class="lg:hidden fixed bottom-6 right-6 bg-primary-600 text-white rounded-full shadow-2xl hover:bg-primary-700 active:scale-95 transition-all z-40 flex items-center justify-center"
+      style="width: 60px; height: 60px;"
+    >
+      <div class="relative">
+        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+        <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+          {{ cartStore.items.length }}
+        </span>
+      </div>
+    </button>
   </div>
 
   <!-- Success Modal -->
-  <div v-if="showSuccess" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="card max-w-md">
-      <div class="text-center">
-        <div class="text-6xl mb-4">✅</div>
-        <h3 class="text-2xl font-bold mb-2">{{ $t('pos.transactionSuccess') }}</h3>
-        <p class="text-gray-600 mb-4">{{ successMessage }}</p>
-        <button @click="closeSuccess" class="btn btn-primary">
+  <div v-if="showSuccess" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="card max-w-md w-full">
+      <div class="text-center p-4 sm:p-6">
+        <div class="text-5xl sm:text-6xl mb-4">✅</div>
+        <h3 class="text-xl sm:text-2xl font-bold mb-2">{{ $t('pos.transactionSuccess') }}</h3>
+        <p class="text-gray-600 mb-4 text-sm sm:text-base">{{ successMessage }}</p>
+        <button @click="closeSuccess" class="btn btn-primary w-full sm:w-auto">
           {{ $t('pos.ok') }}
         </button>
       </div>
@@ -285,6 +441,7 @@ const paymentMethod = ref('cash')
 const paidAmount = ref(0)
 const loading = ref(false)
 const showSuccess = ref(false)
+const showMobileCart = ref(false)
 const successMessage = ref('')
 const barcodeInput = ref(null)
 const currentOutletId = ref(null)
@@ -483,6 +640,7 @@ const processCheckout = async () => {
 
     successMessage.value = `No. Transaksi: ${transaction.transaction_no}`
     showSuccess.value = true
+    showMobileCart.value = false
 
     // Reset
     paidAmount.value = 0
@@ -520,6 +678,7 @@ const processCheckout = async () => {
 
 const closeSuccess = () => {
   showSuccess.value = false
+  showMobileCart.value = false
   barcodeInput.value?.focus()
 }
 

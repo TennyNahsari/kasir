@@ -1,38 +1,38 @@
 <template>
-  <div class="p-6 space-y-6">
-    <div class="flex justify-between items-center">
-      <h1 class="text-2xl font-bold text-gray-900">{{ $t('users.title') }}</h1>
-      <button @click="openAddModal" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+  <div class="p-4 sm:p-6 space-y-4 sm:space-y-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+      <h1 class="text-xl sm:text-2xl font-bold text-gray-900">{{ $t('users.title') }}</h1>
+      <button @click="openAddModal" class="w-full sm:w-auto bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm sm:text-base">
         {{ $t('users.addUser') }}
       </button>
     </div>
 
     <!-- Error Message -->
-    <div v-if="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+    <div v-if="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-3 py-2 sm:px-4 sm:py-3 rounded relative text-sm">
       <span class="block sm:inline">{{ errorMessage }}</span>
-      <button @click="errorMessage = ''" class="absolute top-0 bottom-0 right-0 px-4 py-3">
+      <button @click="errorMessage = ''" class="absolute top-0 bottom-0 right-0 px-3 py-2 sm:px-4 sm:py-3">
         <span class="text-red-700">&times;</span>
       </button>
     </div>
 
     <!-- Success Message -->
-    <div v-if="successMessage" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
+    <div v-if="successMessage" class="bg-green-100 border border-green-400 text-green-700 px-3 py-2 sm:px-4 sm:py-3 rounded relative text-sm">
       <span class="block sm:inline">{{ successMessage }}</span>
-      <button @click="successMessage = ''" class="absolute top-0 bottom-0 right-0 px-4 py-3">
+      <button @click="successMessage = ''" class="absolute top-0 bottom-0 right-0 px-3 py-2 sm:px-4 sm:py-3">
         <span class="text-green-700">&times;</span>
       </button>
     </div>
 
     <!-- Filters -->
-    <div class="bg-white rounded-lg shadow p-4">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="bg-white rounded-lg shadow p-3 sm:p-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('users.searchLabel') }}</label>
-          <input v-model="filters.search" @input="loadUsers" type="text" class="w-full border-gray-300 rounded-lg" :placeholder="$t('users.searchPlaceholder')">
+          <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('users.searchLabel') }}</label>
+          <input v-model="filters.search" @input="loadUsers" type="text" class="w-full border-gray-300 rounded-lg text-sm" :placeholder="$t('users.searchPlaceholder')">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('users.roleLabel') }}</label>
-          <select v-model="filters.role" @change="loadUsers" class="w-full border-gray-300 rounded-lg">
+          <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('users.roleLabel') }}</label>
+          <select v-model="filters.role" @change="loadUsers" class="w-full border-gray-300 rounded-lg text-sm">
             <option value="">{{ $t('users.allRoles') }}</option>
             <option value="owner">{{ $t('users.owner') }}</option>
             <option value="inventory">{{ $t('users.inventory') }}</option>
@@ -41,8 +41,8 @@
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('users.statusLabel') }}</label>
-          <select v-model="filters.is_active" @change="loadUsers" class="w-full border-gray-300 rounded-lg">
+          <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('users.statusLabel') }}</label>
+          <select v-model="filters.is_active" @change="loadUsers" class="w-full border-gray-300 rounded-lg text-sm">
             <option value="">{{ $t('users.allStatus') }}</option>
             <option value="1">{{ $t('users.active') }}</option>
             <option value="0">{{ $t('users.inactive') }}</option>
@@ -51,8 +51,8 @@
       </div>
     </div>
 
-    <!-- Users Table -->
-    <div class="bg-white rounded-lg shadow overflow-hidden">
+    <!-- Users Table - Desktop Only -->
+    <div class="hidden lg:block bg-white rounded-lg shadow overflow-hidden">
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
@@ -116,26 +116,83 @@
       />
     </div>
 
+    <!-- Mobile Card View -->
+    <div class="lg:hidden space-y-3">
+      <div v-for="user in users" :key="user.id" class="bg-white rounded-lg shadow p-4">
+        <div class="flex justify-between items-start mb-3">
+          <div class="flex-1">
+            <h3 class="font-semibold text-sm text-gray-900">{{ user.name }}</h3>
+            <p class="text-xs text-gray-600 mt-0.5">{{ user.email }}</p>
+          </div>
+          <span :class="user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'" 
+            class="px-2 py-1 text-xs font-semibold rounded-full">
+            {{ user.is_active ? $t('users.active') : $t('users.inactive') }}
+          </span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 text-xs mb-3">
+          <div>
+            <span class="text-gray-600">{{ $t('users.roleLabel') }}:</span>
+            <span class="ml-1 px-2 py-0.5 rounded-full text-xs font-semibold inline-block mt-1"
+              :class="{
+                'bg-purple-100 text-purple-800': user.role === 'owner',
+                'bg-indigo-100 text-indigo-800': user.role === 'inventory',
+                'bg-blue-100 text-blue-800': user.role === 'supervisor',
+                'bg-gray-100 text-gray-800': user.role === 'staff'
+              }">
+              {{ user.role }}
+            </span>
+          </div>
+          <div>
+            <span class="text-gray-600">{{ $t('users.locationLabel') }}:</span>
+            <span class="font-medium ml-1">{{ user.location?.name || '-' }}</span>
+          </div>
+        </div>
+
+        <div class="flex gap-2 pt-3 border-t">
+          <button @click="openEditModal(user)" class="flex-1 py-2 text-xs font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100">
+            {{ $t('users.edit') }}
+          </button>
+          <button @click="deleteUser(user)" class="flex-1 py-2 text-xs font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100">
+            {{ $t('users.delete') }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Pagination (Mobile) -->
+      <Pagination
+        v-if="pagination.total > 0"
+        :current-page="pagination.currentPage"
+        :last-page="pagination.lastPage"
+        :per-page="pagination.perPage"
+        :total="pagination.total"
+        :from="pagination.from"
+        :to="pagination.to"
+        @update:current-page="handlePageChange"
+        @update:per-page="handlePerPageChange"
+      />
+    </div>
+
     <!-- Modal -->
-    <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-        <h3 class="text-lg font-semibold mb-4">{{ editingUser ? $t('users.modalTitleEdit') : $t('users.modalTitleAdd') }}</h3>
-        <div class="space-y-4">
+    <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-lg shadow-xl p-4 sm:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <h3 class="text-base sm:text-lg font-semibold mb-3 sm:mb-4">{{ editingUser ? $t('users.modalTitleEdit') : $t('users.modalTitleAdd') }}</h3>
+        <div class="space-y-3 sm:space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('users.nameLabel') }}</label>
-            <input v-model="userForm.name" type="text" class="w-full border-gray-300 rounded-lg" required>
+            <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('users.nameLabel') }}</label>
+            <input v-model="userForm.name" type="text" class="w-full border-gray-300 rounded-lg text-sm" required>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('users.emailLabel') }}</label>
-            <input v-model="userForm.email" type="email" class="w-full border-gray-300 rounded-lg" required>
+            <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('users.emailLabel') }}</label>
+            <input v-model="userForm.email" type="email" class="w-full border-gray-300 rounded-lg text-sm" required>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('users.passwordLabel') }} {{ editingUser ? $t('users.passwordLeaveBlank') : $t('users.passwordRequired') }}</label>
-            <input v-model="userForm.password" type="password" class="w-full border-gray-300 rounded-lg">
+            <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('users.passwordLabel') }} {{ editingUser ? $t('users.passwordLeaveBlank') : $t('users.passwordRequired') }}</label>
+            <input v-model="userForm.password" type="password" class="w-full border-gray-300 rounded-lg text-sm">
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('users.roleLabel') }} *</label>
-            <select v-model="userForm.role" class="w-full border-gray-300 rounded-lg" required>
+            <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('users.roleLabel') }} *</label>
+            <select v-model="userForm.role" class="w-full border-gray-300 rounded-lg text-sm" required>
               <option value="owner">{{ $t('users.owner') }}</option>
               <option value="inventory">{{ $t('users.inventory') }}</option>
               <option value="supervisor">{{ $t('users.supervisor') }}</option>
@@ -143,8 +200,8 @@
             </select>
           </div>
           <div v-if="!['owner', 'inventory'].includes(userForm.role)">
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('users.locationLabel') }}</label>
-            <select v-model="userForm.location_id" class="w-full border-gray-300 rounded-lg">
+            <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('users.locationLabel') }}</label>
+            <select v-model="userForm.location_id" class="w-full border-gray-300 rounded-lg text-sm">
               <option value="">{{ $t('users.selectLocation') }}</option>
               <option v-for="loc in locations" :key="loc.id" :value="loc.id">
                 {{ loc.name }} ({{ loc.type }})
@@ -153,12 +210,12 @@
           </div>
           <div class="flex items-center">
             <input v-model="userForm.is_active" type="checkbox" class="rounded border-gray-300 text-blue-600 mr-2">
-            <label class="text-sm font-medium text-gray-700">{{ $t('users.active') }}</label>
+            <label class="text-xs sm:text-sm font-medium text-gray-700">{{ $t('users.active') }}</label>
           </div>
         </div>
-        <div class="mt-6 flex justify-end space-x-3">
-          <button @click="closeModal" :disabled="loading" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">{{ $t('users.cancel') }}</button>
-          <button @click="saveUser" :disabled="loading" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center">
+        <div class="mt-4 sm:mt-6 flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3">
+          <button @click="closeModal" :disabled="loading" class="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm">{{ $t('users.cancel') }}</button>
+          <button @click="saveUser" :disabled="loading" class="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm">
             <svg v-if="loading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>

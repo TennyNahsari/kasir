@@ -1,9 +1,9 @@
 <template>
   <div>
-    <div class="flex justify-between items-center mb-4 sm:mb-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
       <h2 class="text-xl sm:text-2xl font-bold">{{ $t('transactions.title') }}</h2>
-      <button @click="exportToExcel" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <button @click="exportToExcel" class="w-full sm:w-auto bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2 text-sm sm:text-base">
+        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
         {{ $t('transactions.exportExcel') }}
@@ -199,18 +199,18 @@
     <!-- Detail Modal -->
   <div v-if="showDetail && selectedTransaction" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
     <div class="card max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-      <div class="flex justify-between items-start mb-4">
+      <div class="flex justify-between items-start mb-3 sm:mb-4">
         <div>
-          <h3 class="text-xl font-bold">{{ $t('transactions.detailTitle') }}</h3>
-          <p class="text-sm text-gray-600">{{ selectedTransaction.transaction_no }}</p>
+          <h3 class="text-lg sm:text-xl font-bold">{{ $t('transactions.detailTitle') }}</h3>
+          <p class="text-xs sm:text-sm text-gray-600">{{ selectedTransaction.transaction_no }}</p>
         </div>
-        <button @click="showDetail = false" class="text-gray-500 hover:text-gray-700 text-2xl">
+        <button @click="showDetail = false" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">
           ×
         </button>
       </div>
 
-      <div class="space-y-4">
-        <div class="grid grid-cols-2 gap-4 text-sm">
+      <div class="space-y-3 sm:space-y-4">
+        <div class="grid grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm">
           <div>
             <div class="text-gray-600">{{ $t('transactions.date') }}</div>
             <div class="font-medium">{{ formatDate(selectedTransaction.created_at) }}</div>
@@ -230,61 +230,61 @@
         </div>
 
         <!-- Notes Section -->
-        <div v-if="selectedTransaction.notes" class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+        <div v-if="selectedTransaction.notes" class="bg-blue-50 border border-blue-200 rounded-lg p-2 sm:p-3">
           <div class="text-xs text-blue-600 font-semibold mb-1">{{ $t('transactions.notes') }}:</div>
-          <div class="text-sm text-gray-700">{{ selectedTransaction.notes }}</div>
+          <div class="text-xs sm:text-sm text-gray-700">{{ selectedTransaction.notes }}</div>
         </div>
 
-        <div class="border-t pt-4">
-          <h4 class="font-semibold mb-3">{{ $t('transactions.items') }}</h4>
+        <div class="border-t pt-3 sm:pt-4">
+          <h4 class="font-semibold mb-2 sm:mb-3 text-sm sm:text-base">{{ $t('transactions.items') }}</h4>
           <div class="space-y-2">
             <div
               v-for="item in selectedTransaction.items"
               :key="item.id"
-              class="flex justify-between text-sm"
+              class="flex justify-between text-xs sm:text-sm"
             >
-              <div>
-                <div class="font-medium">{{ item.product_name }}</div>
+              <div class="flex-1 min-w-0 pr-2">
+                <div class="font-medium truncate">{{ item.product_name }}</div>
                 <div class="text-gray-600">
                   {{ formatCurrency(item.price) }} x {{ item.quantity }}
                 </div>
               </div>
-              <div class="text-right font-medium">
+              <div class="text-right font-medium flex-shrink-0">
                 {{ formatCurrency(item.subtotal) }}
               </div>
             </div>
           </div>
         </div>
 
-        <div class="border-t pt-4 space-y-2">
-          <div class="flex justify-between text-sm">
+        <div class="border-t pt-3 sm:pt-4 space-y-1.5 sm:space-y-2">
+          <div class="flex justify-between text-xs sm:text-sm">
             <span>{{ $t('transactions.subtotal') }}</span>
             <span>{{ formatCurrency(selectedTransaction.subtotal) }}</span>
           </div>
-          <div v-if="selectedTransaction.discount > 0" class="flex justify-between text-sm">
+          <div v-if="selectedTransaction.discount > 0" class="flex justify-between text-xs sm:text-sm">
             <span>{{ $t('transactions.discount') }}</span>
             <span class="text-red-600">-{{ formatCurrency(selectedTransaction.discount) }}</span>
           </div>
-          <div v-if="selectedTransaction.tax > 0" class="flex justify-between text-sm">
+          <div v-if="selectedTransaction.tax > 0" class="flex justify-between text-xs sm:text-sm">
             <span>{{ $t('transactions.tax') }}</span>
             <span>{{ formatCurrency(selectedTransaction.tax) }}</span>
           </div>
-          <div class="flex justify-between font-bold text-lg border-t pt-2">
+          <div class="flex justify-between font-bold text-base sm:text-lg border-t pt-2">
             <span>{{ $t('transactions.total') }}</span>
             <span class="text-primary-600">{{ formatCurrency(selectedTransaction.total) }}</span>
           </div>
-          <div class="flex justify-between text-sm">
+          <div class="flex justify-between text-xs sm:text-sm">
             <span>{{ $t('transactions.paid') }}</span>
             <span>{{ formatCurrency(selectedTransaction.paid_amount) }}</span>
           </div>
-          <div class="flex justify-between text-sm">
+          <div class="flex justify-between text-xs sm:text-sm">
             <span>{{ $t('transactions.change') }}</span>
             <span class="text-green-600">{{ formatCurrency(selectedTransaction.change_amount) }}</span>
           </div>
         </div>
 
-        <div class="border-t pt-4">
-          <button @click="printReceipt" class="btn btn-primary w-full">
+        <div class="border-t pt-3 sm:pt-4">
+          <button @click="printReceipt" class="btn btn-primary w-full text-sm sm:text-base">
             {{ $t('transactions.printReceipt') }}
           </button>
         </div>
@@ -295,25 +295,25 @@
   <!-- Status Modal for F&B -->
   <div v-if="showStatusUpdate && statusTransaction" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
     <div class="card max-w-md w-full">
-      <div class="flex justify-between items-start mb-4">
+      <div class="flex justify-between items-start mb-3 sm:mb-4">
         <div>
-          <h3 class="text-xl font-bold">{{ $t('transactions.changeStatusTitle') }}</h3>
-          <p class="text-sm text-gray-600">{{ statusTransaction.transaction_no }}</p>
+          <h3 class="text-lg sm:text-xl font-bold">{{ $t('transactions.changeStatusTitle') }}</h3>
+          <p class="text-xs sm:text-sm text-gray-600">{{ statusTransaction.transaction_no }}</p>
         </div>
-        <button @click="showStatusUpdate = false" class="text-gray-500 hover:text-gray-700 text-2xl">
+        <button @click="showStatusUpdate = false" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">
           ×
         </button>
       </div>
 
-      <div class="space-y-4">
+      <div class="space-y-3 sm:space-y-4">
         <div>
-          <label class="label">{{ $t('transactions.currentStatus') }}</label>
-          <div class="font-medium text-lg capitalize">{{ statusTransaction.status }}</div>
+          <label class="label text-xs sm:text-sm">{{ $t('transactions.currentStatus') }}</label>
+          <div class="font-medium text-base sm:text-lg capitalize">{{ statusTransaction.status }}</div>
         </div>
 
         <div>
-          <label class="label">{{ $t('transactions.changeToStatus') }}</label>
-          <select v-model="newStatus" class="input">
+          <label class="label text-xs sm:text-sm">{{ $t('transactions.changeToStatus') }}</label>
+          <select v-model="newStatus" class="input text-sm">
             <option value="pending">{{ $t('transactions.statusPending') }}</option>
             <option value="processed">{{ $t('transactions.statusProcessed') }}</option>
             <option value="delivered">{{ $t('transactions.statusDelivered') }}</option>
@@ -321,11 +321,11 @@
           </select>
         </div>
 
-        <div class="flex gap-3">
-          <button @click="showStatusUpdate = false" class="btn btn-secondary flex-1">
+        <div class="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3">
+          <button @click="showStatusUpdate = false" class="btn btn-secondary flex-1 text-sm sm:text-base">
             {{ $t('transactions.cancel') }}
           </button>
-          <button @click="updateStatus" class="btn btn-primary flex-1">
+          <button @click="updateStatus" class="btn btn-primary flex-1 text-sm sm:text-base">
             {{ $t('transactions.save') }}
           </button>
         </div>

@@ -1,18 +1,18 @@
 <template>
-  <div class="p-6">
-    <div class="mb-6 flex justify-between items-center">
+  <div class="p-4 sm:p-6">
+    <div class="mb-4 sm:mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
       <div>
-        <h1 class="text-3xl font-bold text-gray-800">{{ $t('locations.title') }}</h1>
-        <p class="text-gray-600">{{ $t('locations.subtitle') }}</p>
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">{{ $t('locations.title') }}</h1>
+        <p class="text-sm sm:text-base text-gray-600">{{ $t('locations.subtitle') }}</p>
       </div>
-      <button @click="showCreateModal = true" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700" :disabled="loading">
+      <button @click="showCreateModal = true" class="w-full sm:w-auto bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center justify-center" :disabled="loading">
         <span class="text-xl mr-1">+</span>
         {{ $t('locations.addLocation') }}
       </button>
     </div>
 
     <!-- Error Message -->
-    <div v-if="errorMessage" class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+    <div v-if="errorMessage" class="mb-4 sm:mb-6 bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4">
       <div class="flex items-start gap-3">
         <svg class="w-5 h-5 text-red-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -30,37 +30,37 @@
     </div>
 
     <!-- Loading State -->
-    <div v-if="loading" class="bg-white rounded-lg shadow p-12 text-center">
-      <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-blue-600"></div>
-      <p class="text-gray-500 mt-4">{{ $t('locations.loadingLocations') }}</p>
+    <div v-if="loading" class="bg-white rounded-lg shadow p-6 sm:p-12 text-center">
+      <div class="inline-block animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-4 border-gray-200 border-t-blue-600"></div>
+      <p class="text-sm sm:text-base text-gray-500 mt-4">{{ $t('locations.loadingLocations') }}</p>
     </div>
 
     <!-- Empty State -->
-    <div v-else-if="locations.length === 0" class="bg-white rounded-lg shadow p-12 text-center">
-      <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div v-else-if="locations.length === 0" class="bg-white rounded-lg shadow p-6 sm:p-12 text-center">
+      <svg class="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
       </svg>
-      <p class="text-gray-500 mb-2">{{ $t('locations.noLocations') }}</p>
-      <p class="text-sm text-gray-400 mb-4">{{ $t('locations.noLocationsHint') }}</p>
-      <button @click="showCreateModal = true" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+      <p class="text-sm sm:text-base text-gray-500 mb-2">{{ $t('locations.noLocations') }}</p>
+      <p class="text-xs sm:text-sm text-gray-400 mb-4">{{ $t('locations.noLocationsHint') }}</p>
+      <button @click="showCreateModal = true" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
         <span class="text-xl mr-2">+</span>
         {{ $t('locations.addLocation') }}
       </button>
     </div>
 
     <!-- Locations Grid -->
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div v-for="location in locations" :key="location.id" class="bg-white rounded-lg shadow p-6">
-        <div class="flex justify-between items-start mb-4">
-          <div>
-            <h3 class="text-lg font-semibold text-gray-900">{{ location.name }}</h3>
-            <p class="text-sm text-gray-500 mt-1">{{ location.code }}</p>
+    <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+      <div v-for="location in locations" :key="location.id" class="bg-white rounded-lg shadow p-4 sm:p-6">
+        <div class="flex justify-between items-start mb-3 sm:mb-4">
+          <div class="flex-1 min-w-0 mr-2">
+            <h3 class="text-base sm:text-lg font-semibold text-gray-900 truncate">{{ location.name }}</h3>
+            <p class="text-xs sm:text-sm text-gray-500 mt-1">{{ location.code }}</p>
             <span :class="getTypeClass(location.type)" class="inline-block px-2 py-1 text-xs font-semibold rounded-full mt-1">
               {{ location.type }}
             </span>
           </div>
-          <div class="flex space-x-2">
+          <div class="flex gap-2 flex-shrink-0">
             <button @click="editLocation(location)" class="text-blue-600 hover:text-blue-800">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
@@ -74,7 +74,7 @@
           </div>
         </div>
 
-        <div class="space-y-2 text-sm text-gray-600">
+        <div class="space-y-2 text-xs sm:text-sm text-gray-600">
           <div v-if="location.address">
             <p>{{ location.address }}</p>
           </div>
@@ -113,47 +113,47 @@
     </div>
 
     <!-- Create/Edit Modal -->
-    <div v-if="showCreateModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-        <h3 class="text-lg font-semibold mb-4">{{ editingLocation ? $t('locations.modals.edit') : $t('locations.modals.add') }} {{ $t('locations.location') }}</h3>
-        <div class="space-y-4">
+    <div v-if="showCreateModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-lg shadow-xl p-4 sm:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <h3 class="text-base sm:text-lg font-semibold mb-4">{{ editingLocation ? $t('locations.modals.edit') : $t('locations.modals.add') }} {{ $t('locations.location') }}</h3>
+        <div class="space-y-3 sm:space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('locations.code') }} *</label>
-            <input v-model="locationForm.code" type="text" class="w-full border-gray-300 rounded-lg" :placeholder="$t('locations.codePlaceholder')" required :disabled="loading">
+            <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('locations.code') }} *</label>
+            <input v-model="locationForm.code" type="text" class="w-full border-gray-300 rounded-lg text-sm" :placeholder="$t('locations.codePlaceholder')" required :disabled="loading">
             <p class="text-xs text-gray-500 mt-1">{{ $t('locations.codeHint') }}</p>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('locations.name') }} *</label>
-            <input v-model="locationForm.name" type="text" class="w-full border-gray-300 rounded-lg" required :disabled="loading">
+            <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('locations.name') }} *</label>
+            <input v-model="locationForm.name" type="text" class="w-full border-gray-300 rounded-lg text-sm" required :disabled="loading">
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('locations.type') }} *</label>
-            <select v-model="locationForm.type" class="w-full border-gray-300 rounded-lg" required :disabled="loading">
+            <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('locations.type') }} *</label>
+            <select v-model="locationForm.type" class="w-full border-gray-300 rounded-lg text-sm" required :disabled="loading">
               <option value="INVENTORY">{{ $t('locations.types.inventory') }}</option>
               <option value="OUTLET">{{ $t('locations.types.outlet') }}</option>
               <option value="FNB">{{ $t('locations.types.fnb') }}</option>
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('locations.address') }}</label>
-            <textarea v-model="locationForm.address" rows="3" class="w-full border-gray-300 rounded-lg" :disabled="loading"></textarea>
+            <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('locations.address') }}</label>
+            <textarea v-model="locationForm.address" rows="3" class="w-full border-gray-300 rounded-lg text-sm" :disabled="loading"></textarea>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('locations.phone') }}</label>
-            <input v-model="locationForm.phone" type="text" class="w-full border-gray-300 rounded-lg" :disabled="loading">
+            <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('locations.phone') }}</label>
+            <input v-model="locationForm.phone" type="text" class="w-full border-gray-300 rounded-lg text-sm" :disabled="loading">
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('locations.personInCharge') }}</label>
-            <input v-model="locationForm.person_in_charge" type="text" class="w-full border-gray-300 rounded-lg" :placeholder="$t('locations.personInChargePlaceholder')" :disabled="loading">
+            <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('locations.personInCharge') }}</label>
+            <input v-model="locationForm.person_in_charge" type="text" class="w-full border-gray-300 rounded-lg text-sm" :placeholder="$t('locations.personInChargePlaceholder')" :disabled="loading">
           </div>
           <div class="flex items-center">
             <input v-model="locationForm.is_active" type="checkbox" class="rounded border-gray-300 text-blue-600 mr-2" :disabled="loading">
-            <label class="text-sm font-medium text-gray-700">{{ $t('locations.status.active') }}</label>
+            <label class="text-xs sm:text-sm font-medium text-gray-700">{{ $t('locations.status.active') }}</label>
           </div>
         </div>
-        <div class="mt-6 flex justify-end space-x-3">
-          <button @click="closeModal" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50" :disabled="loading">{{ $t('common.cancel') }}</button>
-          <button @click="saveLocation" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50" :disabled="loading">
+        <div class="mt-4 sm:mt-6 flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
+          <button @click="closeModal" class="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm" :disabled="loading">{{ $t('common.cancel') }}</button>
+          <button @click="saveLocation" class="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm" :disabled="loading">
             {{ loading ? $t('common.saving') : $t('common.save') }}
           </button>
         </div>
