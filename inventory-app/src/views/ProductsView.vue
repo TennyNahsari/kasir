@@ -1,33 +1,33 @@
 <template>
   <div>
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
-      <h2 class="text-xl sm:text-2xl font-bold">{{ $t('products.title') }}</h2>
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-3 mb-3 sm:mb-4 lg:mb-6">
+      <h2 class="text-lg sm:text-xl lg:text-2xl font-bold">{{ $t('products.title') }}</h2>
       <div class="flex gap-2 w-full sm:w-auto">
-        <button @click="showCategoryModal = true" class="btn btn-secondary flex-1 sm:flex-none text-sm sm:text-base">
+        <button @click="showCategoryModal = true" class="btn btn-secondary flex-1 sm:flex-none text-xs sm:text-sm">
           + {{ $t('products.addCategory') }}
         </button>
-        <button @click="showAddModal = true" class="btn btn-primary flex-1 sm:flex-none text-sm sm:text-base">
+        <button @click="showAddModal = true" class="btn btn-primary flex-1 sm:flex-none text-xs sm:text-sm">
           + {{ $t('products.addProduct') }}
         </button>
       </div>
     </div>
 
     <!-- Search & Filter -->
-    <div class="card mb-4 sm:mb-6">
-      <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+    <div class="card mb-3 sm:mb-4 lg:mb-6">
+      <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 lg:gap-4">
         <input
           v-model="searchQuery"
           type="text"
-          class="input flex-1 text-sm sm:text-base"
+          class="input flex-1 text-sm"
           :placeholder="$t('products.searchPlaceholder')"
         >
-        <select v-model="filterCategory" class="input sm:w-48 text-sm sm:text-base">
+        <select v-model="filterCategory" class="input sm:w-40 lg:w-48 text-sm">
           <option value="">{{ $t('products.allCategories') }}</option>
           <option v-for="cat in categories" :key="cat.id" :value="cat.id">
             {{ cat.name }}
           </option>
         </select>
-        <button @click="loadProducts" class="btn btn-primary text-sm sm:text-base">
+        <button @click="loadProducts" class="btn btn-primary text-sm">
           {{ $t('common.search') }}
         </button>
       </div>
@@ -84,14 +84,14 @@
     </div>
 
     <!-- Mobile Card View -->
-    <div class="lg:hidden space-y-3">
-      <div v-for="product in products" :key="product.id" class="card p-3">
+    <div class="lg:hidden space-y-2 sm:space-y-3">
+      <div v-for="product in products" :key="product.id" class="card p-3 sm:p-4">
         <div class="flex justify-between items-start mb-2">
-          <div class="flex-1">
-            <h3 class="font-semibold text-sm">{{ product.name }}</h3>
+          <div class="flex-1 min-w-0">
+            <h3 class="font-semibold text-sm sm:text-base truncate">{{ product.name }}</h3>
             <p class="text-xs text-gray-600">{{ product.category?.name }}</p>
           </div>
-          <img v-if="product.image" :src="`http://localhost:8000/storage/${product.image}`" class="w-12 h-12 object-cover rounded ml-2">
+          <img v-if="product.image" :src="`http://localhost:8000/storage/${product.image}`" class="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded ml-2 flex-shrink-0">
         </div>
         
         <div class="grid grid-cols-2 gap-2 text-xs mb-3">
@@ -107,48 +107,48 @@
           </div>
           <div>
             <span class="text-gray-600">Modal:</span>
-            <span class="font-medium ml-1">{{ formatCurrency(product.cost_price) }}</span>
+            <span class="font-medium ml-1 text-xs">{{ formatCurrency(product.cost_price) }}</span>
           </div>
           <div>
             <span class="text-gray-600">Jual:</span>
-            <span class="font-semibold ml-1 text-primary-600">{{ formatCurrency(product.selling_price) }}</span>
+            <span class="font-semibold ml-1 text-primary-600 text-xs">{{ formatCurrency(product.selling_price) }}</span>
           </div>
         </div>
         
-        <div class="flex gap-2">
-          <button @click="editProduct(product)" class="flex-1 py-2 text-xs font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100">
+        <div class="flex gap-1.5 sm:gap-2">
+          <button @click="editProduct(product)" class="flex-1 py-1.5 sm:py-2 text-xs font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 active:scale-95 transition-transform">
             {{ $t('products.edit') }}
           </button>
-          <button @click="printBarcode(product)" class="flex-1 py-2 text-xs font-medium text-green-600 bg-green-50 rounded-lg hover:bg-green-100">
-            {{ $t('products.printLabel').replace('Print ', '') }}
+          <button @click="printBarcode(product)" class="flex-1 py-1.5 sm:py-2 text-xs font-medium text-green-600 bg-green-50 rounded-lg hover:bg-green-100 active:scale-95 transition-transform">
+            Label
           </button>
-          <button @click="deleteProduct(product)" class="flex-1 py-2 text-xs font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100">
+          <button @click="deleteProduct(product)" class="flex-1 py-1.5 sm:py-2 text-xs font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 active:scale-95 transition-transform">
             {{ $t('common.delete') }}
           </button>
         </div>
       </div>
       
-      <div v-if="products.length === 0" class="text-center py-8 text-gray-500 text-sm">
+      <div v-if="products.length === 0" class="text-center py-8 sm:py-12 text-gray-500 text-sm">
         {{ $t('products.noProducts') }}
       </div>
     </div>
   </div>
 
   <!-- Add/Edit Modal -->
-  <div v-if="showAddModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4 overflow-y-auto">
+  <div v-if="showAddModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
     <div class="card max-w-2xl w-full my-4 sm:my-8 max-h-[95vh] overflow-y-auto">
-      <h3 class="text-lg sm:text-xl font-bold mb-3 sm:mb-4">{{ editingProduct ? $t('products.modalEditTitle') : $t('products.modalAddTitle') }}</h3>
+      <h3 class="text-base sm:text-lg lg:text-xl font-bold mb-3 sm:mb-4">{{ editingProduct ? $t('products.modalEditTitle') : $t('products.modalAddTitle') }}</h3>
       
       <form @submit.prevent="saveProduct" class="space-y-3 sm:space-y-4">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <div>
             <label class="label text-xs sm:text-sm">{{ $t('products.name') }} *</label>
-            <input v-model="form.name" type="text" class="input text-sm sm:text-base" required>
+            <input v-model="form.name" type="text" class="input text-sm" required>
           </div>
           
           <div>
             <label class="label text-xs sm:text-sm">{{ $t('products.category') }} *</label>
-            <select v-model.number="form.category_id" class="input text-sm sm:text-base" required>
+            <select v-model.number="form.category_id" class="input text-sm" required>
               <option value="">{{ $t('products.category') }}</option>
               <option v-for="cat in categories" :key="cat.id" :value="cat.id">
                 {{ cat.name }}
@@ -158,65 +158,65 @@
 
           <div>
             <label class="label text-xs sm:text-sm">SKU</label>
-            <input v-model="form.sku" type="text" class="input text-sm sm:text-base" placeholder="Auto generate">
+            <input v-model="form.sku" type="text" class="input text-sm" placeholder="Auto generate">
           </div>
 
           <div>
             <label class="label text-xs sm:text-sm">Barcode</label>
-            <input v-model="form.barcode" type="text" class="input text-sm sm:text-base">
+            <input v-model="form.barcode" type="text" class="input text-sm">
           </div>
 
           <div>
             <label class="label text-xs sm:text-sm">{{ $t('products.costPrice') }} *</label>
-            <input v-model.number="form.cost_price" type="number" class="input text-sm sm:text-base" required min="0">
+            <input v-model.number="form.cost_price" type="number" class="input text-sm" required min="0">
           </div>
 
           <div>
             <label class="label text-xs sm:text-sm">{{ $t('products.sellingPrice') }} *</label>
-            <input v-model.number="form.selling_price" type="number" class="input text-sm sm:text-base" required min="0">
+            <input v-model.number="form.selling_price" type="number" class="input text-sm" required min="0">
           </div>
 
           <div>
             <label class="label text-xs sm:text-sm">{{ $t('products.stock') }}</label>
-            <input v-model.number="form.stock" type="number" class="input text-sm sm:text-base" min="0">
+            <input v-model.number="form.stock" type="number" class="input text-sm" min="0">
           </div>
 
           <div>
-            <label class="label">{{ $t('products.minStock') }}</label>
-            <input v-model.number="form.min_stock" type="number" class="input" min="0">
+            <label class="label text-xs sm:text-sm">{{ $t('products.minStock') }}</label>
+            <input v-model.number="form.min_stock" type="number" class="input text-sm" min="0">
           </div>
         </div>
 
         <div>
-          <label class="label">{{ $t('products.image') }}</label>
+          <label class="label text-xs sm:text-sm">{{ $t('products.image') }}</label>
           <input 
             type="file" 
             @change="handleImageUpload" 
             accept="image/*" 
-            class="input"
+            class="input text-sm"
           >
           <div v-if="imagePreview" class="mt-2">
-            <img :src="imagePreview" alt="Preview" class="w-32 h-32 object-cover rounded">
+            <img :src="imagePreview" alt="Preview" class="w-24 h-24 sm:w-32 sm:h-32 object-cover rounded">
           </div>
         </div>
 
         <div>
           <label class="flex items-center">
             <input v-model="form.track_stock" type="checkbox" class="mr-2">
-            <span class="text-sm">Track Stok (uncheck untuk produk F&B)</span>
+            <span class="text-xs sm:text-sm">Track Stok (uncheck untuk produk F&B)</span>
           </label>
         </div>
 
         <div>
-          <label class="label">{{ $t('products.description') }}</label>
-          <textarea v-model="form.description" class="input" rows="3"></textarea>
+          <label class="label text-xs sm:text-sm">{{ $t('products.description') }}</label>
+          <textarea v-model="form.description" class="input text-sm" rows="3"></textarea>
         </div>
 
-        <div class="flex gap-3">
-          <button type="submit" class="btn btn-primary flex-1">
+        <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
+          <button type="submit" class="btn btn-primary flex-1 text-sm">
             {{ $t('common.save') }}
           </button>
-          <button type="button" @click="closeModal" class="btn btn-secondary flex-1">
+          <button type="button" @click="closeModal" class="btn btn-secondary flex-1 text-sm">
             {{ $t('common.cancel') }}
           </button>
         </div>

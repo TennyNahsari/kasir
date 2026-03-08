@@ -1,21 +1,21 @@
 <template>
-  <div class="p-6">
-    <div class="mb-6 flex justify-between items-center">
+  <div class="p-3 sm:p-4 lg:p-6">
+    <div class="mb-3 sm:mb-4 lg:mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
       <div>
-        <h1 class="text-3xl font-bold text-gray-800">{{ $t('transfers.title') }}</h1>
-        <p class="text-gray-600">{{ $t('transfers.subtitle') }}</p>
+        <h1 class="text-lg sm:text-2xl lg:text-3xl font-bold text-gray-800">{{ $t('transfers.title') }}</h1>
+        <p class="text-xs sm:text-sm text-gray-600">{{ $t('transfers.subtitle') }}</p>
       </div>
-      <button @click="showCreateModal = true" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+      <button @click="showCreateModal = true" class="bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-blue-700 text-xs sm:text-sm w-full sm:w-auto">
         {{ $t('transfers.createTransfer') }}
       </button>
     </div>
 
     <!-- Filters -->
-    <div class="bg-white rounded-lg shadow p-4 mb-6">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="bg-white rounded-lg shadow p-3 sm:p-4 mb-3 sm:mb-4 lg:mb-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('transfers.statusLabel') }}</label>
-          <select v-model="filters.status" @change="loadTransfers" class="w-full border-gray-300 rounded-lg">
+          <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('transfers.statusLabel') }}</label>
+          <select v-model="filters.status" @change="loadTransfers" class="w-full border-gray-300 rounded-lg text-sm">
             <option value="">{{ $t('transfers.allStatus') }}</option>
             <option value="DRAFT">{{ $t('transfers.draft') }}</option>
             <option value="PENDING">{{ $t('transfers.pending') }}</option>
@@ -25,28 +25,28 @@
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('transfers.fromLocation') }}</label>
-          <select v-model="filters.from_location" @change="loadTransfers" class="w-full border-gray-300 rounded-lg">
+          <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('transfers.fromLocation') }}</label>
+          <select v-model="filters.from_location" @change="loadTransfers" class="w-full border-gray-300 rounded-lg text-sm">
             <option value="">{{ $t('transfers.allLocations') }}</option>
             <option v-for="loc in locations" :key="loc.id" :value="loc.id">{{ loc.name }}</option>
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('transfers.toLocation') }}</label>
-          <select v-model="filters.to_location" @change="loadTransfers" class="w-full border-gray-300 rounded-lg">
+          <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('transfers.toLocation') }}</label>
+          <select v-model="filters.to_location" @change="loadTransfers" class="w-full border-gray-300 rounded-lg text-sm">
             <option value="">{{ $t('transfers.allLocations') }}</option>
             <option v-for="loc in locations" :key="loc.id" :value="loc.id">{{ loc.name }}</option>
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('transfers.searchLabel') }}</label>
-          <input v-model="filters.search" @input="loadTransfers" type="text" :placeholder="$t('transfers.searchPlaceholder')" class="w-full border-gray-300 rounded-lg">
+          <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('transfers.searchLabel') }}</label>
+          <input v-model="filters.search" @input="loadTransfers" type="text" :placeholder="$t('transfers.searchPlaceholder')" class="w-full border-gray-300 rounded-lg text-sm">
         </div>
       </div>
     </div>
 
-    <!-- Transfers Table -->
-    <div class="bg-white rounded-lg shadow overflow-hidden">
+    <!-- Transfers Table (Desktop) -->
+    <div class="hidden lg:block bg-white rounded-lg shadow overflow-hidden">
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
@@ -91,83 +91,128 @@
             </tr>
           </tbody>
         </table>
-      </div>      <Pagination :pagination="pagination" @page-change="changePage" />    </div>
+      </div>
+      <Pagination :pagination="pagination" @page-change="changePage" />
+    </div>
+
+    <!-- Mobile Card View -->
+    <div class="lg:hidden space-y-2 sm:space-y-3">
+      <div v-for="transfer in transfers" :key="transfer?.id || Math.random()" class="bg-white rounded-lg shadow p-3 sm:p-4">
+        <div class="flex justify-between items-start mb-2">
+          <div class="flex-1 min-w-0">
+            <h3 class="font-semibold text-sm sm:text-base text-gray-900">{{ transfer?.transfer_no || '-' }}</h3>
+            <p class="text-xs text-gray-500">{{ transfer?.requested_by?.name || '-' }}</p>
+          </div>
+          <span :class="getStatusClass(transfer?.status || 'DRAFT')" class="px-2 py-1 text-xs font-semibold rounded-full flex-shrink-0 ml-2">
+            {{ transfer?.status || 'DRAFT' }}
+          </span>
+        </div>
+        
+        <div class="space-y-1.5 mb-3 text-xs">
+          <div class="flex items-center">
+            <span class="text-gray-600 w-12 flex-shrink-0">From:</span>
+            <span class="font-medium text-gray-900 truncate">{{ transfer?.from_location?.name || '-' }}</span>
+          </div>
+          <div class="flex items-center">
+            <span class="text-gray-600 w-12 flex-shrink-0">To:</span>
+            <span class="font-medium text-gray-900 truncate">{{ transfer?.to_location?.name || '-' }}</span>
+          </div>
+          <div class="flex items-center">
+            <span class="text-gray-600 w-12 flex-shrink-0">Date:</span>
+            <span class="text-gray-900">{{ transfer?.transfer_date ? formatDate(transfer.transfer_date) : '-' }}</span>
+          </div>
+          <div class="flex items-center">
+            <span class="text-gray-600 w-12 flex-shrink-0">Items:</span>
+            <span class="text-gray-900">{{ $t('transfers.itemsCount', { count: transfer?.items?.length || 0 }) }}</span>
+          </div>
+        </div>
+        
+        <button @click="viewTransfer(transfer)" class="w-full py-2 text-xs font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 active:scale-95 transition-transform">
+          {{ $t('transfers.view') }}
+        </button>
+      </div>
+      
+      <div v-if="transfers.length === 0" class="bg-white rounded-lg shadow p-6 sm:p-8 text-center text-gray-500 text-sm">
+        {{ $t('transfers.noTransfers') }}
+      </div>
+
+      <Pagination :pagination="pagination" @page-change="changePage" />    </div>
 
     <!-- Create Transfer Modal -->
-    <div v-if="showCreateModal" @click="closeCreateModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div v-if="showCreateModal" @click="closeCreateModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
       <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col" @click.stop>
-        <div class="flex justify-between items-center p-6 border-b">
-          <h3 class="text-lg font-semibold">{{ $t('transfers.modalCreateTitle') }}</h3>
+        <div class="flex justify-between items-center p-4 sm:p-6 border-b">
+          <h3 class="text-base sm:text-lg font-semibold">{{ $t('transfers.modalCreateTitle') }}</h3>
           <button @click.stop="closeCreateModal" type="button" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
         </div>
-        <div class="flex-1 overflow-y-auto p-6">
-          <div class="space-y-4">
-            <div class="grid grid-cols-2 gap-4">
+        <div class="flex-1 overflow-y-auto p-4 sm:p-6">
+          <div class="space-y-3 sm:space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('transfers.fromLocationRequired') }}</label>
-                <select v-model="createForm.from_location_id" class="w-full border-gray-300 rounded-lg" required>
+                <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('transfers.fromLocationRequired') }}</label>
+                <select v-model="createForm.from_location_id" class="w-full border-gray-300 rounded-lg text-sm" required>
                   <option value="">{{ $t('transfers.selectLocation') }}</option>
                   <option v-for="loc in locations" :key="loc.id" :value="loc.id">{{ loc.name }}</option>
                 </select>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('transfers.toLocationRequired') }}</label>
-                <select v-model="createForm.to_location_id" class="w-full border-gray-300 rounded-lg" required>
+                <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('transfers.toLocationRequired') }}</label>
+                <select v-model="createForm.to_location_id" class="w-full border-gray-300 rounded-lg text-sm" required>
                   <option value="">{{ $t('transfers.selectLocation') }}</option>
                   <option v-for="loc in locations" :key="loc.id" :value="loc.id" :disabled="loc.id === createForm.from_location_id">{{ loc.name }}</option>
                 </select>
               </div>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('transfers.transferDate') }}</label>
-              <input v-model="createForm.transfer_date" type="date" class="w-full border-gray-300 rounded-lg" required>
+              <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('transfers.transferDate') }}</label>
+              <input v-model="createForm.transfer_date" type="date" class="w-full border-gray-300 rounded-lg text-sm" required>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('transfers.notesLabel') }}</label>
-              <textarea v-model="createForm.notes" rows="2" class="w-full border-gray-300 rounded-lg"></textarea>
+              <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('transfers.notesLabel') }}</label>
+              <textarea v-model="createForm.notes" rows="2" class="w-full border-gray-300 rounded-lg text-sm"></textarea>
             </div>
 
             <!-- Items -->
-            <div class="border-t pt-4">
-              <div class="flex justify-between items-center mb-3">
-                <h4 class="font-medium">{{ $t('transfers.transferItems') }}</h4>
+            <div class="border-t pt-3 sm:pt-4">
+              <div class="flex justify-between items-center mb-2 sm:mb-3">
+                <h4 class="font-medium text-sm sm:text-base">{{ $t('transfers.transferItems') }}</h4>
                 <button 
                   @click.stop.prevent="addItem" 
                   type="button" 
-                  class="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                  class="px-2 sm:px-3 py-1 bg-blue-600 text-white text-xs sm:text-sm rounded hover:bg-blue-700"
                 >
                   {{ $t('transfers.addItem') }}
                 </button>
               </div>
-              <div v-if="createForm.items.length === 0" class="text-center py-4 text-gray-500 text-sm">
+              <div v-if="createForm.items.length === 0" class="text-center py-3 sm:py-4 text-gray-500 text-xs sm:text-sm">
                 {{ $t('transfers.noItemsAdded') }}
               </div>
-              <div v-for="(item, index) in createForm.items" :key="index" class="grid grid-cols-12 gap-2 mb-3 relative">
-                <div class="col-span-6 relative">
-                  <input v-model="item.product_search" @input="searchProductsForItem(index)" type="text" :placeholder="$t('transfers.searchProductPlaceholder')" class="w-full border-gray-300 rounded-lg text-sm">
-                  <div v-if="item.searchResults && item.searchResults.length > 0" class="absolute z-10 mt-1 left-0 right-0 bg-white border rounded-lg shadow-lg max-h-40 overflow-y-auto">
-                    <div v-for="product in item.searchResults.filter(p => p && p.id)" :key="product.id" @click="selectProductForItem(index, product)" class="p-2 hover:bg-gray-100 cursor-pointer text-sm">
+              <div v-for="(item, index) in createForm.items" :key="index" class="flex flex-col sm:grid sm:grid-cols-12 gap-2 mb-2 sm:mb-3 p-2 sm:p-0 border sm:border-0 rounded sm:rounded-none relative">
+                <div class="sm:col-span-6">
+                  <input v-model="item.product_search" @input="searchProductsForItem(index)" type="text" :placeholder="$t('transfers.searchProductPlaceholder')" class="w-full border-gray-300 rounded-lg text-xs sm:text-sm">
+                  <div v-if="item.searchResults && item.searchResults.length > 0" class="absolute z-10 mt-1 left-0 right-0 sm:left-auto sm:right-auto bg-white border rounded-lg shadow-lg max-h-32 sm:max-h-40 overflow-y-auto">
+                    <div v-for="product in item.searchResults.filter(p => p && p.id)" :key="product.id" @click="selectProductForItem(index, product)" class="p-2 hover:bg-gray-100 cursor-pointer text-xs">
                       {{ product.name }} ({{ product.sku }})
                     </div>
                   </div>
                 </div>
-                <div class="col-span-2">
-                  <input v-model.number="item.quantity" type="number" step="0.01" min="0.01" :placeholder="$t('transfers.qtyPlaceholder')" class="w-full border-gray-300 rounded-lg text-sm">
+                <div class="sm:col-span-2">
+                  <input v-model.number="item.quantity" type="number" step="0.01" min="0.01" :placeholder="$t('transfers.qtyPlaceholder')" class="w-full border-gray-300 rounded-lg text-xs sm:text-sm">
                 </div>
-                <div class="col-span-3">
-                  <input v-model="item.notes" type="text" :placeholder="$t('transfers.notesOptional')" class="w-full border-gray-300 rounded-lg text-sm">
+                <div class="sm:col-span-3">
+                  <input v-model="item.notes" type="text" :placeholder="$t('transfers.notesOptional')" class="w-full border-gray-300 rounded-lg text-xs sm:text-sm">
                 </div>
-                <div class="col-span-1 flex items-center justify-center">
-                  <button @click.stop="removeItem(index)" type="button" class="text-red-600 hover:text-red-700 text-xl font-bold cursor-pointer">×</button>
+                <div class="sm:col-span-1 flex items-center justify-end sm:justify-center">
+                  <button @click.stop="removeItem(index)" type="button" class="text-red-600 hover:text-red-700 text-xl font-bold cursor-pointer px-2">×</button>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <div class="border-t p-6 flex justify-end space-x-3">
-          <button @click.stop="closeCreateModal" type="button" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">{{ $t('common.cancel') }}</button>
-          <button @click.stop="submitTransfer(false)" type="button" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">{{ $t('transfers.saveDraft') }}</button>
-          <button @click.stop="submitTransfer(true)" type="button" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">{{ $t('transfers.createSubmit') }}</button>
+        <div class="border-t p-4 sm:p-6 flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
+          <button @click.stop="closeCreateModal" type="button" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">{{ $t('common.cancel') }}</button>
+          <button @click.stop="submitTransfer(false)" type="button" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-sm">{{ $t('transfers.saveDraft') }}</button>
+          <button @click.stop="submitTransfer(true)" type="button" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">{{ $t('transfers.createSubmit') }}</button>
         </div>
       </div>
     </div>

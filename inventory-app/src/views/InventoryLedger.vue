@@ -1,32 +1,32 @@
 <template>
-  <div class="p-6">
-    <div class="mb-6">
-      <h1 class="text-3xl font-bold text-gray-800">{{ $t('ledger.title') }}</h1>
-      <p class="text-gray-600">{{ $t('ledger.subtitle') }}</p>
+  <div class="p-3 sm:p-4 lg:p-6">
+    <div class="mb-3 sm:mb-4 lg:mb-6">
+      <h1 class="text-lg sm:text-2xl lg:text-3xl font-bold text-gray-800">{{ $t('ledger.title') }}</h1>
+      <p class="text-xs sm:text-sm text-gray-600">{{ $t('ledger.subtitle') }}</p>
     </div>
 
     <!-- Filters -->
-    <div class="bg-white rounded-lg shadow p-4 mb-6">
-      <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ledger.productLabel') }}</label>
-          <input v-model="filters.product_search" @input="searchProducts" type="text" :placeholder="$t('ledger.searchProductPlaceholder')" class="w-full border-gray-300 rounded-lg">
-          <div v-if="productSearchResults.length > 0" class="absolute z-10 mt-1 w-64 bg-white border rounded-lg shadow-lg max-h-40 overflow-y-auto">
-            <div v-for="product in productSearchResults" :key="product.id" @click="selectProduct(product)" class="p-2 hover:bg-gray-100 cursor-pointer text-sm">
+    <div class="bg-white rounded-lg shadow p-3 sm:p-4 mb-3 sm:mb-4 lg:mb-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+        <div class="relative">
+          <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('ledger.productLabel') }}</label>
+          <input v-model="filters.product_search" @input="searchProducts" type="text" :placeholder="$t('ledger.searchProductPlaceholder')" class="w-full border-gray-300 rounded-lg text-sm">
+          <div v-if="productSearchResults.length > 0" class="absolute z-10 mt-1 w-full bg-white border rounded-lg shadow-lg max-h-32 sm:max-h-40 overflow-y-auto">
+            <div v-for="product in productSearchResults" :key="product.id" @click="selectProduct(product)" class="p-2 hover:bg-gray-100 cursor-pointer text-xs sm:text-sm">
               {{ product.name }} ({{ product.sku }})
             </div>
           </div>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ledger.locationLabel') }}</label>
-          <select v-model="filters.location_id" @change="loadLedger" class="w-full border-gray-300 rounded-lg">
+          <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('ledger.locationLabel') }}</label>
+          <select v-model="filters.location_id" @change="loadLedger" class="w-full border-gray-300 rounded-lg text-sm">
             <option value="">{{ $t('ledger.allLocations') }}</option>
             <option v-for="loc in locations" :key="loc.id" :value="loc.id">{{ loc.name }}</option>
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ledger.movementTypeLabel') }}</label>
-          <select v-model="filters.movement_type" @change="loadLedger" class="w-full border-gray-300 rounded-lg">
+          <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('ledger.movementTypeLabel') }}</label>
+          <select v-model="filters.movement_type" @change="loadLedger" class="w-full border-gray-300 rounded-lg text-sm">
             <option value="">{{ $t('ledger.allTypes') }}</option>
             <option value="STOCK_IN">{{ $t('ledger.stockIn') }}</option>
             <option value="STOCK_OUT">{{ $t('ledger.stockOut') }}</option>
@@ -38,18 +38,18 @@
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ledger.fromDateLabel') }}</label>
-          <input v-model="filters.from_date" @change="loadLedger" type="date" class="w-full border-gray-300 rounded-lg">
+          <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('ledger.fromDateLabel') }}</label>
+          <input v-model="filters.from_date" @change="loadLedger" type="date" class="w-full border-gray-300 rounded-lg text-sm">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('ledger.toDateLabel') }}</label>
-          <input v-model="filters.to_date" @change="loadLedger" type="date" class="w-full border-gray-300 rounded-lg">
+          <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('ledger.toDateLabel') }}</label>
+          <input v-model="filters.to_date" @change="loadLedger" type="date" class="w-full border-gray-300 rounded-lg text-sm">
         </div>
       </div>
     </div>
 
-    <!-- Ledger Table -->
-    <div class="bg-white rounded-lg shadow overflow-hidden">
+    <!-- Ledger Table (Desktop) -->
+    <div class="hidden lg:block bg-white rounded-lg shadow overflow-hidden">
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
@@ -104,6 +104,56 @@
           </tbody>
         </table>
       </div>
+      <Pagination :pagination="pagination" @page-change="changePage" />
+    </div>
+
+    <!-- Mobile Card View -->
+    <div class="lg:hidden space-y-2 sm:space-y-3">
+      <div v-for="entry in ledger" :key="entry.id" class="bg-white rounded-lg shadow p-3 sm:p-4">
+        <div class="flex justify-between items-start mb-2">
+          <div class="flex-1 min-w-0">
+            <h3 class="font-semibold text-sm sm:text-base text-gray-900 truncate">{{ entry.product?.name || '-' }}</h3>
+            <p class="text-xs text-gray-500">{{ entry.product?.sku || '-' }}</p>
+          </div>
+          <span :class="getMovementTypeClass(entry.movement_type)" class="px-2 py-1 text-xs font-semibold rounded-full flex-shrink-0 ml-2">
+            {{ formatMovementType(entry.movement_type) }}
+          </span>
+        </div>
+        
+        <div class="space-y-1 mb-3 text-xs">
+          <div class="flex justify-between">
+            <span class="text-gray-600">{{ $t('ledger.dateTime') }}:</span>
+            <span class="text-gray-900">{{ formatDateTime(entry.created_at) }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">{{ $t('ledger.location') }}:</span>
+            <span class="text-gray-900 truncate ml-2">{{ entry.location?.name || '-' }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">{{ $t('ledger.quantity') }}:</span>
+            <span :class="entry.quantity >= 0 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'">
+              {{ entry.quantity >= 0 ? '+' : '' }}{{ entry.quantity }}
+            </span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">{{ $t('ledger.balance') }}:</span>
+            <span class="font-semibold text-gray-900">{{ entry.balance_after }}</span>
+          </div>
+          <div v-if="entry.reference_type || entry.reference_no" class="flex justify-between">
+            <span class="text-gray-600">{{ $t('ledger.reference') }}:</span>
+            <span class="text-gray-900 truncate ml-2">{{ entry.reference_type || '-' }} {{ entry.reference_no ? '#' + entry.reference_no : '' }}</span>
+          </div>
+          <div v-if="entry.notes" class="pt-1">
+            <span class="text-gray-600">{{ $t('ledger.notes') }}:</span>
+            <p class="text-gray-900 text-xs mt-0.5">{{ entry.notes }}</p>
+          </div>
+        </div>
+      </div>
+      
+      <div v-if="ledger.length === 0" class="bg-white rounded-lg shadow p-6 sm:p-8 text-center text-gray-500 text-sm">
+        {{ $t('ledger.noEntries') }}
+      </div>
+
       <Pagination :pagination="pagination" @page-change="changePage" />
     </div>
   </div>

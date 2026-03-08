@@ -170,82 +170,109 @@
     </aside>
 
     <!-- Mobile Menu Overlay -->
-    <div 
-      v-if="showMobileMenu" 
-      class="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
-      @click="showMobileMenu = false"
+    <transition
+      enter-active-class="transition-opacity duration-300"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition-opacity duration-300"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
     >
-      <div class="bg-white w-64 h-full" @click.stop>
-        <div class="p-4 border-b">
-          <div class="flex items-center justify-between">
-            <span class="font-semibold text-gray-900">{{ $t('nav.menu') }}</span>
-            <button @click="showMobileMenu = false" class="p-2">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
-        <nav class="p-2">
-          <template v-for="item in navigation" :key="item.name">
-            <div v-if="item.isHeader" class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase">
-              {{ item.name }}
+      <div 
+        v-if="showMobileMenu" 
+        class="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+        @click="showMobileMenu = false"
+      >
+        <transition
+          enter-active-class="transition-transform duration-300"
+          enter-from-class="-translate-x-full"
+          enter-to-class="translate-x-0"
+          leave-active-class="transition-transform duration-300"
+          leave-from-class="translate-x-0"
+          leave-to-class="-translate-x-full"
+        >
+          <div v-if="showMobileMenu" class="bg-white w-64 sm:w-72 h-full overflow-y-auto" @click.stop>
+            <div class="p-4 border-b sticky top-0 bg-white z-10">
+              <div class="flex items-center justify-between">
+                <h2 class="text-lg font-bold text-blue-600">{{ $t('header.inventoryTitle') }}</h2>
+                <button @click="showMobileMenu = false" class="p-2 hover:bg-gray-100 rounded-lg">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
-            <router-link
-              v-else
-              :to="item.path"
-              @click="showMobileMenu = false"
-              class="block px-4 py-3 text-sm font-medium rounded-lg transition-colors mb-1"
-              :class="$route.path === item.path 
-                ? 'bg-blue-50 text-blue-600' 
-                : 'text-gray-700 hover:bg-gray-100'"
-            >
-              {{ item.name }}
-            </router-link>
-          </template>
-        </nav>
+            <nav class="p-3">
+              <template v-for="item in navigation" :key="item.name">
+                <div v-if="item.isHeader" class="px-3 py-2 mt-4 first:mt-0 text-xs font-semibold text-gray-500 uppercase">
+                  {{ item.name }}
+                </div>
+                <router-link
+                  v-else
+                  :to="item.path"
+                  @click="showMobileMenu = false"
+                  class="block px-4 py-3 text-sm font-medium rounded-lg transition-colors mb-1"
+                  :class="$route.path === item.path 
+                    ? 'bg-blue-50 text-blue-600' 
+                    : 'text-gray-700 hover:bg-gray-100'"
+                >
+                  {{ item.name }}
+                </router-link>
+              </template>
+              
+              <!-- User info in mobile menu -->
+              <div class="mt-6 pt-4 border-t px-3">
+                <div class="text-sm text-gray-700 font-medium mb-1">{{ authStore.user?.name }}</div>
+                <div class="text-xs text-gray-500 mb-3">({{ authStore.user?.role }})</div>
+                <button @click="handleLogout" class="w-full bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 text-sm">
+                  {{ $t('nav.logout') }}
+                </button>
+              </div>
+            </nav>
+          </div>
+        </transition>
       </div>
-    </div>
+    </transition>
 
     <!-- Main Content Area -->
     <div class="flex-1 flex flex-col overflow-hidden">
       <!-- Header -->
-      <header class="h-16 bg-white border-b flex items-center justify-between px-4 lg:px-6">
-        <div class="flex items-center gap-4">
-          <button @click="showMobileMenu = !showMobileMenu" class="lg:hidden p-2 hover:bg-gray-100 rounded-lg">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <header class="h-14 sm:h-16 bg-white border-b flex items-center justify-between px-3 sm:px-4 lg:px-6">
+        <div class="flex items-center gap-2 sm:gap-4">
+          <button @click="showMobileMenu = !showMobileMenu" class="lg:hidden p-2 hover:bg-gray-100 rounded-lg active:scale-95 transition-transform">
+            <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <h1 class="text-xl font-bold text-blue-600 lg:hidden">{{ $t('header.inventoryTitle') }}</h1>
+          <h1 class="text-base sm:text-xl font-bold text-blue-600 lg:hidden">{{ $t('header.inventoryTitle') }}</h1>
         </div>
         
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2 sm:gap-4">
           <!-- Language Switcher -->
           <div class="relative">
             <button
               @click="showLangDropdown = !showLangDropdown"
-              class="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              class="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
             >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
               </svg>
               <span class="hidden sm:inline">{{ currentLanguage }}</span>
             </button>
             <div
               v-show="showLangDropdown"
-              class="absolute right-0 mt-2 w-32 bg-white rounded-lg shadow-lg border z-50"
+              class="absolute right-0 mt-2 w-28 sm:w-32 bg-white rounded-lg shadow-lg border z-50"
             >
               <button
                 @click="changeLanguage('id')"
-                class="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 first:rounded-t-lg"
+                class="block w-full text-left px-3 sm:px-4 py-2 text-xs sm:text-sm hover:bg-gray-100 first:rounded-t-lg"
                 :class="locale === 'id' ? 'bg-blue-50 text-blue-600' : 'text-gray-700'"
               >
                 Indonesia
               </button>
               <button
                 @click="changeLanguage('en')"
-                class="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 last:rounded-b-lg"
+                class="block w-full text-left px-3 sm:px-4 py-2 text-xs sm:text-sm hover:bg-gray-100 last:rounded-b-lg"
                 :class="locale === 'en' ? 'bg-blue-50 text-blue-600' : 'text-gray-700'"
               >
                 English
@@ -256,14 +283,11 @@
           <span class="hidden lg:inline text-sm text-gray-600">
             {{ authStore.user?.name }} <span class="text-gray-500">({{ authStore.user?.role }})</span>
           </span>
-          <button @click="handleLogout" class="lg:hidden bg-gray-600 text-white px-3 py-1.5 rounded-lg hover:bg-gray-700 text-sm">
-            {{ $t('nav.logout') }}
-          </button>
         </div>
       </header>
 
       <!-- Main Content -->
-      <main class="flex-1 overflow-y-auto p-4 lg:p-6">
+      <main class="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6">
         <router-view />
       </main>
     </div>

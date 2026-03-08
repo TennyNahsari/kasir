@@ -1,22 +1,22 @@
 <template>
-  <div class="space-y-6">
-    <div class="flex justify-between items-center">
-      <h1 class="text-2xl font-bold text-gray-900">{{ $t('users.title') }}</h1>
-      <button @click="openAddModal" class="btn btn-primary">
+  <div class="space-y-4 sm:space-y-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
+      <h1 class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{{ $t('users.title') }}</h1>
+      <button @click="openAddModal" class="btn btn-primary w-full sm:w-auto text-sm">
         + {{ $t('users.addUser') }}
       </button>
     </div>
 
     <!-- Filters -->
     <div class="card">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div>
-          <label class="label">{{ $t('users.searchLabel') }}</label>
-          <input v-model="filters.search" @input="loadUsers" type="text" class="input" :placeholder="$t('users.searchPlaceholder')">
+          <label class="label text-xs sm:text-sm">{{ $t('users.searchLabel') }}</label>
+          <input v-model="filters.search" @input="loadUsers" type="text" class="input text-sm" :placeholder="$t('users.searchPlaceholder')">
         </div>
         <div>
-          <label class="label">{{ $t('users.roleLabel') }}</label>
-          <select v-model="filters.role" @change="loadUsers" class="input">
+          <label class="label text-xs sm:text-sm">{{ $t('users.roleLabel') }}</label>
+          <select v-model="filters.role" @change="loadUsers" class="input text-sm">
             <option value="">{{ $t('users.allRoles') }}</option>
             <option value="owner">{{ $t('users.owner') }}</option>
             <option value="inventory">{{ $t('users.inventory') }}</option>
@@ -25,8 +25,8 @@
           </select>
         </div>
         <div>
-          <label class="label">{{ $t('users.outletLabel') }}</label>
-          <select v-model="filters.outlet_id" @change="loadUsers" class="input">
+          <label class="label text-xs sm:text-sm">{{ $t('users.outletLabel') }}</label>
+          <select v-model="filters.outlet_id" @change="loadUsers" class="input text-sm">
             <option value="">{{ $t('users.allOutlets') }}</option>
             <option v-for="outlet in outlets" :key="outlet.outlet_id" :value="outlet.outlet_id">
               {{ outlet.location_name }}
@@ -34,8 +34,8 @@
           </select>
         </div>
         <div>
-          <label class="label">{{ $t('users.statusLabel') }}</label>
-          <select v-model="filters.is_active" @change="loadUsers" class="input">
+          <label class="label text-xs sm:text-sm">{{ $t('users.statusLabel') }}</label>
+          <select v-model="filters.is_active" @change="loadUsers" class="input text-sm">
             <option value="">{{ $t('users.allStatus') }}</option>
             <option value="1">{{ $t('users.active') }}</option>
             <option value="0">{{ $t('users.inactive') }}</option>
@@ -44,8 +44,8 @@
       </div>
     </div>
 
-    <!-- Users Table -->
-    <div class="card overflow-hidden">
+    <!-- Users Table (Desktop) -->
+    <div class="hidden lg:block card overflow-hidden">
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
@@ -106,30 +106,84 @@
       />
     </div>
 
+    <!-- Mobile Card View -->
+    <div class="lg:hidden space-y-3">
+      <div v-for="user in users" :key="user.id" class="card p-3 sm:p-4">
+        <div class="flex justify-between items-start mb-2">
+          <div class="flex-1 min-w-0">
+            <h3 class="font-semibold text-sm sm:text-base text-gray-900 truncate">{{ user.name }}</h3>
+            <p class="text-xs sm:text-sm text-gray-500 truncate">{{ user.email }}</p>
+          </div>
+          <span :class="user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'" 
+            class="px-2 py-1 text-xs font-semibold rounded-full flex-shrink-0 ml-2">
+            {{ user.is_active ? $t('users.active') : $t('users.inactive') }}
+          </span>
+        </div>
+        
+        <div class="space-y-1.5 mb-3 text-xs sm:text-sm">
+          <div class="flex items-center">
+            <span class="text-gray-600 w-16">Role:</span>
+            <span class="px-2 py-0.5 text-xs font-semibold rounded-full"
+              :class="{
+                'bg-purple-100 text-purple-800': user.role === 'owner',
+                'bg-indigo-100 text-indigo-800': user.role === 'inventory',
+                'bg-blue-100 text-blue-800': user.role === 'supervisor',
+                'bg-gray-100 text-gray-800': user.role === 'staff'
+              }">
+              {{ user.role }}
+            </span>
+          </div>
+          <div class="flex">
+            <span class="text-gray-600 w-16 flex-shrink-0">Outlet:</span>
+            <span class="font-medium text-gray-900 truncate">{{ user.location?.name || user.outlet?.location?.name || '-' }}</span>
+          </div>
+        </div>
+        
+        <div class="flex gap-2">
+          <button @click="openEditModal(user)" class="flex-1 py-1.5 sm:py-2 text-xs font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 active:scale-95 transition-transform">
+            {{ $t('common.edit') }}
+          </button>
+          <button @click="deleteUser(user)" class="flex-1 py-1.5 sm:py-2 text-xs font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 active:scale-95 transition-transform">
+            {{ $t('common.delete') }}
+          </button>
+        </div>
+      </div>
+
+      <Pagination
+        v-if="pagination.last_page > 1"
+        :current-page="pagination.current_page"
+        :last-page="pagination.last_page"
+        :total="pagination.total"
+        :from="pagination.from"
+        :to="pagination.to"
+        @page-changed="loadUsers"
+      />
+    </div>
+
     <!-- Add/Edit Modal -->
-    <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-lg max-w-md w-full p-6">
-        <h2 class="text-xl font-bold mb-4">{{ editingUser ? $t('users.modalEditTitle') : $t('users.modalAddTitle') }}</h2>
+    <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
+      <div class="bg-white rounded-lg max-w-md w-full p-4 sm:p-6 max-h-[95vh] overflow-y-auto">
+        <h2 class="text-base sm:text-lg lg:text-xl font-bold mb-3 sm:mb-4">{{ editingUser ? $t('users.modalEditTitle') : $t('users.modalAddTitle') }}</h2>
 
-        <form @submit.prevent="saveUser" class="space-y-4">
+        <form @submit.prevent="saveUser" class="space-y-3 sm:space-y-4">
           <div>
-            <label class="label">{{ $t('users.name') }} *</label>
-            <input v-model="form.name" type="text" class="input" required>
+            <label class="label text-xs sm:text-sm">{{ $t('users.name') }} *</label>
+            <input v-model="form.name" type="text" class="input text-sm" required>
           </div>
 
           <div>
-            <label class="label">{{ $t('users.email') }} *</label>
-            <input v-model="form.email" type="email" class="input" required>
+            <label class="label text-xs sm:text-sm">{{ $t('users.email') }} *</label>
+            <input v-model="form.email" type="email" class="input text-sm" required>
           </div>
 
           <div>
-            <label class="label">{{ $t('users.password') }} {{ editingUser ? $t('users.passwordHintEdit') : $t('users.passwordRequired') }}</label>
-            <input v-model="form.password" type="password" class="input" :required="!editingUser" minlength="6">
+            <label class="label text-xs sm:text-sm">{{ $t('users.password') }} {{ editingUser ? $t('users.passwordHintEdit') : $t('users.passwordRequired') }}</label>
+            <input v-model="form.password" type="password" class="input text-sm" :required="!editingUser" minlength="6">
           </div>
 
           <div>
-            <label class="label">{{ $t('users.role') }} *</label>
-            <select v-model="form.role" class="input" required>
+            <label class="label text-xs sm:text-sm">{{ $t('users.role') }} *</label>
+            <select v-model="form.role" class="input text-sm" required>
               <option value="">{{ $t('users.selectRole') }}</option>
               <option value="owner">{{ $t('users.owner') }}</option>
               <option value="inventory">{{ $t('users.inventory') }}</option>
@@ -139,29 +193,29 @@
           </div>
 
           <div class="relative">
-            <label class="label">{{ $t('users.location') }}</label>
+            <label class="label text-xs sm:text-sm">{{ $t('users.location') }}</label>
             <input 
               v-model="locationSearch" 
               @focus="showLocationDropdown = true"
               @input="filterLocations"
               @blur="handleLocationBlur"
               type="text" 
-              class="input"
+              class="input text-sm"
               :placeholder="$t('users.locationPlaceholder')"
               autocomplete="off"
             >
             <div 
               v-if="showLocationDropdown && filteredLocations.length > 0" 
-              class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+              class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 sm:max-h-60 overflow-y-auto"
             >
               <div 
                 v-for="location in filteredLocations" 
                 :key="location.location_id"
                 @click="selectLocation(location)"
-                class="px-4 py-2 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-0"
+                class="px-3 sm:px-4 py-2 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-0"
               >
-                <div class="font-medium text-gray-900">{{ location.location_name }}</div>
-                <div class="text-sm text-gray-500">Type: {{ location.location_type }}</div>
+                <div class="font-medium text-gray-900 text-xs sm:text-sm">{{ location.location_name }}</div>
+                <div class="text-xs text-gray-500">Type: {{ location.location_type }}</div>
               </div>
             </div>
             <p class="text-xs text-gray-500 mt-1">
@@ -171,12 +225,12 @@
 
           <div class="flex items-center">
             <input v-model="form.is_active" type="checkbox" class="rounded border-gray-300 text-blue-600">
-            <label class="ml-2 text-sm text-gray-700">{{ $t('users.active') }}</label>
+            <label class="ml-2 text-xs sm:text-sm text-gray-700">{{ $t('users.active') }}</label>
           </div>
 
-          <div class="flex justify-end gap-2 pt-4 border-t">
-            <button type="button" @click="closeModal" class="btn btn-secondary">{{ $t('common.cancel') }}</button>
-            <button type="submit" class="btn btn-primary">{{ editingUser ? $t('users.update') : $t('users.create') }}</button>
+          <div class="flex flex-col sm:flex-row justify-end gap-2 pt-4 border-t">
+            <button type="button" @click="closeModal" class="btn btn-secondary text-sm">{{ $t('common.cancel') }}</button>
+            <button type="submit" class="btn btn-primary text-sm">{{ editingUser ? $t('users.update') : $t('users.create') }}</button>
           </div>
         </form>
       </div>

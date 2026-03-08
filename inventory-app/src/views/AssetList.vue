@@ -1,36 +1,37 @@
 <template>
-  <div class="p-4 sm:p-6">
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
-      <h2 class="text-2xl font-bold">{{ $t('assets.title') }}</h2>
-      <div class="flex space-x-3">
-        <button @click="exportToExcel" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <div class="p-3 sm:p-4 lg:p-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
+      <h2 class="text-lg sm:text-2xl lg:text-3xl font-bold">{{ $t('assets.title') }}</h2>
+      <div class="flex flex-wrap gap-2 sm:space-x-3 w-full sm:w-auto">
+        <button @click="exportToExcel" class="bg-green-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2 text-sm active:scale-95 transition-transform">
+          <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          {{ $t('assets.exportExcel') }}
+          <span class="hidden sm:inline">{{ $t('assets.exportExcel') }}</span>
+          <span class="sm:hidden">Excel</span>
         </button>
-        <button @click="showAddModal = true" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+        <button @click="showAddModal = true" class="flex-1 sm:flex-none bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-blue-700 text-sm active:scale-95 transition-transform">
           + {{ $t('assets.addAsset') }}
         </button>
       </div>
     </div>
 
     <!-- Filters -->
-    <div class="card mb-6">
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="card mb-4 sm:mb-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div>
-          <label class="label text-sm">{{ $t('assets.searchLabel') }}</label>
+          <label class="label text-xs sm:text-sm">{{ $t('assets.searchLabel') }}</label>
           <input
             v-model="filters.search"
             type="text"
-            class="input"
+            class="input text-sm"
             :placeholder="$t('assets.searchPlaceholder')"
             @input="loadAssets"
           >
         </div>
         <div>
-          <label class="label text-sm">{{ $t('assets.statusLabel') }}</label>
-          <select v-model="filters.status" class="input" @change="loadAssets">
+          <label class="label text-xs sm:text-sm">{{ $t('assets.statusLabel') }}</label>
+          <select v-model="filters.status" class="input text-sm" @change="loadAssets">
             <option value="">{{ $t('assets.allStatus') }}</option>
             <option value="AVAILABLE">{{ $t('assets.available') }}</option>
             <option value="ASSIGNED">{{ $t('assets.assigned') }}</option>
@@ -41,8 +42,8 @@
           </select>
         </div>
         <div>
-          <label class="label text-sm">{{ $t('assets.locationLabel') }}</label>
-          <select v-model="filters.location_id" class="input" @change="loadAssets">
+          <label class="label text-xs sm:text-sm">{{ $t('assets.locationLabel') }}</label>
+          <select v-model="filters.location_id" class="input text-sm" @change="loadAssets">
             <option value="">{{ $t('assets.allLocations') }}</option>
             <option v-for="loc in locations" :key="loc.id" :value="loc.id">
               {{ loc.name }}
@@ -50,8 +51,8 @@
           </select>
         </div>
         <div>
-          <label class="label text-sm">{{ $t('assets.picLabel') }}</label>
-          <input v-model="filters.pic" type="text" class="input" :placeholder="$t('assets.picPlaceholder')" @input="loadAssets">
+          <label class="label text-xs sm:text-sm">{{ $t('assets.picLabel') }}</label>
+          <input v-model="filters.pic" type="text" class="input text-sm" :placeholder="$t('assets.picPlaceholder')" @input="loadAssets">
         </div>
       </div>
     </div>
@@ -198,8 +199,8 @@
 
     <!-- Add Asset Modal -->
     <div v-if="showAddModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div class="p-6">
+      <div class="bg-white rounded-lg max-w-2xl w-full max-h-[95vh] overflow-y-auto">
+        <div class="p-4 sm:p-6">
           <div class="flex justify-between items-center mb-4">
             <h3 class="text-xl font-bold">{{ $t('assets.modalAddTitle') }}</h3>
             <button @click="closeAddModal" class="text-gray-400 hover:text-gray-600">
@@ -209,10 +210,10 @@
             </button>
           </div>
 
-          <form @submit.prevent="createAsset" class="space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form @submit.prevent="createAsset" class="space-y-3 sm:space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div class="relative">
-                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('assets.productRequired') }} <span class="text-red-500">*</span></label>
+                <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('assets.productRequired') }} <span class="text-red-500">*</span></label>
                 <input 
                   v-model="productSearch" 
                   @focus="showProductDropdown = true"
@@ -220,13 +221,13 @@
                   @blur="handleProductBlur"
                   type="text" 
                   required 
-                  class="w-full border-gray-300 rounded-lg"
+                  class="w-full border-gray-300 rounded-lg text-sm"
                   :placeholder="$t('assets.productPlaceholder')"
                   autocomplete="off"
                 >
                 <div 
                   v-if="showProductDropdown && filteredProducts.length > 0" 
-                  class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                  class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-40 sm:max-h-60 overflow-y-auto"
                 >
                   <div 
                     v-for="product in filteredProducts" 
@@ -240,15 +241,15 @@
                 </div>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('assets.serialNumberRequired') }} <span class="text-red-500">*</span></label>
-                <input v-model="assetForm.serial_number" type="text" required class="w-full border-gray-300 rounded-lg" :placeholder="$t('assets.serialNumberPlaceholder')">
+                <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('assets.serialNumberRequired') }} <span class="text-red-500">*</span></label>
+                <input v-model="assetForm.serial_number" type="text" required class="w-full border-gray-300 rounded-lg text-sm" :placeholder="$t('assets.serialNumberPlaceholder')">
               </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('assets.locationRequired') }} <span class="text-red-500">*</span></label>
-                <select v-model="assetForm.location_id" required class="w-full border-gray-300 rounded-lg">
+                <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('assets.locationRequired') }} <span class="text-red-500">*</span></label>
+                <select v-model="assetForm.location_id" required class="w-full border-gray-300 rounded-lg text-sm">
                   <option value="">{{ $t('assets.selectLocation') }}</option>
                   <option v-for="loc in locations" :key="loc.id" :value="loc.id">
                     {{ loc.name }}
@@ -256,8 +257,8 @@
                 </select>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('assets.conditionRequired') }} <span class="text-red-500">*</span></label>
-                <select v-model="assetForm.condition" required class="w-full border-gray-300 rounded-lg">
+                <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('assets.conditionRequired') }} <span class="text-red-500">*</span></label>
+                <select v-model="assetForm.condition" required class="w-full border-gray-300 rounded-lg text-sm">
                   <option value="NEW">{{ $t('assets.conditionNew') }}</option>
                   <option value="GOOD">{{ $t('assets.conditionGood') }}</option>
                   <option value="FAIR">{{ $t('assets.conditionFair') }}</option>
@@ -267,38 +268,38 @@
               </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('assets.purchaseDateRequired') }} <span class="text-red-500">*</span></label>
-                <input v-model="assetForm.purchase_date" type="date" required class="w-full border-gray-300 rounded-lg">
+                <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('assets.purchaseDateRequired') }} <span class="text-red-500">*</span></label>
+                <input v-model="assetForm.purchase_date" type="date" required class="w-full border-gray-300 rounded-lg text-sm">
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('assets.purchasePriceRequired') }} <span class="text-red-500">*</span></label>
-                <input v-model="assetForm.purchase_price" type="number" step="0.01" required class="w-full border-gray-300 rounded-lg" placeholder="0">
+                <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('assets.purchasePriceRequired') }} <span class="text-red-500">*</span></label>
+                <input v-model="assetForm.purchase_price" type="number" step="0.01" required class="w-full border-gray-300 rounded-lg text-sm" placeholder="0">
               </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('assets.usefulLife') }}</label>
-                <input v-model="assetForm.useful_life_years" type="number" step="1" class="w-full border-gray-300 rounded-lg" placeholder="5">
+                <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('assets.usefulLife') }}</label>
+                <input v-model="assetForm.useful_life_years" type="number" step="1" class="w-full border-gray-300 rounded-lg text-sm" placeholder="5">
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('assets.warrantyExpiry') }}</label>
-                <input v-model="assetForm.warranty_expiry" type="date" class="w-full border-gray-300 rounded-lg">
+                <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('assets.warrantyExpiry') }}</label>
+                <input v-model="assetForm.warranty_expiry" type="date" class="w-full border-gray-300 rounded-lg text-sm">
               </div>
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('assets.notes') }}</label>
-              <textarea v-model="assetForm.notes" rows="3" class="w-full border-gray-300 rounded-lg" :placeholder="$t('assets.notesPlaceholder')"></textarea>
+              <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('assets.notes') }}</label>
+              <textarea v-model="assetForm.notes" rows="3" class="w-full border-gray-300 rounded-lg text-sm" :placeholder="$t('assets.notesPlaceholder')"></textarea>
             </div>
 
-            <div class="flex gap-3 justify-end pt-4">
-              <button type="button" @click="closeAddModal" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+            <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-end pt-4">
+              <button type="button" @click="closeAddModal" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">
                 {{ $t('common.cancel') }}
               </button>
-              <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+              <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm">
                 {{ $t('common.save') }}
               </button>
             </div>

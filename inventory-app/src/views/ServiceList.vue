@@ -1,19 +1,20 @@
 <template>
-  <div class="p-6">
-    <div class="mb-6 flex justify-between items-center">
+  <div class="p-3 sm:p-4 lg:p-6">
+    <div class="mb-4 sm:mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
       <div>
-        <h1 class="text-3xl font-bold text-gray-800 mb-2">{{ $t('services.title') }}</h1>
-        <p class="text-gray-600">{{ $t('services.subtitle') }}</p>
+        <h1 class="text-lg sm:text-2xl lg:text-3xl font-bold text-gray-800 mb-1 sm:mb-2">{{ $t('services.title') }}</h1>
+        <p class="text-sm sm:text-base text-gray-600">{{ $t('services.subtitle') }}</p>
       </div>
-      <div class="flex space-x-3">
-        <button @click="exportToExcel" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+        <button @click="exportToExcel" class="bg-green-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2 text-sm active:scale-95 transition-transform">
+          <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          {{ $t('services.exportExcel') }}
+          <span class="hidden sm:inline">{{ $t('services.exportExcel') }}</span>
+          <span class="sm:hidden">Excel</span>
         </button>
-        <button @click="showCreateModal = true" class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 flex items-center">
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button @click="showCreateModal = true" class="flex-1 sm:flex-none bg-purple-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-purple-700 flex items-center justify-center text-sm sm:text-base active:scale-95 transition-transform">
+          <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
           </svg>
           {{ $t('services.addContract') }}
@@ -22,57 +23,57 @@
     </div>
 
     <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-      <div class="bg-white rounded-lg shadow p-6">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6">
+      <div class="bg-white rounded-lg shadow p-3 sm:p-4 lg:p-6">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-gray-600 text-sm">{{ $t('services.statsActive') }}</p>
-            <p class="text-2xl font-bold text-green-600">{{ stats.total_active || 0 }}</p>
+            <p class="text-gray-600 text-xs sm:text-sm">{{ $t('services.statsActive') }}</p>
+            <p class="text-lg sm:text-2xl font-bold text-green-600">{{ stats.total_active || 0 }}</p>
           </div>
-          <div class="bg-green-100 p-3 rounded-full">
-            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="bg-green-100 p-2 sm:p-3 rounded-full">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
           </div>
         </div>
       </div>
       
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="bg-white rounded-lg shadow p-3 sm:p-4 lg:p-6">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-gray-600 text-sm">{{ $t('services.statsExpiringSoon') }}</p>
-            <p class="text-2xl font-bold text-yellow-600">{{ stats.expiring_soon || 0 }}</p>
+            <p class="text-gray-600 text-xs sm:text-sm">{{ $t('services.statsExpiringSoon') }}</p>
+            <p class="text-lg sm:text-2xl font-bold text-yellow-600">{{ stats.expiring_soon || 0 }}</p>
           </div>
-          <div class="bg-yellow-100 p-3 rounded-full">
-            <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="bg-yellow-100 p-2 sm:p-3 rounded-full">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
           </div>
         </div>
       </div>
       
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="bg-white rounded-lg shadow p-3 sm:p-4 lg:p-6">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-gray-600 text-sm">{{ $t('services.statsPending') }}</p>
-            <p class="text-2xl font-bold text-blue-600">{{ stats.total_pending || 0 }}</p>
+            <p class="text-gray-600 text-xs sm:text-sm">{{ $t('services.statsPending') }}</p>
+            <p class="text-lg sm:text-2xl font-bold text-blue-600">{{ stats.total_pending || 0 }}</p>
           </div>
-          <div class="bg-blue-100 p-3 rounded-full">
-            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="bg-blue-100 p-2 sm:p-3 rounded-full">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
           </div>
         </div>
       </div>
       
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="bg-white rounded-lg shadow p-3 sm:p-4 lg:p-6">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-gray-600 text-sm">{{ $t('services.statsExpired') }}</p>
-            <p class="text-2xl font-bold text-red-600">{{ stats.expired || 0 }}</p>
+            <p class="text-gray-600 text-xs sm:text-sm">{{ $t('services.statsExpired') }}</p>
+            <p class="text-lg sm:text-2xl font-bold text-red-600">{{ stats.expired || 0 }}</p>
           </div>
-          <div class="bg-red-100 p-3 rounded-full">
-            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="bg-red-100 p-2 sm:p-3 rounded-full">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
           </div>
@@ -81,17 +82,17 @@
     </div>
 
     <!-- Filters -->
-    <div class="bg-white rounded-lg shadow p-6 mb-6">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="bg-white rounded-lg shadow p-4 sm:p-6 mb-4 sm:mb-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('services.searchLabel') }}</label>
+          <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">{{ $t('services.searchLabel') }}</label>
           <input v-model="filters.search" type="text" :placeholder="$t('services.searchPlaceholder')"
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+            class="w-full border border-gray-300 rounded-lg px-3 sm:px-4 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('services.statusLabel') }}</label>
+          <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">{{ $t('services.statusLabel') }}</label>
           <select v-model="filters.status"
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+            class="w-full border border-gray-300 rounded-lg px-3 sm:px-4 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent">
             <option value="">{{ $t('services.allStatus') }}</option>
             <option value="ACTIVE">{{ $t('services.active') }}</option>
             <option value="PENDING">{{ $t('services.pending') }}</option>
@@ -100,9 +101,9 @@
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('services.contractTypeLabel') }}</label>
+          <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">{{ $t('services.contractTypeLabel') }}</label>
           <select v-model="filters.contract_type"
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+            class="w-full border border-gray-300 rounded-lg px-3 sm:px-4 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent">
             <option value="">{{ $t('services.allTypes') }}</option>
             <option value="RENTAL">{{ $t('services.rental') }}</option>
             <option value="SUBSCRIPTION">{{ $t('services.subscription') }}</option>
@@ -113,9 +114,9 @@
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('services.vendorLabel') }}</label>
+          <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">{{ $t('services.vendorLabel') }}</label>
           <select v-model="filters.vendor_id"
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+            class="w-full border border-gray-300 rounded-lg px-3 sm:px-4 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent">
             <option value="">{{ $t('services.allVendors') }}</option>
             <option v-for="vendor in vendors" :key="vendor.id" :value="vendor.id">
               {{ vendor.name }}
@@ -123,18 +124,18 @@
           </select>
         </div>
       </div>
-      <div class="flex justify-between items-center mt-4">
-        <button @click="resetFilters" class="text-purple-600 hover:text-purple-800">
+      <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2 sm:gap-0 mt-3 sm:mt-4">
+        <button @click="resetFilters" class="text-purple-600 hover:text-purple-800 text-sm py-2 sm:py-0">
           {{ $t('services.resetFilters') }}
         </button>
-        <button @click="loadContracts" class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700">
+        <button @click="loadContracts" class="bg-purple-600 text-white px-4 sm:px-6 py-2 rounded-lg hover:bg-purple-700 text-sm active:scale-95 transition-transform">
           {{ $t('services.applyFilters') }}
         </button>
       </div>
     </div>
 
-    <!-- Contracts Table -->
-    <div class="bg-white rounded-lg shadow overflow-hidden">
+    <!-- Contracts Table - Desktop -->
+    <div class="hidden lg:block bg-white rounded-lg shadow overflow-hidden">
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
@@ -206,17 +207,96 @@
       </div>
 
       <!-- Pagination -->
-      <div v-if="pagination.total > 0" class="bg-gray-50 px-6 py-4 flex items-center justify-between border-t">
-        <div class="text-sm text-gray-700">
+      <div v-if="pagination.total > 0" class="bg-gray-50 px-4 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row items-center justify-between border-t gap-2 sm:gap-0">
+        <div class="text-xs sm:text-sm text-gray-700">
           {{ $t('services.showing') }} {{ pagination.from }} {{ $t('services.to') }} {{ pagination.to }} {{ $t('services.of') }} {{ pagination.total }} {{ $t('services.contractsText') }}
         </div>
         <div class="flex space-x-2">
           <button @click="changePage(pagination.current_page - 1)" :disabled="pagination.current_page === 1"
-            class="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
+            class="px-3 py-1 text-sm border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
             {{ $t('services.previous') }}
           </button>
           <button @click="changePage(pagination.current_page + 1)" :disabled="pagination.current_page === pagination.last_page"
-            class="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
+            class="px-3 py-1 text-sm border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
+            {{ $t('services.next') }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contracts Mobile Card View -->
+    <div class="lg:hidden space-y-3">
+      <div v-if="loading" class="bg-white rounded-lg shadow p-8 text-center text-gray-500">
+        {{ $t('services.loadingText') }}
+      </div>
+      <div v-else-if="contracts.length === 0" class="bg-white rounded-lg shadow p-8 text-center text-gray-500">
+        {{ $t('services.noContracts') }}
+      </div>
+      <div v-else v-for="contract in contracts" :key="contract.id" class="bg-white rounded-lg shadow p-4">
+        <div class="flex justify-between items-start mb-3">
+          <div class="flex-1">
+            <h3 class="font-semibold text-gray-900 text-sm">{{ contract.contract_number }}</h3>
+            <p class="text-xs text-gray-600 mt-0.5">{{ contract.product?.name || 'N/A' }}</p>
+            <p class="text-xs text-gray-500">{{ contract.product?.sku || 'N/A' }}</p>
+          </div>
+          <span :class="getStatusClass(contract.status)" class="px-2 py-1 text-xs font-semibold rounded-full whitespace-nowrap ml-2">
+            {{ contract.status }}
+          </span>
+        </div>
+        
+        <div v-if="contract.is_expiring_soon" class="text-xs text-yellow-600 font-medium mb-2 bg-yellow-50 px-2 py-1 rounded">
+          ⚠️ {{ $t('services.expiresIn', {days: contract.days_until_expiry}) }}
+        </div>
+        
+        <div class="space-y-1 text-xs mb-3">
+          <div class="flex justify-between">
+            <span class="text-gray-600">{{ $t('services.vendor') }}:</span>
+            <span class="font-medium text-gray-900">{{ contract.vendor?.name || 'N/A' }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">{{ $t('services.pic') }}:</span>
+            <span class="font-medium text-gray-900">{{ contract.pic || '-' }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">{{ $t('services.type') }}:</span>
+            <span class="badge badge-gray text-xs">{{ formatContractType(contract.contract_type) }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">{{ $t('services.startEnd') }}:</span>
+            <span class="font-medium text-gray-900">{{ formatDate(contract.start_date) }} - {{ formatDate(contract.end_date) }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">{{ $t('services.valueLabel') }}:</span>
+            <span class="font-medium text-gray-900">{{ formatCurrency(contract.contract_value) }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">{{ $t('services.billingCycle') }}:</span>
+            <span class="font-medium text-gray-900">{{ contract.billing_cycle }}</span>
+          </div>
+        </div>
+        
+        <div class="flex gap-2">
+          <button @click="printBarcode(contract)" class="flex-1 py-2 text-sm font-medium text-purple-600 bg-purple-50 rounded-lg hover:bg-purple-100 active:scale-95 transition-transform">
+            {{ $t('services.barcode') }}
+          </button>
+          <button @click="viewContract(contract.id)" class="flex-1 py-2 text-sm font-medium text-purple-600 bg-purple-50 rounded-lg hover:bg-purple-100 active:scale-95 transition-transform">
+            {{ $t('services.viewDetails') }}
+          </button>
+        </div>
+      </div>
+      
+      <!-- Mobile Pagination -->
+      <div v-if="pagination.total > 0" class="bg-white rounded-lg shadow px-4 py-3">
+        <div class="text-xs text-center text-gray-700 mb-2">
+          {{ $t('services.showing') }} {{ pagination.from }} {{ $t('services.to') }} {{ pagination.to }} {{ $t('services.of') }} {{ pagination.total }} {{ $t('services.contractsText') }}
+        </div>
+        <div class="flex justify-center space-x-2">
+          <button @click="changePage(pagination.current_page - 1)" :disabled="pagination.current_page === 1"
+            class="px-3 py-1 text-sm border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
+            {{ $t('services.previous') }}
+          </button>
+          <button @click="changePage(pagination.current_page + 1)" :disabled="pagination.current_page === pagination.last_page"
+            class="px-3 py-1 text-sm border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
             {{ $t('services.next') }}
           </button>
         </div>
@@ -224,13 +304,13 @@
     </div>
 
     <!-- Create Service Contract Modal -->
-    <div v-if="showCreateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <h3 class="text-xl font-semibold mb-4">{{ $t('services.modalCreateTitle') }}</h3>
+    <div v-if="showCreateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-lg shadow-xl p-4 sm:p-6 w-full max-w-2xl max-h-[95vh] overflow-y-auto">
+        <h3 class="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">{{ $t('services.modalCreateTitle') }}</h3>
         <form @submit.prevent="createContract">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="md:col-span-2 relative">
-              <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('services.productServiceRequired') }} <span class="text-red-500">*</span></label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div class="sm:col-span-2 relative">
+              <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">{{ $t('services.productServiceRequired') }} <span class="text-red-500">*</span></label>
               <input 
                 v-model="productSearch" 
                 @focus="showProductDropdown = true"
@@ -238,13 +318,13 @@
                 @blur="handleProductBlur"
                 type="text" 
                 required 
-                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                class="w-full border border-gray-300 rounded-lg px-3 sm:px-4 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 :placeholder="$t('services.productPlaceholder')"
                 autocomplete="off"
               >
               <div 
                 v-if="showProductDropdown && filteredProducts.length > 0" 
-                class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-40 sm:max-h-60 overflow-y-auto"
               >
                 <div 
                   v-for="product in filteredProducts" 
@@ -258,10 +338,10 @@
               </div>
             </div>
             
-            <div class="md:col-span-2">
-              <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('services.vendorRequired') }} <span class="text-red-500">*</span></label>
+            <div class="sm:col-span-2">
+              <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">{{ $t('services.vendorRequired') }} <span class="text-red-500">*</span></label>
               <select v-model="createForm.vendor_id" required
-                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                class="w-full border border-gray-300 rounded-lg px-3 sm:px-4 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent">
                 <option value="">{{ $t('services.selectVendor') }}</option>
                 <option v-for="vendor in vendors" :key="vendor.id" :value="vendor.id">
                   {{ vendor.name }}
@@ -269,10 +349,10 @@
               </select>
             </div>
             
-            <div class="md:col-span-2">
-              <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('services.locationOptional') }}</label>
+            <div class="sm:col-span-2">
+              <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">{{ $t('services.locationOptional') }}</label>
               <select v-model="createForm.location_id"
-                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                class="w-full border border-gray-300 rounded-lg px-3 sm:px-4 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent">
                 <option value="">{{ $t('services.selectLocation') }}</option>
                 <option v-for="location in locations" :key="location.id" :value="location.id">
                   {{ location.name }}
@@ -280,16 +360,16 @@
               </select>
             </div>
             
-            <div class="md:col-span-2">
-              <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('services.picField') }}</label>
+            <div class="sm:col-span-2">
+              <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">{{ $t('services.picField') }}</label>
               <input v-model="createForm.pic" type="text" :placeholder="$t('services.picPlaceholder')"
-                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                class="w-full border border-gray-300 rounded-lg px-3 sm:px-4 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent">
             </div>
             
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('services.contractTypeRequired') }} <span class="text-red-500">*</span></label>
+              <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">{{ $t('services.contractTypeRequired') }} <span class="text-red-500">*</span></label>
               <select v-model="createForm.contract_type" required
-                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                class="w-full border border-gray-300 rounded-lg px-3 sm:px-4 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent">
                 <option value="">{{ $t('services.selectType') }}</option>
                 <option value="RENTAL">{{ $t('services.rentalType') }}</option>
                 <option value="SUBSCRIPTION">{{ $t('services.subscriptionType') }}</option>
@@ -301,9 +381,9 @@
             </div>
             
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('services.billingCycleRequired') }} <span class="text-red-500">*</span></label>
+              <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">{{ $t('services.billingCycleRequired') }} <span class="text-red-500">*</span></label>
               <select v-model="createForm.billing_cycle" required
-                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                class="w-full border border-gray-300 rounded-lg px-3 sm:px-4 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent">
                 <option value="MONTHLY">{{ $t('services.monthly') }}</option>
                 <option value="QUARTERLY">{{ $t('services.quarterly') }}</option>
                 <option value="YEARLY">{{ $t('services.yearly') }}</option>
@@ -312,36 +392,36 @@
             </div>
             
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('services.startDateRequired') }} <span class="text-red-500">*</span></label>
+              <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">{{ $t('services.startDateRequired') }} <span class="text-red-500">*</span></label>
               <input v-model="createForm.start_date" type="date" required
-                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                class="w-full border border-gray-300 rounded-lg px-3 sm:px-4 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent">
             </div>
             
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('services.endDateRequired') }} <span class="text-red-500">*</span></label>
+              <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">{{ $t('services.endDateRequired') }} <span class="text-red-500">*</span></label>
               <input v-model="createForm.end_date" type="date" required
-                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                class="w-full border border-gray-300 rounded-lg px-3 sm:px-4 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent">
             </div>
             
-            <div class="md:col-span-2">
-              <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('services.contractValueRequired') }} <span class="text-red-500">*</span></label>
+            <div class="sm:col-span-2">
+              <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">{{ $t('services.contractValueRequired') }} <span class="text-red-500">*</span></label>
               <input v-model.number="createForm.contract_value" type="number" step="0.01" required min="0"
                 placeholder="0.00"
-                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                class="w-full border border-gray-300 rounded-lg px-3 sm:px-4 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent">
             </div>
             
-            <div class="md:col-span-2">
-              <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('services.description') }}</label>
+            <div class="sm:col-span-2">
+              <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">{{ $t('services.description') }}</label>
               <textarea v-model="createForm.notes" rows="3" :placeholder="$t('services.descriptionPlaceholder')"
-                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"></textarea>
+                class="w-full border border-gray-300 rounded-lg px-3 sm:px-4 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"></textarea>
             </div>
           </div>
           
-          <div class="flex justify-end space-x-3 mt-6">
-            <button type="button" @click="closeCreateModal" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+          <div class="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 mt-4 sm:mt-6">
+            <button type="button" @click="closeCreateModal" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">
               {{ $t('common.cancel') }}
             </button>
-            <button type="submit" :disabled="creating" class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50">
+            <button type="submit" :disabled="creating" class="bg-purple-600 text-white px-4 sm:px-6 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50 text-sm">
               {{ $t('common.save') }}
             </button>
           </div>
@@ -351,26 +431,26 @@
 
     <!-- Barcode Modal -->
     <div v-if="showBarcodeModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
-      <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
-        <div class="flex justify-between items-center p-4 border-b">
-          <h3 class="text-lg font-semibold">Print Contract Barcode</h3>
+      <div class="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[95vh] overflow-y-auto">
+        <div class="flex justify-between items-center p-3 sm:p-4 border-b">
+          <h3 class="text-base sm:text-lg font-semibold">Print Contract Barcode</h3>
           <button @click="closeBarcodeModal" class="text-gray-400 hover:text-gray-600">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
         
-        <div class="p-6">
-          <div class="space-y-4">
+        <div class="p-4 sm:p-6">
+          <div class="space-y-3 sm:space-y-4">
             <div>
-              <p class="text-sm text-gray-600">Service: <span class="font-medium text-gray-900">{{ barcodeData.product_name }}</span></p>
-              <p class="text-sm text-gray-600">Contract: <span class="font-medium text-gray-900">{{ barcodeData.contract_number }}</span></p>
+              <p class="text-xs sm:text-sm text-gray-600">Service: <span class="font-medium text-gray-900">{{ barcodeData.product_name }}</span></p>
+              <p class="text-xs sm:text-sm text-gray-600">Contract: <span class="font-medium text-gray-900">{{ barcodeData.contract_number }}</span></p>
             </div>
             
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Label Size</label>
-              <select v-model="barcodeData.labelSize" @change="generateBarcodePreview" class="w-full border-gray-300 rounded-lg">
+              <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Label Size</label>
+              <select v-model="barcodeData.labelSize" @change="generateBarcodePreview" class="w-full border-gray-300 rounded-lg text-sm">
                 <option value="small">Small (30mm x 20mm) - Compact</option>
                 <option value="medium">Medium (50mm x 30mm) - Standard</option>
                 <option value="large">Large (100mm x 50mm) - Wide</option>
@@ -378,11 +458,11 @@
             </div>
             
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Number of Labels</label>
-              <input v-model.number="barcodeData.copies" type="number" min="1" max="100" class="w-full border-gray-300 rounded-lg">
+              <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Number of Labels</label>
+              <input v-model.number="barcodeData.copies" type="number" min="1" max="100" class="w-full border-gray-300 rounded-lg text-sm">
             </div>
             
-            <div class="border rounded-lg p-4 bg-gray-50" id="barcode-preview">
+            <div class="border rounded-lg p-3 sm:p-4 bg-gray-50" id="barcode-preview">
               <div class="text-center">
                 <div class="inline-block" :style="previewStyle">
                   <svg id="barcode-svg-contract"></svg>
@@ -394,11 +474,11 @@
           </div>
         </div>
         
-        <div class="flex gap-3 justify-end p-4 border-t">
-          <button @click="closeBarcodeModal" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+        <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-end p-3 sm:p-4 border-t">
+          <button @click="closeBarcodeModal" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">
             Cancel
           </button>
-          <button @click="printBarcodeLabels" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+          <button @click="printBarcodeLabels" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 text-sm active:scale-95 transition-transform">
             Print
           </button>
         </div>

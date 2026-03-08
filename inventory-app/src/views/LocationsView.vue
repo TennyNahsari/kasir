@@ -1,65 +1,65 @@
 <template>
-  <div class="p-6">
-    <div class="mb-6 flex justify-between items-center">
+  <div class="p-3 sm:p-4 lg:p-6">
+    <div class="mb-4 sm:mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
       <div>
-        <h1 class="text-3xl font-bold text-gray-800">{{ $t('locations.title') }}</h1>
-        <p class="text-gray-600">{{ $t('locations.subtitle') }}</p>
+        <h1 class="text-lg sm:text-2xl lg:text-3xl font-bold text-gray-800">{{ $t('locations.title') }}</h1>
+        <p class="text-xs sm:text-sm text-gray-600">{{ $t('locations.subtitle') }}</p>
       </div>
-      <button @click="showCreateModal = true" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+      <button @click="showCreateModal = true" class="bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-blue-700 text-xs sm:text-sm w-full sm:w-auto">
         {{ $t('locations.addLocation') }}
       </button>
     </div>
 
     <!-- Locations Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div v-for="location in locations" :key="location.id" class="bg-white rounded-lg shadow p-6">
-        <div class="flex justify-between items-start mb-4">
-          <div>
-            <h3 class="text-lg font-semibold text-gray-900">{{ location.name }}</h3>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
+      <div v-for="location in locations" :key="location.id" class="bg-white rounded-lg shadow p-3 sm:p-4 lg:p-6">
+        <div class="flex justify-between items-start mb-3 sm:mb-4">
+          <div class="flex-1 min-w-0 mr-2">
+            <h3 class="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 truncate">{{ location.name }}</h3>
             <span :class="getTypeClass(location.type)" class="inline-block px-2 py-1 text-xs font-semibold rounded-full mt-1">
               {{ getTypeName(location.type) }}
             </span>
           </div>
-          <div class="flex space-x-2">
-            <button @click="editLocation(location)" class="text-blue-600 hover:text-blue-800">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="flex space-x-1.5 sm:space-x-2 flex-shrink-0">
+            <button @click="editLocation(location)" class="text-blue-600 hover:text-blue-800 p-1.5 sm:p-2 hover:bg-blue-50 rounded">
+              <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
               </svg>
             </button>
-            <button v-if="location.type === 'FNB'" @click="openQrModal(location)" class="text-purple-600 hover:text-purple-800" :title="$t('locations.generateQR')">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button v-if="location.type === 'FNB'" @click="openQrModal(location)" class="text-purple-600 hover:text-purple-800 p-1.5 sm:p-2 hover:bg-purple-50 rounded" :title="$t('locations.generateQR')">
+              <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
               </svg>
             </button>
-            <button @click="viewStock(location)" class="text-green-600 hover:text-green-800">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button @click="viewStock(location)" class="text-green-600 hover:text-green-800 p-1.5 sm:p-2 hover:bg-green-50 rounded">
+              <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
               </svg>
             </button>
           </div>
         </div>
 
-        <div class="space-y-2 text-sm text-gray-600">
+        <div class="space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-gray-600">
           <div v-if="location.address">
-            <p>{{ location.address }}</p>
+            <p class="line-clamp-2">{{ location.address }}</p>
           </div>
           <div v-if="location.phone" class="flex items-center">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
             </svg>
-            {{ location.phone }}
+            <span class="truncate">{{ location.phone }}</span>
           </div>
         </div>
 
-        <div v-if="location.stock_summary" class="mt-4 pt-4 border-t">
-          <div class="grid grid-cols-2 gap-2 text-sm">
+        <div v-if="location.stock_summary" class="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t">
+          <div class="grid grid-cols-2 gap-2 text-xs sm:text-sm">
             <div>
               <p class="text-gray-500">{{ $t('locations.totalSKUs') }}</p>
-              <p class="text-lg font-semibold">{{ location.stock_summary.total_products }}</p>
+              <p class="text-base sm:text-lg font-semibold">{{ location.stock_summary.total_products }}</p>
             </div>
             <div>
               <p class="text-gray-500">{{ $t('locations.lowStockItems') }}</p>
-              <p class="text-lg font-semibold text-orange-600">{{ location.stock_summary.low_stock_count }}</p>
+              <p class="text-base sm:text-lg font-semibold text-orange-600">{{ location.stock_summary.low_stock_count }}</p>
             </div>
           </div>
         </div>
@@ -67,21 +67,21 @@
     </div>
 
     <!-- Create/Edit Modal -->
-    <div v-if="showCreateModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-        <h3 class="text-lg font-semibold mb-4">{{ editingLocation ? $t('locations.modalEditTitle') : $t('locations.modalAddTitle') }}</h3>
-        <div class="space-y-4">
+    <div v-if="showCreateModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
+      <div class="bg-white rounded-lg shadow-xl p-4 sm:p-6 w-full max-w-md max-h-[95vh] overflow-y-auto">
+        <h3 class="text-base sm:text-lg font-semibold mb-3 sm:mb-4">{{ editingLocation ? $t('locations.modalEditTitle') : $t('locations.modalAddTitle') }}</h3>
+        <div class="space-y-3 sm:space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('locations.code') }} {{ $t('locations.codeRequired') }}</label>
-            <input v-model="locationForm.code" type="text" class="w-full border-gray-300 rounded-lg" :placeholder="$t('locations.codePlaceholder')" required>
+            <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('locations.code') }} {{ $t('locations.codeRequired') }}</label>
+            <input v-model="locationForm.code" type="text" class="w-full border-gray-300 rounded-lg text-sm" :placeholder="$t('locations.codePlaceholder')" required>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('locations.name') }} {{ $t('locations.nameRequired') }}</label>
-            <input v-model="locationForm.name" type="text" class="w-full border-gray-300 rounded-lg" required>
+            <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('locations.name') }} {{ $t('locations.nameRequired') }}</label>
+            <input v-model="locationForm.name" type="text" class="w-full border-gray-300 rounded-lg text-sm" required>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('locations.type') }} {{ $t('locations.typeRequired') }}</label>
-            <select v-model="locationForm.type" class="w-full border-gray-300 rounded-lg" required>
+            <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('locations.type') }} {{ $t('locations.typeRequired') }}</label>
+            <select v-model="locationForm.type" class="w-full border-gray-300 rounded-lg text-sm" required>
               <option value="WAREHOUSE">{{ $t('locations.warehouse') }}</option>
               <option value="OUTLET">{{ $t('locations.outlet') }}</option>
               <option value="FNB">{{ $t('locations.fnb') }}</option>
@@ -89,60 +89,60 @@
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('locations.address') }}</label>
-            <textarea v-model="locationForm.address" rows="3" class="w-full border-gray-300 rounded-lg"></textarea>
+            <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('locations.address') }}</label>
+            <textarea v-model="locationForm.address" rows="3" class="w-full border-gray-300 rounded-lg text-sm"></textarea>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('locations.phone') }}</label>
-            <input v-model="locationForm.phone" type="text" class="w-full border-gray-300 rounded-lg">
+            <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('locations.phone') }}</label>
+            <input v-model="locationForm.phone" type="text" class="w-full border-gray-300 rounded-lg text-sm">
           </div>
           <div class="flex items-center">
             <input v-model="locationForm.is_active" type="checkbox" class="rounded border-gray-300 text-blue-600 mr-2">
-            <label class="text-sm font-medium text-gray-700">{{ $t('locations.active') }}</label>
+            <label class="text-xs sm:text-sm font-medium text-gray-700">{{ $t('locations.active') }}</label>
           </div>
         </div>
-        <div class="mt-6 flex justify-end space-x-3">
-          <button @click="closeModal" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">{{ $t('common.cancel') }}</button>
-          <button @click="saveLocation" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">{{ $t('common.save') }}</button>
+        <div class="mt-4 sm:mt-6 flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
+          <button @click="closeModal" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">{{ $t('common.cancel') }}</button>
+          <button @click="saveLocation" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">{{ $t('common.save') }}</button>
         </div>
       </div>
     </div>
 
     <!-- QR Code Modal -->
-    <div v-if="showQrModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <h3 class="text-xl font-bold mb-4">{{ $t('locations.qrModalTitle') }} - {{ selectedLocation?.name }}</h3>
+    <div v-if="showQrModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
+      <div class="bg-white rounded-lg shadow-xl p-4 sm:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <h3 class="text-base sm:text-lg lg:text-xl font-bold mb-3 sm:mb-4">{{ $t('locations.qrModalTitle') }} - {{ selectedLocation?.name }}</h3>
 
-        <div v-if="!qrCodes" class="space-y-4">
-          <p class="text-gray-600">{{ $t('locations.qrDescription') }}</p>
+        <div v-if="!qrCodes" class="space-y-3 sm:space-y-4">
+          <p class="text-xs sm:text-sm text-gray-600">{{ $t('locations.qrDescription') }}</p>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('locations.numberOfTables') }}</label>
-            <input v-model="tableCount" type="number" min="1" max="100" class="w-full border-gray-300 rounded-lg">
+            <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('locations.numberOfTables') }}</label>
+            <input v-model="tableCount" type="number" min="1" max="100" class="w-full border-gray-300 rounded-lg text-sm">
           </div>
-          <div class="flex justify-end space-x-3">
-            <button @click="closeQrModal" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">{{ $t('common.cancel') }}</button>
-            <button @click="generateQr" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">{{ $t('locations.generate') }}</button>
+          <div class="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
+            <button @click="closeQrModal" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">{{ $t('common.cancel') }}</button>
+            <button @click="generateQr" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm">{{ $t('locations.generate') }}</button>
           </div>
         </div>
 
-        <div v-else class="space-y-4">
-          <div class="flex justify-end mb-4">
-            <button @click="printQrCodes" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+        <div v-else class="space-y-3 sm:space-y-4">
+          <div class="flex justify-end mb-3 sm:mb-4">
+            <button @click="printQrCodes" class="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-xs sm:text-sm">
               {{ $t('locations.printQR') }}
             </button>
           </div>
 
-          <div id="qr-codes-container" class="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-[60vh] overflow-y-auto">
-            <div v-for="qr in qrCodes" :key="qr.table_number" class="border rounded-lg p-4 text-center print-qr-item">
-              <div class="font-bold text-lg mb-2">{{ selectedLocation?.name }}</div>
-              <div class="font-semibold mb-2">{{ $t('locations.table') }} {{ qr.table_number }}</div>
-              <canvas :id="`qr-${qr.table_number}`" class="mx-auto"></canvas>
-              <div class="text-xs text-gray-500 mt-2">{{ $t('locations.scanToOrder') }}</div>
+          <div id="qr-codes-container" class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 max-h-[60vh] overflow-y-auto">
+            <div v-for="qr in qrCodes" :key="qr.table_number" class="border rounded-lg p-3 sm:p-4 text-center print-qr-item">
+              <div class="font-bold text-sm sm:text-base lg:text-lg mb-1 sm:mb-2 truncate">{{ selectedLocation?.name }}</div>
+              <div class="font-semibold text-xs sm:text-sm mb-1 sm:mb-2">{{ $t('locations.table') }} {{ qr.table_number }}</div>
+              <canvas :id="`qr-${qr.table_number}`" class="mx-auto w-24 h-24 sm:w-32 sm:h-32"></canvas>
+              <div class="text-xs text-gray-500 mt-1 sm:mt-2">{{ $t('locations.scanToOrder') }}</div>
             </div>
           </div>
 
-          <div class="flex justify-end mt-4">
-            <button @click="closeQrModal" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">{{ $t('locations.close') }}</button>
+          <div class="flex justify-end mt-3 sm:mt-4">
+            <button @click="closeQrModal" class="px-3 sm:px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-xs sm:text-sm">{{ $t('locations.close') }}</button>
           </div>
         </div>
       </div>
