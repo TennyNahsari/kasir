@@ -27,7 +27,7 @@ return new class extends Migration
             $table->decimal('reorder_level', 12, 4)->default(0)->after('max_stock_level');
             
             // Costing
-            $table->decimal('last_purchase_price', 15, 2)->nullable()->after('price');
+            $table->decimal('last_purchase_price', 15, 2)->nullable()->after('selling_price');
             $table->decimal('average_cost', 15, 2)->nullable()->after('last_purchase_price');
             
             // Indexes

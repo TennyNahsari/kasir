@@ -17,21 +17,27 @@ class TicketSystemSeeder extends Seeder
     public function run(): void
     {
         // Create technician users
-        $technician1 = User::create([
-            'name' => 'Ahmad Teknisi',
-            'email' => 'technician@kasir.test',
-            'password' => bcrypt('password'),
-            'role' => 'technician',
-            'is_active' => true,
-        ]);
+        $technician1 = User::firstOrCreate(
+            ['email' => 'technician@kasir.app'],
+            [
+                'name' => 'Ahmad Teknisi',
+                'password' => bcrypt('password'),
+                'role' => 'staff',
+                'is_technician' => true,
+                'is_active' => true,
+            ]
+        );
 
-        $technician2 = User::create([
-            'name' => 'Budi Maintenance',
-            'email' => 'maintenance@kasir.test',
-            'password' => bcrypt('password'),
-            'role' => 'technician',
-            'is_active' => true,
-        ]);
+        $technician2 = User::firstOrCreate(
+            ['email' => 'maintenance@kasir.test'],
+            [
+                'name' => 'Budi Maintenance',
+                'password' => bcrypt('password'),
+                'role' => 'staff',
+                'is_technician' => true,
+                'is_active' => true,
+            ]
+        );
 
         // Get existing users
         $supervisor = User::where('role', 'supervisor')->first();
@@ -51,7 +57,7 @@ class TicketSystemSeeder extends Seeder
                 'ticket_number' => sprintf('TKT-2026-%04d', $index + 1),
                 'type' => 'INCIDENT',
                 'asset_id' => $asset->id,
-                'reported_by' => $asset->assigned_to ?? $owner->id,
+                'reported_by' => $owner->id ?? 1,
                 'assigned_to' => $index % 2 === 0 ? $technician1->id : $technician2->id,
                 'location_id' => $asset->location_id,
                 'title' => match($index) {

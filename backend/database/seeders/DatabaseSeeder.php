@@ -14,81 +14,120 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Create Outlets
-        $outlet1 = Outlet::create([
-            'name' => 'Toko Retail Utama',
-            'code' => 'RET001',
-            'business_type' => 'retail',
-            'address' => 'Jl. Merdeka No. 123',
-            'phone' => '081234567890',
-            'enable_qr_order' => false,
-        ]);
+        $outlet1 = Outlet::firstOrCreate(
+            ['code' => 'RET001'],
+            [
+                'name' => 'Toko Retail Utama',
+                'business_type' => 'retail',
+                'address' => 'Jl. Merdeka No. 123',
+                'phone' => '081234567890',
+                'enable_qr_order' => false,
+            ]
+        );
 
-        $outlet2 = Outlet::create([
-            'name' => 'Minimarket Sejahtera',
-            'code' => 'MKT001',
-            'business_type' => 'minimarket',
-            'address' => 'Jl. Sudirman No. 456',
-            'phone' => '081234567891',
-            'enable_qr_order' => false,
-        ]);
+        $outlet2 = Outlet::firstOrCreate(
+            ['code' => 'MKT001'],
+            [
+                'name' => 'Minimarket Sejahtera',
+                'business_type' => 'minimarket',
+                'address' => 'Jl. Sudirman No. 456',
+                'phone' => '081234567891',
+                'enable_qr_order' => false,
+            ]
+        );
 
-        $outlet3 = Outlet::create([
-            'name' => 'Warung Makan Sedap',
-            'code' => 'FNB001',
-            'business_type' => 'fnb',
-            'address' => 'Jl. Ahmad Yani No. 789',
-            'phone' => '081234567892',
-            'enable_qr_order' => true,
-        ]);
+        $outlet3 = Outlet::firstOrCreate(
+            ['code' => 'FNB001'],
+            [
+                'name' => 'Warung Makan Sedap',
+                'business_type' => 'fnb',
+                'address' => 'Jl. Ahmad Yani No. 789',
+                'phone' => '081234567892',
+                'enable_qr_order' => true,
+            ]
+        );
 
         // Create Users
-        User::create([
-            'name' => 'Owner',
-            'email' => 'owner@kasir.app',
-            'password' => bcrypt('password'),
-            'role' => 'owner',
-            'outlet_id' => null, // Can access all outlets
-        ]);
+        User::firstOrCreate(
+            ['email' => 'owner@kasir.app'],
+            [
+                'name' => 'Owner',
+                'password' => bcrypt('password'),
+                'role' => 'owner',
+                'outlet_id' => null, // Can access all outlets
+            ]
+        );
 
-        User::create([
-            'name' => 'Supervisor Retail',
-            'email' => 'supervisor@kasir.app',
-            'password' => bcrypt('password'),
-            'role' => 'supervisor',
-            'outlet_id' => $outlet1->id,
-        ]);
+        User::firstOrCreate(
+            ['email' => 'inventory@kasir.app'],
+            [
+                'name' => 'Inventory Manager',
+                'password' => bcrypt('password'),
+                'role' => 'inventory',
+                'outlet_id' => null,
+            ]
+        );
 
-        User::create([
-            'name' => 'Kasir Retail',
-            'email' => 'kasir@kasir.app',
-            'password' => bcrypt('password'),
-            'role' => 'kasir',
-            'outlet_id' => $outlet1->id,
-        ]);
+        User::firstOrCreate(
+            ['email' => 'supervisor@kasir.app'],
+            [
+                'name' => 'Supervisor Retail',
+                'password' => bcrypt('password'),
+                'role' => 'supervisor',
+                'outlet_id' => $outlet1->id,
+            ]
+        );
 
-        User::create([
-            'name' => 'Kasir Minimarket',
-            'email' => 'kasir2@kasir.app',
-            'password' => bcrypt('password'),
-            'role' => 'kasir',
-            'outlet_id' => $outlet2->id,
-        ]);
+        User::firstOrCreate(
+            ['email' => 'kasir@kasir.app'],
+            [
+                'name' => 'Kasir Retail',
+                'password' => bcrypt('password'),
+                'role' => 'kasir',
+                'outlet_id' => $outlet1->id,
+            ]
+        );
 
-        User::create([
-            'name' => 'Kasir F&B',
-            'email' => 'kasir3@kasir.app',
-            'password' => bcrypt('password'),
-            'role' => 'kasir',
-            'outlet_id' => $outlet3->id,
-        ]);
+        User::firstOrCreate(
+            ['email' => 'kasir2@kasir.app'],
+            [
+                'name' => 'Kasir Minimarket',
+                'password' => bcrypt('password'),
+                'role' => 'kasir',
+                'outlet_id' => $outlet2->id,
+            ]
+        );
 
-        User::create([
-            'name' => 'Kitchen F&B',
-            'email' => 'kitchen@kasir.app',
-            'password' => bcrypt('password'),
-            'role' => 'kitchen',
-            'outlet_id' => $outlet3->id,
-        ]);
+        User::firstOrCreate(
+            ['email' => 'kasir3@kasir.app'],
+            [
+                'name' => 'Kasir F&B',
+                'password' => bcrypt('password'),
+                'role' => 'kasir',
+                'outlet_id' => $outlet3->id,
+            ]
+        );
+
+        User::firstOrCreate(
+            ['email' => 'kitchen@kasir.app'],
+            [
+                'name' => 'Kitchen F&B',
+                'password' => bcrypt('password'),
+                'role' => 'kitchen',
+                'outlet_id' => $outlet3->id,
+            ]
+        );
+
+        User::firstOrCreate(
+            ['email' => 'technician@kasir.app'],
+            [
+                'name' => 'Ahmad Teknisi',
+                'password' => bcrypt('password'),
+                'role' => 'staff',
+                'is_technician' => true,
+                'outlet_id' => null,
+            ]
+        );
 
         // Create Categories
         $categories = [
@@ -107,7 +146,7 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($categories as $cat) {
-            Category::create($cat);
+            Category::firstOrCreate(['slug' => $cat['slug']], $cat);
         }
 
         // Create Products
@@ -148,23 +187,29 @@ class DatabaseSeeder extends Seeder
             $sku = 'SKU-' . str_pad($index + 1, 6, '0', STR_PAD_LEFT);
             $barcode = $this->generateEAN13($index + 1);
             
-            Product::create(array_merge($prod, [
-                'sku' => $sku,
-                'barcode' => $barcode,
-                'stock' => $prod['stock'] ?? 0,
-                'min_stock' => 10,
-                'track_stock' => $prod['track_stock'] ?? true,
-            ]));
+            Product::firstOrCreate(
+                ['sku' => $sku],
+                array_merge($prod, [
+                    'barcode' => $barcode,
+                    'stock' => $prod['stock'] ?? 0,
+                    'min_stock' => 10,
+                    'track_stock' => $prod['track_stock'] ?? true,
+                ])
+            );
         }
 
         // Create Tables for F&B outlet
         for ($i = 1; $i <= 10; $i++) {
-            Table::create([
-                'outlet_id' => $outlet3->id,
-                'table_number' => 'Table ' . $i,
-                'capacity' => 4,
-                'status' => 'available',
-            ]);
+            Table::firstOrCreate(
+                [
+                    'outlet_id' => $outlet3->id,
+                    'table_number' => 'Table ' . $i,
+                ],
+                [
+                    'capacity' => 4,
+                    'status' => 'available',
+                ]
+            );
         }
         
         // Seed inventory & procurement data
@@ -188,9 +233,13 @@ class DatabaseSeeder extends Seeder
     private function seedInventoryData(): void
     {
         $this->call([
+            DepartmentSeeder::class,
             LocationSeeder::class,
             VendorSeeder::class,
             ProductInventorySeeder::class,
+            AssetSeeder::class,
+            TicketSystemSeeder::class,
+            ProcurementSeeder::class,
         ]);
     }
 }

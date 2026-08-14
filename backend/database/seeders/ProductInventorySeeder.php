@@ -155,7 +155,50 @@ class ProductInventorySeeder extends Seeder
             Product::create($product);
         }
 
+        // Seed initial InventoryStock & InventoryLedger entries across locations
+        $locations = \App\Models\Location::all();
+        $allProducts = Product::where('track_stock', true)->get();
+
+        if ($locations->isNotEmpty() && $allProducts->isNotEmpty()) {
+            foreach ($allProducts as $p) {
+                foreach ($locations as $loc) {
+                    $qty = rand(5, 100);
+                    $reorder = rand(10, 25);
+                    $stock = \App\Models\InventoryStock::firstOrCreate(
+                        [
+                            'product_id' => $p->id,
+                            'location_id' => $loc->id,
+                        ],
+                        [
+                            'quantity' => $qty,
+                            'reserved_quantity' => 0,
+                            'reorder_level' => $reorder,
+                            'last_stock_in' => now(),
+                        ]
+                    );
+
+                    \App\Models\InventoryLedger::firstOrCreate(
+                        [
+                            'product_id' => $p->id,
+                            'location_id' => $loc->id,
+                            'reference_type' => 'INITIAL_SEED',
+                        ],
+                        [
+                            'movement_type' => 'STOCK_IN',
+                            'quantity' => $qty,
+                            'balance_before' => 0,
+                            'balance_after' => $qty,
+                            'reference_id' => $stock->id,
+                            'notes' => 'Initial inventory seed',
+                            'created_by' => 1,
+                        ]
+                    );
+                }
+            }
+        }
+
         $this->command->info('Products updated with inventory fields!');
-        $this->command->info('New inventory products created successfully!');
+        $this->command->info('New inventory products & initial stocks created successfully!');
     }
 }
+

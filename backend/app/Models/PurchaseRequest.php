@@ -15,6 +15,7 @@ class PurchaseRequest extends Model
         'required_date',
         'status',
         'location_id',
+        'department_id',
         'requested_by',
         'approved_by',
         'approved_at',
@@ -48,13 +49,18 @@ class PurchaseRequest extends Model
 
     public function getDepartmentAttribute()
     {
-        return $this->location ? $this->location->name : null;
+        return $this->departmentRel ? $this->departmentRel->name : ($this->location ? $this->location->name : null);
     }
 
     // Relationships
     public function location()
     {
         return $this->belongsTo(Location::class);
+    }
+
+    public function departmentRel()
+    {
+        return $this->belongsTo(Department::class, 'department_id');
     }
 
     public function items()

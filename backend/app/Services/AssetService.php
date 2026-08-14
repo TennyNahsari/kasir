@@ -217,7 +217,7 @@ class AssetService
 
             $asset->update([
                 'status' => 'DISPOSED',
-                'assigned_to' => null,
+                'pic' => null,
                 'assigned_date' => null,
             ]);
 
@@ -261,19 +261,33 @@ class AssetService
     public function getAssetsByStatus(string $status)
     {
         return Asset::where('status', $status)
-            ->with(['product', 'location', 'assignedTo'])
+            ->with(['product', 'location'])
             ->get();
     }
 
     /**
-     * Get assets assigned to user
+     * Get assets assigned to user (by user ID or PIC search)
      */
-    public function getUserAssets(int $userId)
+    public function getUserAssets($userIdentifier)
     {
-        return Asset::where('assigned_to', $userId)
-            ->whereIn('status', ['ASSIGNED', 'IN_USE'])
-            ->with(['product', 'location'])
-            ->get();
+        $query = Asset::whereIn('status', ['ASSIGNED', 'IN_USE'])
+            ->with(['product', 'location']);
+
+        if (is_numeric($userIdentifier)) {
+            $user = \App\Models\User::find((int)$userIdentifier);
+            if ($user) {
+                $query->where(function($q) use ($user) {
+                    $q->where('pic', 'ilike', "%{$user->name}%")
+                      ->orWhere('pic', 'ilike', "%{$user->email}%");
+                });
+            } else {
+                $query->whereRaw('1 = 0');
+            }
+        } else {
+            $query->where('pic', 'ilike', "%{$userIdentifier}%");
+        }
+
+        return $query->get();
     }
 
     /**

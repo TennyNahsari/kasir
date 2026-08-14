@@ -306,15 +306,26 @@ class TransactionController extends Controller
         }
 
         return DB::transaction(function () use ($transaction) {
+            // Determine location_id for stock restoration
+            $locationId = $transaction->location_id;
+            if (!$locationId && $transaction->outlet_id) {
+                $location = \App\Models\Location::where('outlet_id', $transaction->outlet_id)
+                    ->where('type', 'OUTLET')
+                    ->first();
+                $locationId = $location?->id;
+            }
+
             // Restore inventory stock
             foreach ($transaction->items as $item) {
-                $inventoryStock = InventoryStock::where('product_id', $item->product_id)
-                    ->where('location_id', $transaction->outlet_id)
-                    ->first();
-                
-                if ($inventoryStock) {
-                    $inventoryStock->increment('quantity', $item->quantity);
-                    $inventoryStock->update(['last_stock_in' => now()]);
+                if ($locationId) {
+                    $inventoryStock = InventoryStock::where('product_id', $item->product_id)
+                        ->where('location_id', $locationId)
+                        ->first();
+                    
+                    if ($inventoryStock) {
+                        $inventoryStock->increment('quantity', $item->quantity);
+                        $inventoryStock->update(['last_stock_in' => now()]);
+                    }
                 }
             }
 

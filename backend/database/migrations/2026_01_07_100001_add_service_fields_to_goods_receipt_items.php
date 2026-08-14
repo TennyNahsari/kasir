@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('goods_receipt_items', function (Blueprint $table) {
             // Service Contract Fields (only applicable if product type = SERVICE)
-            $table->date('service_start_date')->nullable()->after('rejected_quantity');
+            $table->date('service_start_date')->nullable()->after('quantity_rejected');
             $table->date('service_end_date')->nullable()->after('service_start_date');
             $table->enum('contract_type', [
                 'RENTAL',

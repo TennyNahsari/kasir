@@ -215,7 +215,7 @@ class TicketController extends Controller
 
             return response()->json([
                 'message' => 'Ticket created successfully' . (isset($validated['create_schedule']) && $validated['create_schedule'] ? ' with recurring schedule' : ''),
-                'ticket' => $ticket->load(['asset.product', 'reporter', 'location', 'assignedTo'])
+                'ticket' => $ticket->load(['asset.product', 'reporter', 'location', 'assignedUser'])
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();

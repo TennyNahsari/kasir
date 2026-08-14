@@ -95,13 +95,7 @@ class Asset extends Model
         return $this->hasMany(MaintenanceSchedule::class);
     }
 
-    /**
-     * Get the user assigned to this asset
-     */
-    public function assignedUser()
-    {
-        return $this->belongsTo(User::class, 'assigned_to');
-    }
+    // Note: assignedUser relationship removed as assets table replaced assigned_to FK with pic string field.
 
     /**
      * Calculate depreciation
