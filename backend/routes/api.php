@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\GoodsReceiptController;
 use App\Http\Controllers\Api\AssetController;
 use App\Http\Controllers\Api\ServiceContractController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\TableController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\DashboardController as TicketDashboardController;
 use Illuminate\Support\Facades\Route;
@@ -28,7 +29,9 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/public/categories', [CategoryController::class, 'index']);
 Route::get('/public/products', [ProductController::class, 'index']);
 Route::get('/public/locations/{location}', [LocationController::class, 'show']);
+Route::get('/public/orders', [TransactionController::class, 'publicOrders']);
 Route::post('/public/orders', [TransactionController::class, 'store']);
+Route::get('/public/tables', [TableController::class, 'index']);
 
 // Public routes for Asset QR Code (anyone can scan)
 Route::get('/public/assets/{asset}', [AssetController::class, 'show']);
@@ -54,6 +57,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Users (Owner only)
     Route::apiResource('users', UserController::class);
 
+    // Tables
+    Route::apiResource('tables', TableController::class);
+
     // Categories
     Route::apiResource('categories', CategoryController::class);
 
@@ -66,6 +72,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Transactions
     Route::apiResource('transactions', TransactionController::class);
     Route::post('/transactions/{transaction}/void', [TransactionController::class, 'void']);
+    Route::post('/transactions/{transaction}/confirm-addon', [TransactionController::class, 'confirmAddon']);
 
     // ==================== INVENTORY & PROCUREMENT ROUTES ====================
     

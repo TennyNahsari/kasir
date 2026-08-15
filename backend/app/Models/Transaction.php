@@ -24,9 +24,12 @@ class Transaction extends Model
         'change_amount',
         'payment_method',
         'payment_details',
+        'customer_name',
         'notes',
         'table_id',
+        'order_type',
         'status',
+        'has_unconfirmed_addon',
         'completed_at',
     ];
 
@@ -38,6 +41,7 @@ class Transaction extends Model
         'paid_amount' => 'decimal:2',
         'change_amount' => 'decimal:2',
         'payment_details' => 'array',
+        'has_unconfirmed_addon' => 'boolean',
         'completed_at' => 'datetime',
     ];
 
@@ -72,14 +76,27 @@ class Transaction extends Model
     {
         $date = now()->format('Ymd');
         $outlet = str_pad($outletId, 3, '0', STR_PAD_LEFT);
-        $lastTransaction = self::where('outlet_id', $outletId)
+        
+        $lastTransaction = self::withTrashed()
+            ->where('outlet_id', $outletId)
             ->whereDate('created_at', now())
             ->orderBy('id', 'desc')
             ->first();
         
-        $sequence = $lastTransaction ? (int) substr($lastTransaction->transaction_no, -4) + 1 : 1;
-        $sequenceStr = str_pad($sequence, 4, '0', STR_PAD_LEFT);
-        
-        return "TRX{$date}{$outlet}{$sequenceStr}";
+        $sequence = 1;
+        if ($lastTransaction && preg_match('/(\d{4})$/', $lastTransaction->transaction_no, $matches)) {
+            $sequence = ((int) $matches[1]) + 1;
+        }
+
+        do {
+            $sequenceStr = str_pad($sequence, 4, '0', STR_PAD_LEFT);
+            $trxNo = "TRX{$date}{$outlet}{$sequenceStr}";
+            $exists = self::withTrashed()->where('transaction_no', $trxNo)->exists();
+            if ($exists) {
+                $sequence++;
+            }
+        } while ($exists);
+
+        return $trxNo;
     }
 }

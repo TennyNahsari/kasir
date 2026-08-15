@@ -21,10 +21,12 @@ return new class extends Migration
             $table->decimal('paid_amount', 15, 2)->nullable(); // Nullable for pending orders
             $table->decimal('change_amount', 15, 2)->nullable(); // Nullable for pending orders
             $table->enum('payment_method', ['cash', 'qris', 'transfer', 'ewallet', 'multiple'])->nullable();
-            $table->json('payment_details')->nullable(); // Multi payment
+            $table->string('customer_name')->nullable(); // Customer name for public/table orders
             $table->text('notes')->nullable();
             $table->foreignId('table_id')->nullable()->constrained()->onDelete('set null'); // F&B
+            $table->enum('order_type', ['dine_in', 'take_away'])->nullable()->default(null);
             $table->enum('status', ['pending', 'processed', 'delivered', 'completed', 'void', 'refund'])->default('completed');
+            $table->boolean('has_unconfirmed_addon')->default(false);
             $table->timestamp('completed_at')->nullable();
             $table->timestamps();
             $table->softDeletes();

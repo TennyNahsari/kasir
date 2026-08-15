@@ -165,7 +165,7 @@ export default {
     transactionNo: 'Transaction No.',
     date: 'Date',
     type: 'Type',
-    cashier: 'Cashier',
+    cashier: 'Processed By',
     payment: 'Payment',
     total: 'Total',
     status: 'Status',

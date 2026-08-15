@@ -28,6 +28,13 @@ import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
 import api from '@/services/api'
 
+const props = defineProps({
+  allowedTypes: {
+    type: Array,
+    default: null
+  }
+})
+
 const emit = defineEmits(['outlet-changed'])
 const { t } = useI18n()
 
@@ -96,6 +103,11 @@ const loadOutlets = async () => {
     
     // Map locations to outlet format (with outlet info)
     // For POS: Show all locations with type OUTLET, INVENTORY, or FNB (regardless of outlet_id)
+    const defaultValidTypes = ['OUTLET', 'FNB', 'INVENTORY', 'WAREHOUSE']
+    const validTypes = props.allowedTypes && props.allowedTypes.length > 0
+      ? props.allowedTypes.map(t => t.toUpperCase())
+      : defaultValidTypes
+
     const allLocations = locationsData.map(loc => ({
       location_id: loc.id,
       location_name: loc.name,
@@ -103,7 +115,7 @@ const loadOutlets = async () => {
       outlet_name: loc.outlet?.name || t('outlet.noOutletLabel'),
       business_type: loc.outlet?.business_type || (loc.type === 'FNB' ? 'fnb' : 'retail'),
       location_type: loc.type,
-      isValidType: ['OUTLET', 'FNB', 'INVENTORY', 'WAREHOUSE'].includes(loc.type?.toUpperCase())
+      isValidType: validTypes.includes(loc.type?.toUpperCase())
     }))
     
     console.log('All locations before filtering:', allLocations)

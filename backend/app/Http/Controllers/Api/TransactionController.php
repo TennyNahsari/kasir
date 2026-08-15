@@ -54,6 +54,11 @@ class TransactionController extends Controller
             $query->where('payment_method', $request->payment_method);
         }
 
+        // Filter by order type (dine_in / take_away)
+        if ($request->has('order_type') && $request->filled('order_type')) {
+            $query->where('order_type', $request->order_type);
+        }
+
         $transactions = $query->orderBy('created_at', 'desc')
             ->paginate($request->per_page ?? 20);
 
@@ -99,7 +104,10 @@ class TransactionController extends Controller
                 'payment_details' => 'nullable|array',
                 'paid_amount' => 'nullable|numeric|min:0',
                 'notes' => 'nullable|string',
-                'table_id' => 'nullable|exists:tables,id',
+                'table_id' => 'nullable',
+                'order_type' => 'nullable|in:dine_in,take_away',
+                'customer_name' => 'nullable|string|max:255',
+                'status' => 'nullable|in:pending,processed,delivered,completed,void,refund',
             ]);
             
             // If location_id is provided, get outlet_id from location
@@ -194,6 +202,141 @@ class TransactionController extends Controller
                 ? Transaction::generateTransactionNo($outletIdForTransaction)
                 : 'TRX-' . now()->format('YmdHis') . '-' . rand(100, 999);
 
+            // Resolve table_id or text table number
+            $tableIdToStore = null;
+            $tableVal = $validated['table_id'] ?? null;
+            $notesToStore = $validated['notes'] ?? null;
+
+            if (!empty($tableVal)) {
+                if (is_numeric($tableVal) && \App\Models\Table::where('id', $tableVal)->exists()) {
+                    $tableIdToStore = $tableVal;
+                } else {
+                    $foundTable = \App\Models\Table::where('table_number', (string)$tableVal)->first();
+                    if ($foundTable) {
+                        $tableIdToStore = $foundTable->id;
+                    } else {
+                        $tableNote = "Meja: {$tableVal}";
+                        $notesToStore = $notesToStore ? ($notesToStore . " | " . $tableNote) : $tableNote;
+                    }
+                }
+            }
+
+            // Check if this is an F&B / QR Table order that should append to an active transaction
+            $isFnbOrTableOrder = ($businessType === 'fnb')
+                || (isset($location) && strtoupper($location->type) === 'FNB')
+                || !empty($tableVal);
+
+            $activeTransaction = null;
+
+            if ($isFnbOrTableOrder && (!empty($tableIdToStore) || !empty($tableVal))) {
+                $activeQuery = Transaction::whereIn('status', ['pending', 'processed', 'delivered']);
+
+                if (isset($validated['location_id'])) {
+                    $activeQuery->where('location_id', $validated['location_id']);
+                } elseif ($outletIdForTransaction) {
+                    $activeQuery->where('outlet_id', $outletIdForTransaction);
+                }
+
+                $activeQuery->where(function($q) use ($tableIdToStore, $tableVal) {
+                    if ($tableIdToStore) {
+                        $q->where('table_id', $tableIdToStore);
+                    }
+                    if ($tableVal) {
+                        $q->orWhere('notes', 'like', "%Meja: {$tableVal}%");
+                    }
+                });
+
+                $activeTransaction = $activeQuery->latest()->first();
+            }
+
+            if ($activeTransaction) {
+                \Log::info('Appending order items to active FNB transaction', [
+                    'transaction_id' => $activeTransaction->id,
+                    'transaction_no' => $activeTransaction->transaction_no
+                ]);
+
+                // Append items to active transaction
+                foreach ($validated['items'] as $item) {
+                    $product = Product::find($item['product_id']);
+                    $addQty = (int) $item['quantity'];
+                    $addDiscount = (float) ($item['discount'] ?? 0);
+
+                    $existingItem = TransactionItem::where('transaction_id', $activeTransaction->id)
+                        ->where('product_id', $product->id)
+                        ->first();
+
+                    if ($existingItem) {
+                        $existingItem->quantity += $addQty;
+                        $existingItem->discount += $addDiscount;
+                        $existingItem->subtotal = ($existingItem->price * $existingItem->quantity) - $existingItem->discount;
+                        $existingItem->save();
+                    } else {
+                        $itemSubtotal = ($item['price'] * $addQty) - $addDiscount;
+                        TransactionItem::create([
+                            'transaction_id' => $activeTransaction->id,
+                            'product_id' => $product->id,
+                            'product_name' => $product->name,
+                            'price' => $item['price'],
+                            'quantity' => $addQty,
+                            'discount' => $addDiscount,
+                            'subtotal' => $itemSubtotal,
+                            'notes' => $item['notes'] ?? null,
+                        ]);
+                    }
+
+                    // Decrement inventory stock for the location
+                    $locationIdForStock = $validated['location_id'] ?? $activeTransaction->location_id;
+                    if ($locationIdForStock) {
+                        $inventoryStock = InventoryStock::where('product_id', $product->id)
+                            ->where('location_id', $locationIdForStock)
+                            ->first();
+                        if ($inventoryStock) {
+                            $inventoryStock->decrement('quantity', $addQty);
+                            $inventoryStock->update(['last_stock_out' => now()]);
+                        }
+                    }
+                }
+
+                // Update customer_name & order_type if provided
+                if (!empty($validated['customer_name'])) {
+                    $activeTransaction->customer_name = $validated['customer_name'];
+                }
+                if (!empty($validated['order_type'])) {
+                    $activeTransaction->order_type = $validated['order_type'];
+                }
+
+                // Add Order Tambahan flag to notes & set unconfirmed addon flag
+                if (empty($activeTransaction->notes)) {
+                    $activeTransaction->notes = '[Order Tambahan]';
+                } elseif (!str_contains($activeTransaction->notes, '[Order Tambahan]')) {
+                    $activeTransaction->notes = $activeTransaction->notes . ' | [Order Tambahan]';
+                }
+
+                $activeTransaction->has_unconfirmed_addon = true;
+
+                // Recalculate subtotal & total
+                $allSubtotal = TransactionItem::where('transaction_id', $activeTransaction->id)->get()->sum('subtotal');
+                $activeTransaction->subtotal = $allSubtotal;
+                $activeTransaction->discount = ($activeTransaction->discount ?? 0) + ($discount ?? 0);
+                $activeTransaction->tax = $tax ?? $activeTransaction->tax;
+                $activeTransaction->total = max(0, $activeTransaction->subtotal - $activeTransaction->discount + $activeTransaction->tax);
+
+                if ($paidAmount > 0) {
+                    $activeTransaction->paid_amount = ($activeTransaction->paid_amount ?? 0) + $paidAmount;
+                }
+
+                $activeTransaction->save();
+
+                // Log activity
+                ActivityLog::log('update_transaction', $activeTransaction, [
+                    'transaction_no' => $activeTransaction->transaction_no,
+                    'action' => 'append_items',
+                    'total' => $activeTransaction->total,
+                ]);
+
+                return response()->json($activeTransaction->load(['items.product', 'outlet', 'user', 'table']), 200);
+            }
+
             // Create transaction
             $transaction = Transaction::create([
                 'transaction_no' => $transactionNo,
@@ -209,10 +352,12 @@ class TransactionController extends Controller
                 'change_amount' => $changeAmount,
                 'payment_method' => $validated['payment_method'] ?? null,
                 'payment_details' => $validated['payment_details'] ?? null,
-                'notes' => $validated['notes'] ?? null,
-                'table_id' => $validated['table_id'] ?? null,
-                'status' => $paidAmount && $paidAmount > 0 ? 'completed' : 'pending',
-                'completed_at' => $paidAmount && $paidAmount > 0 ? now() : null,
+                'customer_name' => $validated['customer_name'] ?? null,
+                'notes' => $notesToStore,
+                'table_id' => $tableIdToStore,
+                'order_type' => $validated['order_type'] ?? null,
+                'status' => $validated['status'] ?? 'pending',
+                'completed_at' => (isset($validated['status']) && $validated['status'] === 'completed') ? now() : null,
             ]);
 
             // Create transaction items
@@ -350,5 +495,43 @@ class TransactionController extends Controller
 
             return response()->json(['message' => 'Transaction voided successfully']);
         });
+    }
+
+    public function publicOrders(Request $request)
+    {
+        $validated = $request->validate([
+            'location_id' => 'required',
+            'table_id' => 'nullable',
+        ]);
+
+        $query = Transaction::with(['items.product', 'items'])
+            ->where('location_id', $validated['location_id']);
+
+        if (!empty($validated['table_id'])) {
+            $tableId = $validated['table_id'];
+            $query->where(function ($q) use ($tableId) {
+                $q->where('table_id', $tableId)
+                  ->orWhere('table_id', (string)$tableId);
+            });
+        }
+
+        // Fetch active orders only (status not completed / void / refund)
+        $transactions = $query->whereIn('status', ['pending', 'processed', 'delivered'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $transactions
+        ]);
+    }
+
+    public function confirmAddon(Transaction $transaction)
+    {
+        $transaction->update(['has_unconfirmed_addon' => false]);
+        return response()->json([
+            'message' => 'Order tambahan berhasil dikonfirmasi',
+            'transaction' => $transaction->load(['items.product', 'outlet', 'user', 'table'])
+        ]);
     }
 }

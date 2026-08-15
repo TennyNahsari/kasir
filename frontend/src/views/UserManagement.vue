@@ -196,17 +196,25 @@
               <option value="owner">{{ $t('users.owner') }}</option>
               <option value="inventory">{{ $t('users.inventory') }}</option>
               <option value="supervisor">{{ $t('users.supervisor') }}</option>
+              <option value="kasir">Kasir (Cashier)</option>
               <option value="staff">{{ $t('users.staff') }}</option>
+              <option value="kitchen">Kitchen / Dapur (F&B)</option>
             </select>
           </div>
           <div v-if="!['owner', 'inventory'].includes(userForm.role)">
             <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{{ $t('users.locationLabel') }}</label>
             <select v-model="userForm.location_id" class="w-full border-gray-300 rounded-lg text-sm">
               <option value="">{{ $t('users.selectLocation') }}</option>
-              <option v-for="loc in locations" :key="loc.id" :value="loc.id">
+              <option v-for="loc in filteredLocationOptions" :key="loc.id" :value="loc.id">
                 {{ loc.name }} ({{ loc.type }})
               </option>
             </select>
+            <p v-if="userForm.role === 'kitchen'" class="text-[11px] text-blue-600 mt-1">
+              ℹ️ Role Kitchen hanya dapat di-assign ke lokasi bertipe F&B.
+            </p>
+            <p v-else-if="['kasir', 'staff', 'supervisor'].includes(userForm.role)" class="text-[11px] text-gray-500 mt-1">
+              ℹ️ Pilih lokasi Outlet atau F&B untuk Kasir / Supervisor.
+            </p>
           </div>
           <div class="flex items-center">
             <input v-model="userForm.is_active" type="checkbox" class="rounded border-gray-300 text-blue-600 mr-2">
@@ -238,6 +246,16 @@ const { t } = useI18n()
 const users = ref([])
 const locations = ref([])
 const showModal = ref(false)
+
+const filteredLocationOptions = computed(() => {
+  if (userForm.value.role === 'kitchen') {
+    return locations.value.filter(loc => loc.type === 'FNB')
+  }
+  if (['kasir', 'staff', 'supervisor'].includes(userForm.value.role)) {
+    return locations.value.filter(loc => ['OUTLET', 'FNB'].includes(loc.type))
+  }
+  return locations.value
+})
 const editingUser = ref(null)
 const errorMessage = ref('')
 const successMessage = ref('')

@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-4">
     <!-- Outlet Selector for Owner & Inventory -->
-    <OutletSelector v-if="isOwner" @outlet-changed="handleOutletChange" />
+    <OutletSelector v-if="isOwner" :allowed-types="['OUTLET', 'FNB']" @outlet-changed="handleOutletChange" />
 
     <!-- Fixed Outlet Display for Staff/Supervisor -->
     <div v-if="!isOwner && userOutletName" class="rounded-lg p-4" 
@@ -198,6 +198,61 @@
         </div>
       </div>
 
+      <!-- Order Options: Tipe, Meja, Nama Pemesan -->
+      <div class="mt-4 space-y-3 pt-3 border-t">
+        <template v-if="isFnbMode">
+          <div>
+            <label class="label text-xs font-semibold">Tipe Pesanan</label>
+            <div class="grid grid-cols-2 gap-2 mt-1">
+              <button
+                type="button"
+                @click="orderType = 'dine_in'"
+                :class="[
+                  'py-1.5 px-2 rounded-lg text-xs font-bold transition-all border flex items-center justify-center gap-1',
+                  orderType === 'dine_in'
+                    ? 'bg-blue-50 border-blue-600 text-blue-700 shadow-sm'
+                    : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                ]"
+              >
+                🍽️ Dine In
+              </button>
+              <button
+                type="button"
+                @click="orderType = 'take_away'"
+                :class="[
+                  'py-1.5 px-2 rounded-lg text-xs font-bold transition-all border flex items-center justify-center gap-1',
+                  orderType === 'take_away'
+                    ? 'bg-orange-50 border-orange-500 text-orange-700 shadow-sm'
+                    : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                ]"
+              >
+                🛍️ Take Away
+              </button>
+            </div>
+          </div>
+
+          <div v-if="orderType === 'dine_in'">
+            <label class="label text-xs font-semibold">Nomor Meja</label>
+            <input
+              v-model="tableNumber"
+              type="text"
+              class="input text-xs"
+              placeholder="Contoh: 1, 5, VIP-1 (Opsional)"
+            >
+          </div>
+        </template>
+
+        <div>
+          <label class="label text-xs font-semibold">Nama Pemesan / Pelanggan</label>
+          <input
+            v-model="customerName"
+            type="text"
+            class="input text-xs"
+            placeholder="Contoh: Budi (Opsional)"
+          >
+        </div>
+      </div>
+
       <!-- Payment -->
       <div class="mt-4 space-y-3">
         <div>
@@ -337,6 +392,61 @@
           </div>
         </div>
 
+        <!-- Order Options: Tipe, Meja, Nama Pemesan -->
+        <div class="space-y-3 pt-2 border-t">
+          <template v-if="isFnbMode">
+            <div>
+              <label class="label text-xs font-semibold">Tipe Pesanan</label>
+              <div class="grid grid-cols-2 gap-2 mt-1">
+                <button
+                  type="button"
+                  @click="orderType = 'dine_in'"
+                  :class="[
+                    'py-1.5 px-2 rounded-lg text-xs font-bold transition-all border flex items-center justify-center gap-1',
+                    orderType === 'dine_in'
+                      ? 'bg-blue-50 border-blue-600 text-blue-700 shadow-sm'
+                      : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                  ]"
+                >
+                  🍽️ Dine In
+                </button>
+                <button
+                  type="button"
+                  @click="orderType = 'take_away'"
+                  :class="[
+                    'py-1.5 px-2 rounded-lg text-xs font-bold transition-all border flex items-center justify-center gap-1',
+                    orderType === 'take_away'
+                      ? 'bg-orange-50 border-orange-500 text-orange-700 shadow-sm'
+                      : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                  ]"
+                >
+                  🛍️ Take Away
+                </button>
+              </div>
+            </div>
+
+            <div v-if="orderType === 'dine_in'">
+              <label class="label text-xs font-semibold">Nomor Meja</label>
+              <input
+                v-model="tableNumber"
+                type="text"
+                class="input text-xs"
+                placeholder="Contoh: 1, 5, VIP-1 (Opsional)"
+              >
+            </div>
+          </template>
+
+          <div>
+            <label class="label text-xs font-semibold">Nama Pemesan / Pelanggan</label>
+            <input
+              v-model="customerName"
+              type="text"
+              class="input text-xs"
+              placeholder="Contoh: Budi (Opsional)"
+            >
+          </div>
+        </div>
+
         <!-- Payment Method -->
         <div>
           <label class="label text-sm">{{ $t('pos.paymentMethod') }}</label>
@@ -448,6 +558,23 @@ const currentOutletId = ref(null)
 const debugInfo = ref(null)
 const userOutletName = ref('')
 const outletInfo = ref(null)
+const customerName = ref('')
+const orderType = ref('dine_in') // 'dine_in' | 'take_away'
+const tableNumber = ref('')
+const tables = ref([])
+
+const loadTables = async (outletId) => {
+  try {
+    const id = outletId || currentOutletId.value
+    if (!id) return
+    const { data } = await api.get('/tables', {
+      params: { location_id: id }
+    })
+    tables.value = data || []
+  } catch (err) {
+    console.error('Failed to load tables:', err)
+  }
+}
 
 const isOwner = computed(() => {
   const role = authStore.user?.role
@@ -635,7 +762,10 @@ const processCheckout = async () => {
   try {
     const transaction = await cartStore.checkout({
       payment_method: paymentMethod.value,
-      paid_amount: paidAmount.value
+      paid_amount: paidAmount.value,
+      order_type: isFnbMode.value ? orderType.value : null,
+      table_id: isFnbMode.value ? (tableNumber.value || null) : null,
+      customer_name: customerName.value || null,
     }, currentOutletId.value)
 
     successMessage.value = `No. Transaksi: ${transaction.transaction_no}`
@@ -646,6 +776,9 @@ const processCheckout = async () => {
     paidAmount.value = 0
     discount.value = 0
     searchQuery.value = ''
+    customerName.value = ''
+    tableNumber.value = ''
+    orderType.value = 'dine_in'
     
     // TODO: Print receipt
     
@@ -711,6 +844,7 @@ const loadProductsForOutlet = async (outletId) => {
     const locationResponse = await api.get(`/locations/${validOutletId}`)
     outletInfo.value = locationResponse.data
     userOutletName.value = locationResponse.data.name // Set outlet name for display
+    loadTables(validOutletId)
     console.log('Outlet info:', outletInfo.value)
     console.log('Outlet business type:', outletInfo.value?.outlet?.business_type)
     console.log('Location type:', outletInfo.value?.type)

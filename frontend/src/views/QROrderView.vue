@@ -1,11 +1,43 @@
 <template>
   <div class="min-h-screen bg-gray-50 pb-safe">
     <!-- Header -->
-    <div class="bg-gradient-to-r from-blue-600 to-blue-700 shadow-lg sticky top-0 z-10">
-      <div class="max-w-2xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
-        <div class="text-center text-white">
-          <h1 class="text-xl sm:text-2xl font-bold">{{ outlet?.name }}</h1>
-          <p class="text-xs sm:text-sm text-blue-100 mt-1">📍 Meja {{ tableNumber }}</p>
+    <div class="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 shadow-lg sticky top-0 z-20 backdrop-blur-md">
+      <div class="max-w-3xl mx-auto px-4 py-3 sm:py-4">
+        <div class="flex items-center justify-between gap-3 text-white">
+          <!-- Logo & Outlet Info -->
+          <div class="flex items-center gap-3 sm:gap-4 min-w-0">
+            <div class="relative flex-shrink-0">
+              <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-white p-1 flex items-center justify-center overflow-hidden shadow-md border-2 border-white/40">
+                <img 
+                  :src="restaurantImage" 
+                  @error="onImageError"
+                  alt="Restaurant Logo" 
+                  class="w-full h-full object-cover rounded-xl"
+                />
+              </div>
+            </div>
+            <div class="min-w-0">
+              <h1 class="text-base sm:text-2xl font-bold tracking-tight text-white truncate">{{ outlet?.name || 'Kasir Resto' }}</h1>
+              <div class="flex items-center gap-2 text-xs sm:text-sm text-blue-100/90 font-medium mt-0.5">
+                <span class="inline-flex items-center gap-1 bg-white/10 px-2 py-0.5 rounded-full text-[11px] sm:text-xs">
+                  <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span> Buka
+                </span>
+                <span class="hidden sm:inline">•</span>
+                <span class="hidden sm:inline">Menu Self Order</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Table Badge -->
+          <div class="flex-shrink-0">
+            <div class="bg-white/15 backdrop-blur-md border border-white/25 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold text-white shadow-inner flex items-center gap-1.5">
+              <span class="text-base sm:text-lg">📍</span>
+              <div class="text-right sm:text-left">
+                <span class="text-[10px] sm:text-xs block text-blue-200 uppercase tracking-wider leading-none">Meja</span>
+                <span class="text-sm sm:text-base font-extrabold leading-none">{{ tableNumber }}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -31,81 +63,213 @@
 
     <!-- Content -->
     <div v-else class="max-w-2xl mx-auto px-3 sm:px-4 py-4 sm:py-6 pb-28 sm:pb-32">
-      <!-- Categories -->
-      <div class="mb-4 sm:mb-6 -mx-3 sm:mx-0 px-3 sm:px-0">
-        <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-          <button
-            v-for="category in categories"
-            :key="category.id"
-            @click="selectedCategory = category.id"
+      <!-- Top Navigation Tabs (Menu vs Status Pesanan) -->
+      <div class="flex border border-gray-200 mb-4 sm:mb-6 bg-white rounded-xl p-1 shadow-sm">
+        <button
+          @click="activeTab = 'menu'"
+          :class="[
+            'flex-1 py-2.5 px-3 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-1.5',
+            activeTab === 'menu'
+              ? 'bg-blue-600 text-white shadow'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+          ]"
+        >
+          <span>🍽️ Menu</span>
+        </button>
+        <button
+          @click="activeTab = 'status'; loadTableOrders()"
+          :class="[
+            'flex-1 py-2.5 px-3 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-1.5 relative',
+            activeTab === 'status'
+              ? 'bg-blue-600 text-white shadow'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+          ]"
+        >
+          <span>📋 Status Pesanan</span>
+          <span 
+            v-if="tableOrders.length > 0"
             :class="[
-              'px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all flex-shrink-0',
-              selectedCategory === category.id
-                ? 'bg-blue-600 text-white shadow-md'
-                : 'bg-white text-gray-700 hover:bg-gray-100 shadow-sm'
+              'px-1.5 py-0.5 text-[10px] font-bold rounded-full ml-1',
+              activeTab === 'status' ? 'bg-white text-blue-700' : 'bg-blue-600 text-white'
             ]"
           >
-            {{ formatCategoryName(category.name) }}
-          </button>
-          <button
-            @click="selectedCategory = null"
-            :class="[
-              'px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all flex-shrink-0',
-              selectedCategory === null
-                ? 'bg-blue-600 text-white shadow-md'
-                : 'bg-white text-gray-700 hover:bg-gray-100 shadow-sm'
-            ]"
+            {{ tableOrders.length }}
+          </span>
+        </button>
+      </div>
+
+      <!-- Tab 1: Menu Section -->
+      <div v-if="activeTab === 'menu'">
+        <!-- Categories -->
+        <div class="mb-4 sm:mb-6 -mx-3 sm:mx-0 px-3 sm:px-0">
+          <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            <button
+              v-for="category in categories"
+              :key="category.id"
+              @click="selectedCategory = category.id"
+              :class="[
+                'px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all flex-shrink-0',
+                selectedCategory === category.id
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'bg-white text-gray-700 hover:bg-gray-100 shadow-sm'
+              ]"
+            >
+              {{ formatCategoryName(category.name) }}
+            </button>
+            <button
+              @click="selectedCategory = null"
+              :class="[
+                'px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all flex-shrink-0',
+                selectedCategory === null
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'bg-white text-gray-700 hover:bg-gray-100 shadow-sm'
+              ]"
+            >
+              Semua
+            </button>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div v-if="filteredProducts.length === 0" class="text-center py-12 bg-white rounded-xl shadow-sm">
+          <svg class="w-16 h-16 sm:w-20 sm:h-20 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+          <p class="text-gray-500 text-sm">Tidak ada menu tersedia</p>
+        </div>
+
+        <!-- Products -->
+        <div v-else class="grid grid-cols-2 gap-3 sm:gap-4">
+          <div
+            v-for="product in filteredProducts"
+            :key="product.id"
+            class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow"
           >
-            Semua
-          </button>
+            <div class="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center overflow-hidden">
+              <img 
+                v-if="product.image" 
+                :src="`http://localhost:8000/storage/${product.image}`" 
+                :alt="product.name"
+                class="w-full h-full object-cover"
+              >
+              <svg v-else class="w-12 h-12 sm:w-16 sm:h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div class="p-2.5 sm:p-3">
+              <h3 class="font-medium text-gray-900 text-xs sm:text-sm mb-1 line-clamp-2 min-h-[2.5rem] sm:min-h-[2.25rem]">
+                {{ product.name }}
+              </h3>
+              <p class="text-blue-600 font-bold text-sm sm:text-base mb-2">
+                Rp {{ formatNumber(product.selling_price) }}
+              </p>
+              <button
+                @click="addToCart(product)"
+                :disabled="product.stock <= 0 && product.track_stock"
+                :class="[
+                  'w-full py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all active:scale-95',
+                  (product.stock > 0 || !product.track_stock)
+                    ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
+                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                ]"
+              >
+                {{ (product.stock > 0 || !product.track_stock) ? '+ Tambah' : 'Habis' }}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Empty State -->
-      <div v-if="filteredProducts.length === 0" class="text-center py-12">
-        <svg class="w-16 h-16 sm:w-20 sm:h-20 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-        </svg>
-        <p class="text-gray-500 text-sm">Tidak ada menu tersedia</p>
-      </div>
-
-      <!-- Products -->
-      <div class="grid grid-cols-2 gap-3 sm:gap-4">
-        <div
-          v-for="product in filteredProducts"
-          :key="product.id"
-          class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow"
-        >
-          <div class="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center overflow-hidden">
-            <img 
-              v-if="product.image" 
-              :src="`http://localhost:8000/storage/${product.image}`" 
-              :alt="product.name"
-              class="w-full h-full object-cover"
-            >
-            <svg v-else class="w-12 h-12 sm:w-16 sm:h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      <!-- Tab 2: Status Pesanan Section -->
+      <div v-else-if="activeTab === 'status'" class="space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm sm:text-base font-bold text-gray-900 flex items-center gap-2">
+            <span>Riwayat Pesanan Meja {{ tableNumber }}</span>
+          </h2>
+          <button 
+            @click="loadTableOrders" 
+            class="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1 font-medium bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200 active:scale-95 transition-all"
+            :disabled="loadingOrders"
+          >
+            <svg class="w-3.5 h-3.5" :class="{ 'animate-spin': loadingOrders }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
+            <span>Refresh</span>
+          </button>
+        </div>
+
+        <div v-if="loadingOrders" class="text-center py-10 bg-white rounded-xl shadow-sm p-6">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+          <p class="text-xs text-gray-500">Memuat status pesanan...</p>
+        </div>
+
+        <div v-else-if="activeTableOrders.length === 0" class="text-center py-10 bg-white rounded-xl shadow-sm p-6 border">
+          <div class="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-3">
+            <span class="text-2xl">📑</span>
           </div>
-          <div class="p-2.5 sm:p-3">
-            <h3 class="font-medium text-gray-900 text-xs sm:text-sm mb-1 line-clamp-2 min-h-[2.5rem] sm:min-h-[2.25rem]">
-              {{ product.name }}
-            </h3>
-            <p class="text-blue-600 font-bold text-sm sm:text-base mb-2">
-              Rp {{ formatNumber(product.selling_price) }}
-            </p>
-            <button
-              @click="addToCart(product)"
-              :disabled="product.stock <= 0 && product.track_stock"
-              :class="[
-                'w-full py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all active:scale-95',
-                (product.stock > 0 || !product.track_stock)
-                  ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
-                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-              ]"
-            >
-              {{ (product.stock > 0 || !product.track_stock) ? '+ Tambah' : 'Habis' }}
-            </button>
+          <h3 class="text-sm font-semibold text-gray-800">Belum Ada Pesanan</h3>
+          <p class="text-xs text-gray-500 mt-1">Belum ada pesanan aktif untuk Meja {{ tableNumber }} saat ini.</p>
+          <button 
+            @click="activeTab = 'menu'" 
+            class="mt-4 px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+          >
+            + Buat Pesanan Baru
+          </button>
+        </div>
+
+        <div v-else class="space-y-3">
+          <div 
+            v-for="order in activeTableOrders" 
+            :key="order.id"
+            class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 transition-all hover:shadow-md"
+          >
+            <div class="flex items-start justify-between gap-2 pb-3 border-b border-gray-100">
+              <div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="text-xs font-mono font-bold text-gray-800">#{{ order.transaction_no }}</span>
+                  <span 
+                    :class="order.order_type === 'take_away' ? 'bg-orange-100 text-orange-800 border-orange-200' : 'bg-blue-100 text-blue-800 border-blue-200'"
+                    class="px-2 py-0.5 rounded text-[10px] font-bold border"
+                  >
+                    {{ order.order_type === 'take_away' ? '🛍️ Take Away' : '🍽️ Dine In' }}
+                  </span>
+                </div>
+                <p class="text-[11px] text-gray-400 mt-0.5">{{ formatDate(order.created_at) }}</p>
+              </div>
+              <span 
+                :class="getStatusBadge(order.status).bg"
+                class="px-2.5 py-1 rounded-full text-xs font-bold border flex items-center gap-1 shrink-0 shadow-sm"
+              >
+                <span>{{ getStatusBadge(order.status).icon }}</span>
+                <span>{{ getStatusBadge(order.status).text }}</span>
+              </span>
+            </div>
+
+            <!-- Notes if present -->
+            <div v-if="order.notes" class="mt-2 text-xs bg-gray-50 p-2 rounded-lg text-gray-600">
+              <span class="font-medium">Catatan:</span> {{ order.notes }}
+            </div>
+
+            <!-- Item List -->
+            <div class="mt-3 space-y-2">
+              <div 
+                v-for="item in order.items" 
+                :key="item.id"
+                class="flex justify-between items-center text-xs"
+              >
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-gray-900 bg-gray-100 px-1.5 py-0.5 rounded text-[11px]">{{ item.quantity }}x</span>
+                  <span class="text-gray-800 font-medium">{{ item.product_name || item.product?.name }}</span>
+                </div>
+                <span class="text-gray-600 font-semibold">Rp {{ formatNumber(item.subtotal || (item.price * item.quantity)) }}</span>
+              </div>
+            </div>
+
+            <!-- Total Footer -->
+            <div class="mt-3 pt-2 border-t border-dashed border-gray-200 flex justify-between items-center text-xs sm:text-sm">
+              <span class="text-gray-500 font-medium">Total Tagihan</span>
+              <span class="text-blue-600 font-extrabold text-sm sm:text-base">Rp {{ formatNumber(order.total) }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -207,6 +371,37 @@
             </div>
           </div>
           
+          <!-- Order Type Selection -->
+          <div class="space-y-1">
+            <label class="block text-xs font-semibold text-gray-700">Tipe Pesanan</label>
+            <div class="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                @click="orderType = 'dine_in'"
+                :class="[
+                  'py-2 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5',
+                  orderType === 'dine_in'
+                    ? 'bg-blue-50 border-blue-600 text-blue-700 shadow-sm'
+                    : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                ]"
+              >
+                <span>🍽️ Makan di Tempat</span>
+              </button>
+              <button
+                type="button"
+                @click="orderType = 'take_away'"
+                :class="[
+                  'py-2 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5',
+                  orderType === 'take_away'
+                    ? 'bg-orange-50 border-orange-500 text-orange-700 shadow-sm'
+                    : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                ]"
+              >
+                <span>🛍️ Bawa Pulang</span>
+              </button>
+            </div>
+          </div>
+
           <input
             v-model="customerName"
             type="text"
@@ -247,12 +442,20 @@
         <p class="text-sm sm:text-base text-gray-600 mb-6">
           Pesanan Anda sedang diproses.<br class="hidden sm:block">Mohon tunggu sebentar.
         </p>
-        <button
-          @click="resetOrder"
-          class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3 sm:py-3.5 rounded-xl font-bold text-sm sm:text-base shadow-lg active:scale-95 transition-all"
-        >
-          Pesan Lagi
-        </button>
+        <div class="space-y-2 mt-4">
+          <button
+            @click="activeTab = 'status'; showSuccess = false; loadTableOrders()"
+            class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3 rounded-xl font-bold text-sm shadow-md active:scale-95 transition-all"
+          >
+            📋 Cek Status Pesanan
+          </button>
+          <button
+            @click="resetOrder"
+            class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-xl font-semibold text-sm transition-all"
+          >
+            + Tambah Menu Lain
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -262,6 +465,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '@/services/api'
+import defaultRestaurantLogo from '@/assets/restaurant.png'
 
 const route = useRoute()
 const locationId = route.params.locationId
@@ -276,6 +480,71 @@ const selectedCategory = ref(null)
 const cart = ref([])
 const customerName = ref('')
 const customerNote = ref('')
+const orderType = ref('dine_in') // 'dine_in' | 'take_away'
+const imageError = ref(false)
+
+const restaurantImage = computed(() => {
+  if (!imageError.value) {
+    const locImage = location.value?.image || location.value?.logo || outlet.value?.image || outlet.value?.logo
+    if (locImage) {
+      return locImage.startsWith('http') ? locImage : `http://localhost:8000/storage/${locImage}`
+    }
+  }
+  return defaultRestaurantLogo
+})
+
+const onImageError = () => {
+  imageError.value = true
+}
+
+const activeTab = ref('menu') // 'menu' | 'status'
+const tableOrders = ref([])
+const loadingOrders = ref(false)
+
+const loadTableOrders = async () => {
+  try {
+    loadingOrders.value = true
+    const { data } = await api.get('/public/orders', {
+      params: {
+        location_id: locationId,
+        table_id: tableId
+      }
+    })
+    tableOrders.value = data.data || []
+  } catch (err) {
+    console.error('Failed to load table orders:', err)
+  } finally {
+    loadingOrders.value = false
+  }
+}
+
+const activeTableOrders = computed(() => {
+  return tableOrders.value.filter(o => ['pending', 'processed', 'delivered'].includes(o.status?.toLowerCase()))
+})
+
+const getStatusBadge = (status) => {
+  switch (status?.toLowerCase()) {
+    case 'pending':
+      return { text: 'Menunggu Konfirmasi', bg: 'bg-amber-100 text-amber-800 border-amber-300', icon: '⏳' }
+    case 'processed':
+      return { text: 'Sedang Diproses Dapur', bg: 'bg-blue-100 text-blue-800 border-blue-300', icon: '🍳' }
+    case 'delivered':
+      return { text: 'Pesanan Diantar', bg: 'bg-purple-100 text-purple-800 border-purple-300', icon: '🚴' }
+    case 'completed':
+      return { text: 'Selesai', bg: 'bg-green-100 text-green-800 border-green-300', icon: '✅' }
+    case 'void':
+    case 'refund':
+      return { text: 'Dibatalkan', bg: 'bg-red-100 text-red-800 border-red-300', icon: '❌' }
+    default:
+      return { text: status || 'Pending', bg: 'bg-gray-100 text-gray-800 border-gray-300', icon: '📝' }
+  }
+}
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+}
 
 const loading = ref(true)
 const error = ref(null)
@@ -452,6 +721,8 @@ const submitOrder = async () => {
     await api.post('/public/orders', {
       location_id: parseInt(locationId),
       table_id: parseInt(tableId),
+      order_type: orderType.value,
+      customer_name: customerName.value || null,
       items: cart.value,
       discount: 0,
       tax: 0,
@@ -460,6 +731,7 @@ const submitOrder = async () => {
       notes: notes
     })
 
+    await loadTableOrders()
     showCart.value = false
     showSuccess.value = true
   } catch (err) {
@@ -480,6 +752,7 @@ const resetOrder = () => {
 
 onMounted(() => {
   loadData()
+  loadTableOrders()
 })
 </script>
 <style scoped>

@@ -50,7 +50,7 @@ const router = createRouter({
           path: 'settings/users',
           name: 'SettingsUsers',
           component: () => import('@/views/UserManagement.vue'),
-          meta: { roles: ['owner', 'inventory'] }
+          meta: { roles: ['owner'] }
         },
         {
           path: 'settings/products',

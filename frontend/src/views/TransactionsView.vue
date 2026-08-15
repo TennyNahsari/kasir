@@ -1,18 +1,28 @@
 <template>
   <div>
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
-      <h2 class="text-xl sm:text-2xl font-bold">{{ $t('transactions.title') }}</h2>
-      <button @click="exportToExcel" class="w-full sm:w-auto bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2 text-sm sm:text-base">
-        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-        {{ $t('transactions.exportExcel') }}
-      </button>
+      <div>
+        <h2 class="text-xl sm:text-2xl font-bold text-gray-900">{{ $t('transactions.title') }}</h2>
+      </div>
+      <div class="flex items-center gap-2 w-full sm:w-auto">
+        <button 
+          @click="loadTransactions" 
+          class="flex-1 sm:flex-none bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2 text-sm font-semibold transition-all active:scale-95 shadow-sm"
+        >
+          <span class="text-base">🔄</span> Refresh
+        </button>
+        <button @click="exportToExcel" class="flex-1 sm:flex-none bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2 text-sm font-semibold shadow-sm">
+          <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          {{ $t('transactions.exportExcel') }}
+        </button>
+      </div>
     </div>
 
     <!-- Filter -->
     <div class="card mb-4 sm:mb-6">
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-3 sm:gap-4">
         <div>
           <label class="label text-xs sm:text-sm">{{ $t('transactions.dateFrom') }}</label>
           <input v-model="dateFrom" type="date" class="input text-sm">
@@ -28,6 +38,14 @@
             <option value="retail">{{ $t('transactions.retail') }}</option>
             <option value="minimarket">{{ $t('transactions.minimarket') }}</option>
             <option value="fnb">{{ $t('transactions.fnb') }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="label text-xs sm:text-sm">Tipe Pesanan</label>
+          <select v-model="orderType" class="input text-sm">
+            <option value="">{{ $t('transactions.all') }}</option>
+            <option value="dine_in">Dine In (Makan di Tempat)</option>
+            <option value="take_away">Take Away (Bawa Pulang)</option>
           </select>
         </div>
         <div>
@@ -65,19 +83,51 @@
         </thead>
         <tbody class="divide-y">
           <tr v-for="transaction in transactions" :key="transaction.id" class="hover:bg-gray-50">
-            <td class="px-4 py-3 text-sm font-mono">{{ transaction.transaction_no }}</td>
+            <td class="px-4 py-3 text-sm font-mono">
+              <div class="flex flex-col gap-0.5 items-start font-sans">
+                <span class="font-mono font-bold text-gray-900 text-sm">{{ transaction.transaction_no }}</span>
+
+                <!-- Customer Name -->
+                <span v-if="transaction.customer_name" class="text-xs font-semibold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200 inline-flex items-center gap-1">
+                  👤 {{ transaction.customer_name }}
+                </span>
+
+                <!-- Table Number -->
+                <span v-if="getTableDisplay(transaction)" class="text-xs font-semibold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 inline-flex items-center gap-1">
+                  🪑 {{ getTableDisplay(transaction) }}
+                </span>
+
+                <!-- Addon Order Badge -->
+                <span v-if="hasAddonOrder(transaction)" class="text-[11px] font-bold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-300 inline-flex items-center gap-1 animate-pulse">
+                  🔔 Order Tambahan
+                </span>
+              </div>
+            </td>
             <td class="px-4 py-3 text-sm">{{ formatDate(transaction.created_at) }}</td>
             <td class="px-4 py-3 text-sm">
-              <span :class="[
-                'px-2 py-1 rounded text-xs font-medium',
-                transaction.business_type === 'retail' ? 'bg-blue-100 text-blue-700' :
-                transaction.business_type === 'minimarket' ? 'bg-green-100 text-green-700' :
-                'bg-orange-100 text-orange-700'
-              ]">
-                {{ getBusinessTypeLabel(transaction.business_type) }}
-              </span>
+              <div class="flex flex-col gap-1 items-start">
+                <span :class="[
+                  'px-2 py-0.5 rounded text-xs font-medium',
+                  transaction.business_type === 'retail' ? 'bg-blue-100 text-blue-700' :
+                  transaction.business_type === 'minimarket' ? 'bg-green-100 text-green-700' :
+                  'bg-orange-100 text-orange-700'
+                ]">
+                  {{ getBusinessTypeLabel(transaction.business_type) }}
+                </span>
+                <span 
+                  v-if="transaction.order_type"
+                  :class="[
+                    'px-2 py-0.5 rounded text-[11px] font-semibold border',
+                    transaction.order_type === 'take_away' ? 'bg-orange-50 text-orange-800 border-orange-200' : 'bg-blue-50 text-blue-800 border-blue-200'
+                  ]"
+                >
+                  {{ transaction.order_type === 'take_away' ? '🛍️ Take Away' : '🍽️ Dine In' }}
+                </span>
+              </div>
             </td>
-            <td class="px-4 py-3 text-sm">{{ transaction.user?.name || $t('transactions.customer') }}</td>
+            <td class="px-4 py-3 text-sm font-semibold text-gray-900">
+              {{ transaction.user?.name || 'Cutomers' }}
+            </td>
             <td class="px-4 py-3 text-sm capitalize">{{ transaction.payment_method || '-' }}</td>
             <td class="px-4 py-3 text-sm text-right font-semibold">
               {{ formatCurrency(transaction.total) }}
@@ -99,11 +149,19 @@
             </td>
             <td class="px-4 py-3 text-sm text-center">
               <div class="flex items-center justify-center gap-2">
+                <button 
+                  v-if="transaction.has_unconfirmed_addon"
+                  @click="confirmAddonOrder(transaction)" 
+                  class="text-xs font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 border border-amber-300 px-2 py-1 rounded transition-all active:scale-95 flex items-center gap-1 shadow-sm"
+                  title="Klik untuk mengonfirmasi order tambahan"
+                >
+                  ✓ Konfirmasi Order
+                </button>
                 <button @click="viewDetail(transaction)" class="text-blue-600 hover:text-blue-700 font-medium">
                   {{ $t('transactions.detail') }}
                 </button>
                 <button 
-                  v-if="transaction.business_type === 'fnb' && ['pending', 'processed', 'delivered'].includes(transaction.status)"
+                  v-if="['pending', 'processed', 'delivered'].includes(transaction.status)"
                   @click="showStatusModal(transaction)" 
                   class="text-green-600 hover:text-green-700 font-medium"
                 >
@@ -127,24 +185,50 @@
     <div class="lg:hidden space-y-3">
       <div v-for="transaction in transactions" :key="transaction.id" class="card p-3">
         <div class="flex justify-between items-start mb-2">
-          <div>
-            <div class="font-mono text-xs font-semibold text-gray-900">{{ transaction.transaction_no }}</div>
+          <div class="flex flex-col gap-0.5 items-start">
+            <div class="font-mono text-xs font-bold text-gray-900">{{ transaction.transaction_no }}</div>
             <div class="text-xs text-gray-600">{{ formatDate(transaction.created_at) }}</div>
+            
+            <!-- Customer Name -->
+            <span v-if="transaction.customer_name" class="text-xs font-semibold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200 inline-flex items-center gap-1">
+              👤 {{ transaction.customer_name }}
+            </span>
+
+            <!-- Table Number -->
+            <span v-if="getTableDisplay(transaction)" class="text-xs font-semibold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 inline-flex items-center gap-1">
+              🪑 {{ getTableDisplay(transaction) }}
+            </span>
+
+            <!-- Addon Order Badge -->
+            <span v-if="hasAddonOrder(transaction)" class="text-[11px] font-bold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-300 inline-flex items-center gap-1 animate-pulse">
+              🔔 Order Tambahan
+            </span>
           </div>
-          <span :class="[
-            'px-2 py-0.5 rounded text-xs font-medium',
-            transaction.business_type === 'retail' ? 'bg-blue-100 text-blue-700' :
-            transaction.business_type === 'minimarket' ? 'bg-green-100 text-green-700' :
-            'bg-orange-100 text-orange-700'
-          ]">
-            {{ getBusinessTypeLabel(transaction.business_type) }}
-          </span>
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <span :class="[
+              'px-2 py-0.5 rounded text-xs font-medium',
+              transaction.business_type === 'retail' ? 'bg-blue-100 text-blue-700' :
+              transaction.business_type === 'minimarket' ? 'bg-green-100 text-green-700' :
+              'bg-orange-100 text-orange-700'
+            ]">
+              {{ getBusinessTypeLabel(transaction.business_type) }}
+            </span>
+            <span 
+              v-if="transaction.order_type"
+              :class="[
+                'px-2 py-0.5 rounded text-[11px] font-semibold border',
+                transaction.order_type === 'take_away' ? 'bg-orange-50 text-orange-800 border-orange-200' : 'bg-blue-50 text-blue-800 border-blue-200'
+              ]"
+            >
+              {{ transaction.order_type === 'take_away' ? '🛍️ Take Away' : '🍽️ Dine In' }}
+            </span>
+          </div>
         </div>
 
         <div class="grid grid-cols-2 gap-2 text-xs mb-3">
           <div>
             <span class="text-gray-600">{{ $t('transactions.cashier') }}:</span>
-            <span class="font-medium ml-1">{{ transaction.user?.name || $t('transactions.customer') }}</span>
+            <span class="font-semibold ml-1 text-gray-900">{{ transaction.user?.name || 'Customer' }}</span>
           </div>
           <div>
             <span class="text-gray-600">{{ $t('transactions.payment') }}:</span>
@@ -163,6 +247,13 @@
             <div class="text-base font-bold text-primary-600">{{ formatCurrency(transaction.total) }}</div>
           </div>
           <div class="flex items-center gap-2">
+            <button 
+              v-if="transaction.has_unconfirmed_addon"
+              @click="confirmAddonOrder(transaction)" 
+              class="text-xs font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 border border-amber-300 px-2 py-1 rounded-lg transition-all active:scale-95 shadow-sm"
+            >
+              ✓ Konfirmasi Order
+            </button>
             <span :class="[
               'px-2 py-1 rounded text-xs font-medium',
               transaction.status === 'completed' ? 'bg-green-100 text-green-700' :
@@ -175,7 +266,7 @@
               {{ transaction.status }}
             </span>
             <button 
-              v-if="transaction.business_type === 'fnb' && ['pending', 'processed', 'delivered'].includes(transaction.status)"
+              v-if="['pending', 'processed', 'delivered'].includes(transaction.status)"
               @click="showStatusModal(transaction)" 
               class="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-lg hover:bg-green-100"
             >
@@ -216,8 +307,8 @@
             <div class="font-medium">{{ formatDate(selectedTransaction.created_at) }}</div>
           </div>
           <div>
-            <div class="text-gray-600">{{ $t('transactions.cashier') }}</div>
-            <div class="font-medium">{{ selectedTransaction.user?.name || $t('transactions.customer') }}</div>
+            <div class="text-gray-600">{{ selectedTransaction.customer_name ? 'Nama Pemesan' : $t('transactions.cashier') }}</div>
+            <div class="font-bold text-gray-900">{{ selectedTransaction.customer_name || selectedTransaction.user?.name || $t('transactions.customer') }}</div>
           </div>
           <div>
             <div class="text-gray-600">{{ $t('transactions.paymentMethod') }}</div>
@@ -226,6 +317,27 @@
           <div>
             <div class="text-gray-600">{{ $t('transactions.status') }}</div>
             <div class="font-medium capitalize">{{ selectedTransaction.status }}</div>
+          </div>
+          <div>
+            <div class="text-gray-600">Tipe Pesanan</div>
+            <div class="font-medium">
+              <span 
+                v-if="selectedTransaction.order_type"
+                :class="selectedTransaction.order_type === 'take_away' ? 'bg-orange-100 text-orange-800 border-orange-200' : 'bg-blue-100 text-blue-800 border-blue-200'"
+                class="px-2 py-0.5 rounded text-xs font-bold border"
+              >
+                {{ selectedTransaction.order_type === 'take_away' ? '🛍️ Take Away (Bawa Pulang)' : '🍽️ Dine In (Makan di Tempat)' }}
+              </span>
+              <span v-else class="text-gray-400">-</span>
+            </div>
+          </div>
+          <div v-if="getTableDisplay(selectedTransaction)">
+            <div class="text-gray-600">Nomor Meja</div>
+            <div class="font-bold text-emerald-800 flex items-center gap-1 mt-0.5">
+              <span class="bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded text-xs">
+                🪑 {{ getTableDisplay(selectedTransaction) }}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -351,6 +463,7 @@ const dateFrom = ref('')
 const dateTo = ref('')
 const businessType = ref('')
 const paymentMethod = ref('')
+const orderType = ref('')
 const showDetail = ref(false)
 const selectedTransaction = ref(null)
 const showStatusUpdate = ref(false)
@@ -385,6 +498,34 @@ const getBusinessTypeLabel = (type) => {
   return labels[type] || type
 }
 
+const hasAddonOrder = (transaction) => {
+  if (!transaction) return false
+  return Boolean(transaction.has_unconfirmed_addon)
+}
+
+const confirmAddonOrder = async (transaction) => {
+  try {
+    await api.post(`/transactions/${transaction.id}/confirm-addon`)
+    transaction.has_unconfirmed_addon = false
+  } catch (error) {
+    console.error('Failed to confirm addon order:', error)
+  }
+}
+
+const getTableDisplay = (transaction) => {
+  if (!transaction) return null
+  if (transaction.table?.table_number) {
+    return `Meja ${transaction.table.table_number}`
+  }
+  if (transaction.notes) {
+    const match = transaction.notes.match(/Meja:\s*([^|]+)/i)
+    if (match && match[1]) {
+      return `Meja ${match[1].trim()}`
+    }
+  }
+  return null
+}
+
 const loadTransactions = async () => {
   try {
     const params = {}
@@ -392,6 +533,7 @@ const loadTransactions = async () => {
     if (dateTo.value) params.date_to = dateTo.value
     if (businessType.value) params.business_type = businessType.value
     if (paymentMethod.value) params.payment_method = paymentMethod.value
+    if (orderType.value) params.order_type = orderType.value
     // Backend will auto-filter by user's location_id or outlet_id
     // No need to send outlet_id from frontend
 

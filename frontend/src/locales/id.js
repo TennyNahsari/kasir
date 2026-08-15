@@ -165,7 +165,7 @@ export default {
     transactionNo: 'No. Transaksi',
     date: 'Tanggal',
     type: 'Tipe',
-    cashier: 'Kasir',
+    cashier: 'Diproses Oleh',
     payment: 'Pembayaran',
     total: 'Total',
     status: 'Status',

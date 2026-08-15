@@ -55,8 +55,12 @@
         <div class="flex justify-between items-start mb-3 sm:mb-4">
           <div class="flex-1 min-w-0 mr-2">
             <h3 class="text-base sm:text-lg font-semibold text-gray-900 truncate">{{ location.name }}</h3>
-            <p class="text-xs sm:text-sm text-gray-500 mt-1">{{ location.code }}</p>
-            <span :class="getTypeClass(location.type)" class="inline-block px-2 py-1 text-xs font-semibold rounded-full mt-1">
+            <p class="text-xs sm:text-sm text-gray-500 mt-1 flex items-center gap-1.5 flex-wrap">
+              <span class="font-mono bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded text-xs border border-gray-200 font-medium">ID: {{ location.id }}</span>
+              <span>•</span>
+              <span>{{ location.code }}</span>
+            </p>
+            <span :class="getTypeClass(location.type)" class="inline-block px-2 py-1 text-xs font-semibold rounded-full mt-1.5">
               {{ location.type }}
             </span>
           </div>
