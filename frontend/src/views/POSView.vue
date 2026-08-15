@@ -89,7 +89,7 @@
       <!-- Products Grid -->
       <div v-if="isValidPosLocation" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 pb-24 lg:pb-0">
         <div
-          v-for="product in filteredProducts"
+          v-for="product in paginatedProducts"
           :key="product.id"
           @click="addToCart(product)"
           class="card cursor-pointer hover:shadow-md transition-all active:scale-95 p-2 sm:p-3"
@@ -112,6 +112,20 @@
             <span v-if="product.reserved_quantity > 0" class="text-orange-500"> ({{ product.reserved_quantity }} {{ $t('pos.reserved') }})</span>
           </p>
         </div>
+      </div>
+
+      <!-- POS Product Pagination -->
+      <div v-if="isValidPosLocation && filteredProducts.length > 0" class="mt-4 border-t pt-3">
+        <Pagination
+          :current-page="posCurrentPage"
+          :last-page="posLastPage"
+          :per-page="posPerPage"
+          :total="filteredProducts.length"
+          :from="posFromItem"
+          :to="posToItem"
+          @update:currentPage="posCurrentPage = $event"
+          @update:perPage="posPerPage = $event; posCurrentPage = 1"
+        />
       </div>
 
       <div v-if="loading" class="text-center py-8">
@@ -203,7 +217,7 @@
         <template v-if="isFnbMode">
           <div>
             <label class="label text-xs font-semibold">Tipe Pesanan</label>
-            <div class="grid grid-cols-2 gap-2 mt-1">
+            <div class="grid grid-cols-3 gap-1.5 mt-1">
               <button
                 type="button"
                 @click="orderType = 'dine_in'"
@@ -228,10 +242,22 @@
               >
                 🛍️ Take Away
               </button>
+              <button
+                type="button"
+                @click="orderType = 'online'"
+                :class="[
+                  'py-1.5 px-2 rounded-lg text-xs font-bold transition-all border flex items-center justify-center gap-1',
+                  orderType === 'online'
+                    ? 'bg-purple-50 border-purple-600 text-purple-700 shadow-sm'
+                    : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                ]"
+              >
+                🛵 Online
+              </button>
             </div>
           </div>
 
-          <div v-if="orderType === 'dine_in'">
+          <div v-if="orderType !== 'online'">
             <label class="label text-xs font-semibold">Nomor Meja</label>
             <input
               v-model="tableNumber"
@@ -397,7 +423,7 @@
           <template v-if="isFnbMode">
             <div>
               <label class="label text-xs font-semibold">Tipe Pesanan</label>
-              <div class="grid grid-cols-2 gap-2 mt-1">
+              <div class="grid grid-cols-3 gap-1.5 mt-1">
                 <button
                   type="button"
                   @click="orderType = 'dine_in'"
@@ -422,10 +448,22 @@
                 >
                   🛍️ Take Away
                 </button>
+                <button
+                  type="button"
+                  @click="orderType = 'online'"
+                  :class="[
+                    'py-1.5 px-2 rounded-lg text-xs font-bold transition-all border flex items-center justify-center gap-1',
+                    orderType === 'online'
+                      ? 'bg-purple-50 border-purple-600 text-purple-700 shadow-sm'
+                      : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                  ]"
+                >
+                  🛵 Online
+                </button>
               </div>
             </div>
 
-            <div v-if="orderType === 'dine_in'">
+            <div v-if="orderType !== 'online'">
               <label class="label text-xs font-semibold">Nomor Meja</label>
               <input
                 v-model="tableNumber"
@@ -531,9 +569,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import OutletSelector from '@/components/OutletSelector.vue'
+import Pagination from '@/components/Pagination.vue'
 import { useProductStore } from '@/stores/product'
 import { useCartStore } from '@/stores/cart'
 import { useAuthStore } from '@/stores/auth'
@@ -575,6 +614,24 @@ const loadTables = async (outletId) => {
     console.error('Failed to load tables:', err)
   }
 }
+
+watch(tableNumber, async (newVal) => {
+  if (!isFnbMode.value || orderType.value === 'online' || !newVal || !currentOutletId.value) return
+  try {
+    const { data } = await api.get('/public/orders', {
+      params: {
+        location_id: currentOutletId.value,
+        table_id: newVal
+      }
+    })
+    const activeOrders = (data.data || []).filter(o => ['pending', 'processed', 'delivered'].includes(o.status?.toLowerCase()))
+    if (activeOrders.length > 0 && activeOrders[0].customer_name) {
+      customerName.value = activeOrders[0].customer_name
+    }
+  } catch (err) {
+    // Silent ignore
+  }
+})
 
 const isOwner = computed(() => {
   const role = authStore.user?.role
@@ -686,6 +743,31 @@ const filteredProducts = computed(() => {
   return filtered
 })
 
+const posCurrentPage = ref(1)
+const posPerPage = ref(12)
+
+const posLastPage = computed(() => {
+  return Math.ceil(filteredProducts.value.length / posPerPage.value) || 1
+})
+
+const posFromItem = computed(() => {
+  if (filteredProducts.value.length === 0) return 0
+  return (posCurrentPage.value - 1) * posPerPage.value + 1
+})
+
+const posToItem = computed(() => {
+  return Math.min(posCurrentPage.value * posPerPage.value, filteredProducts.value.length)
+})
+
+const paginatedProducts = computed(() => {
+  const start = (posCurrentPage.value - 1) * posPerPage.value
+  return filteredProducts.value.slice(start, start + posPerPage.value)
+})
+
+watch([searchQuery, selectedCategory], () => {
+  posCurrentPage.value = 1
+})
+
 const changeAmount = computed(() => {
   return paidAmount.value > cartStore.total ? paidAmount.value - cartStore.total : 0
 })
@@ -764,7 +846,7 @@ const processCheckout = async () => {
       payment_method: paymentMethod.value,
       paid_amount: paidAmount.value,
       order_type: isFnbMode.value ? orderType.value : null,
-      table_id: isFnbMode.value ? (tableNumber.value || null) : null,
+      table_id: (isFnbMode.value && orderType.value !== 'online') ? (tableNumber.value || null) : null,
       customer_name: customerName.value || null,
     }, currentOutletId.value)
 

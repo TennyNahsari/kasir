@@ -150,6 +150,10 @@ class DatabaseSeeder extends Seeder
         }
 
         // Create Products
+        $catMakananFnb = Category::where('slug', 'makanan-fnb')->first()?->id ?? 7;
+        $catMinumanFnb = Category::where('slug', 'minuman-fnb')->first()?->id ?? 8;
+        $catSnackFnb = Category::where('slug', 'snack-fnb')->first()?->id ?? 9;
+
         $products = [
             // Makanan Retail/Minimarket (produk kemasan)
             ['name' => 'Indomie Goreng', 'category_id' => 1, 'selling_price' => 3500, 'cost_price' => 2500, 'stock' => 100],
@@ -166,21 +170,41 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Oreo', 'category_id' => 3, 'selling_price' => 8500, 'cost_price' => 6500, 'stock' => 60],
             ['name' => 'Tango', 'category_id' => 3, 'selling_price' => 5000, 'cost_price' => 3500, 'stock' => 100],
             
-            // Makanan FNB (siap saji)
-            ['name' => 'Nasi Goreng', 'category_id' => 7, 'selling_price' => 25000, 'cost_price' => 15000, 'track_stock' => false],
-            ['name' => 'Mie Goreng', 'category_id' => 7, 'selling_price' => 20000, 'cost_price' => 12000, 'track_stock' => false],
-            ['name' => 'Ayam Goreng', 'category_id' => 7, 'selling_price' => 15000, 'cost_price' => 8000, 'track_stock' => false],
-            ['name' => 'Sate Ayam', 'category_id' => 7, 'selling_price' => 18000, 'cost_price' => 10000, 'track_stock' => false],
+            // Makanan FNB (siap saji & berstok)
+            ['name' => 'Nasi Goreng Spesial', 'category_id' => $catMakananFnb, 'selling_price' => 28000, 'cost_price' => 15000, 'stock' => 80, 'track_stock' => true],
+            ['name' => 'Nasi Goreng Seafood', 'category_id' => $catMakananFnb, 'selling_price' => 32000, 'cost_price' => 18000, 'stock' => 60, 'track_stock' => true],
+            ['name' => 'Mie Goreng Jawa', 'category_id' => $catMakananFnb, 'selling_price' => 24000, 'cost_price' => 12000, 'stock' => 70, 'track_stock' => true],
+            ['name' => 'Mie Goreng Aceh', 'category_id' => $catMakananFnb, 'selling_price' => 26000, 'cost_price' => 13000, 'stock' => 50, 'track_stock' => true],
+            ['name' => 'Ayam Goreng Lengkuas', 'category_id' => $catMakananFnb, 'selling_price' => 22000, 'cost_price' => 11000, 'stock' => 90, 'track_stock' => true],
+            ['name' => 'Ayam Bakar Madu', 'category_id' => $catMakananFnb, 'selling_price' => 25000, 'cost_price' => 13000, 'stock' => 75, 'track_stock' => true],
+            ['name' => 'Sate Ayam Madura (10 tusuk)', 'category_id' => $catMakananFnb, 'selling_price' => 28000, 'cost_price' => 14000, 'stock' => 50, 'track_stock' => true],
+            ['name' => 'Soto Ayam Lamongan', 'category_id' => $catMakananFnb, 'selling_price' => 20000, 'cost_price' => 10000, 'stock' => 85, 'track_stock' => true],
+            ['name' => 'Sop Buntut Rempah', 'category_id' => $catMakananFnb, 'selling_price' => 48000, 'cost_price' => 28000, 'stock' => 40, 'track_stock' => true],
+            ['name' => 'Bebek Goreng Crispy', 'category_id' => $catMakananFnb, 'selling_price' => 35000, 'cost_price' => 20000, 'stock' => 45, 'track_stock' => true],
+            ['name' => 'Kwetiau Goreng Seafood', 'category_id' => $catMakananFnb, 'selling_price' => 30000, 'cost_price' => 16000, 'stock' => 55, 'track_stock' => true],
+            ['name' => 'Gado-Gado Surabaya', 'category_id' => $catMakananFnb, 'selling_price' => 18000, 'cost_price' => 9000, 'stock' => 65, 'track_stock' => true],
             
-            // Minuman FNB (siap saji)
-            ['name' => 'Es Teh Manis', 'category_id' => 8, 'selling_price' => 5000, 'cost_price' => 2000, 'track_stock' => false],
-            ['name' => 'Es Jeruk', 'category_id' => 8, 'selling_price' => 8000, 'cost_price' => 4000, 'track_stock' => false],
-            ['name' => 'Kopi Hitam', 'category_id' => 8, 'selling_price' => 10000, 'cost_price' => 5000, 'track_stock' => false],
-            ['name' => 'Jus Alpukat', 'category_id' => 8, 'selling_price' => 12000, 'cost_price' => 7000, 'track_stock' => false],
+            // Minuman FNB (siap saji & berstok)
+            ['name' => 'Es Teh Manis', 'category_id' => $catMinumanFnb, 'selling_price' => 5000, 'cost_price' => 1500, 'stock' => 250, 'track_stock' => true],
+            ['name' => 'Es Jeruk Peras', 'category_id' => $catMinumanFnb, 'selling_price' => 8000, 'cost_price' => 3500, 'stock' => 200, 'track_stock' => true],
+            ['name' => 'Kopi Hitam Tubruk', 'category_id' => $catMinumanFnb, 'selling_price' => 10000, 'cost_price' => 4000, 'stock' => 150, 'track_stock' => true],
+            ['name' => 'Kopi Susu Gula Aren', 'category_id' => $catMinumanFnb, 'selling_price' => 18000, 'cost_price' => 8000, 'stock' => 120, 'track_stock' => true],
+            ['name' => 'Jus Alpukat Segar', 'category_id' => $catMinumanFnb, 'selling_price' => 15000, 'cost_price' => 7500, 'stock' => 90, 'track_stock' => true],
+            ['name' => 'Jus Mangga Arumanis', 'category_id' => $catMinumanFnb, 'selling_price' => 15000, 'cost_price' => 7500, 'stock' => 90, 'track_stock' => true],
+            ['name' => 'Matcha Latte Ice', 'category_id' => $catMinumanFnb, 'selling_price' => 22000, 'cost_price' => 10000, 'stock' => 80, 'track_stock' => true],
+            ['name' => 'Es Campur Spesial', 'category_id' => $catMinumanFnb, 'selling_price' => 16000, 'cost_price' => 7000, 'stock' => 85, 'track_stock' => true],
+            ['name' => 'Chocolate Milkshake', 'category_id' => $catMinumanFnb, 'selling_price' => 20000, 'cost_price' => 9000, 'stock' => 95, 'track_stock' => true],
+            ['name' => 'Lemon Tea Warm', 'category_id' => $catMinumanFnb, 'selling_price' => 12000, 'cost_price' => 5000, 'stock' => 110, 'track_stock' => true],
             
-            // Snack FNB (siap saji)
-            ['name' => 'Pisang Goreng', 'category_id' => 9, 'selling_price' => 8000, 'cost_price' => 4000, 'track_stock' => false],
-            ['name' => 'Tahu Isi', 'category_id' => 9, 'selling_price' => 6000, 'cost_price' => 3000, 'track_stock' => false],
+            // Snack FNB (siap saji & berstok)
+            ['name' => 'Pisang Goreng Keju Coklat', 'category_id' => $catSnackFnb, 'selling_price' => 12000, 'cost_price' => 5000, 'stock' => 100, 'track_stock' => true],
+            ['name' => 'Tahu Isi Crispy', 'category_id' => $catSnackFnb, 'selling_price' => 10000, 'cost_price' => 4000, 'stock' => 120, 'track_stock' => true],
+            ['name' => 'Cireng Rujak Pedas', 'category_id' => $catSnackFnb, 'selling_price' => 10000, 'cost_price' => 3500, 'stock' => 130, 'track_stock' => true],
+            ['name' => 'French Fries (Kentang Goreng)', 'category_id' => $catSnackFnb, 'selling_price' => 15000, 'cost_price' => 7000, 'stock' => 140, 'track_stock' => true],
+            ['name' => 'Roti Bakar Coklat Keju', 'category_id' => $catSnackFnb, 'selling_price' => 15000, 'cost_price' => 6500, 'stock' => 90, 'track_stock' => true],
+            ['name' => 'Dimsum Ayam (4 pcs)', 'category_id' => $catSnackFnb, 'selling_price' => 18000, 'cost_price' => 9000, 'stock' => 100, 'track_stock' => true],
+            ['name' => 'Pempek Palembang Kapal Selam', 'category_id' => $catSnackFnb, 'selling_price' => 22000, 'cost_price' => 11000, 'stock' => 70, 'track_stock' => true],
+            ['name' => 'Nachos Cheese Dip', 'category_id' => $catSnackFnb, 'selling_price' => 20000, 'cost_price' => 9500, 'stock' => 80, 'track_stock' => true],
         ];
 
         foreach ($products as $index => $prod) {
@@ -191,9 +215,9 @@ class DatabaseSeeder extends Seeder
                 ['sku' => $sku],
                 array_merge($prod, [
                     'barcode' => $barcode,
-                    'stock' => $prod['stock'] ?? 0,
+                    'stock' => $prod['stock'] ?? 50,
                     'min_stock' => 10,
-                    'track_stock' => $prod['track_stock'] ?? true,
+                    'track_stock' => true,
                 ])
             );
         }
@@ -240,6 +264,7 @@ class DatabaseSeeder extends Seeder
             AssetSeeder::class,
             TicketSystemSeeder::class,
             ProcurementSeeder::class,
+            TransactionSeeder::class,
         ]);
     }
 }

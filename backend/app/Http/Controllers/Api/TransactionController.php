@@ -105,7 +105,7 @@ class TransactionController extends Controller
                 'paid_amount' => 'nullable|numeric|min:0',
                 'notes' => 'nullable|string',
                 'table_id' => 'nullable',
-                'order_type' => 'nullable|in:dine_in,take_away',
+                'order_type' => 'nullable|in:dine_in,take_away,online',
                 'customer_name' => 'nullable|string|max:255',
                 'status' => 'nullable|in:pending,processed,delivered,completed,void,refund',
             ]);
@@ -226,9 +226,10 @@ class TransactionController extends Controller
                 || (isset($location) && strtoupper($location->type) === 'FNB')
                 || !empty($tableVal);
 
+            $isOnlineOrder = isset($validated['order_type']) && $validated['order_type'] === 'online';
             $activeTransaction = null;
 
-            if ($isFnbOrTableOrder && (!empty($tableIdToStore) || !empty($tableVal))) {
+            if (!$isOnlineOrder && $isFnbOrTableOrder && (!empty($tableIdToStore) || !empty($tableVal))) {
                 $activeQuery = Transaction::whereIn('status', ['pending', 'processed', 'delivered']);
 
                 if (isset($validated['location_id'])) {
@@ -255,11 +256,14 @@ class TransactionController extends Controller
                     'transaction_no' => $activeTransaction->transaction_no
                 ]);
 
+                $addedSummaryItems = [];
                 // Append items to active transaction
                 foreach ($validated['items'] as $item) {
                     $product = Product::find($item['product_id']);
                     $addQty = (int) $item['quantity'];
                     $addDiscount = (float) ($item['discount'] ?? 0);
+
+                    $addedSummaryItems[] = "+{$addQty}x {$product->name}";
 
                     $existingItem = TransactionItem::where('transaction_id', $activeTransaction->id)
                         ->where('product_id', $product->id)
@@ -305,14 +309,22 @@ class TransactionController extends Controller
                     $activeTransaction->order_type = $validated['order_type'];
                 }
 
-                // Add Order Tambahan flag to notes & set unconfirmed addon flag
+                // Add Order Tambahan flag to notes & set unconfirmed addon flag & status to pending
                 if (empty($activeTransaction->notes)) {
                     $activeTransaction->notes = '[Order Tambahan]';
                 } elseif (!str_contains($activeTransaction->notes, '[Order Tambahan]')) {
                     $activeTransaction->notes = $activeTransaction->notes . ' | [Order Tambahan]';
                 }
 
+                $newSummaryText = implode(', ', $addedSummaryItems);
+                if (empty($activeTransaction->addon_summary)) {
+                    $activeTransaction->addon_summary = $newSummaryText;
+                } else {
+                    $activeTransaction->addon_summary = $activeTransaction->addon_summary . ' | ' . $newSummaryText;
+                }
+
                 $activeTransaction->has_unconfirmed_addon = true;
+                $activeTransaction->status = 'pending'; // Reset status to pending for kitchen/cashier re-processing
 
                 // Recalculate subtotal & total
                 $allSubtotal = TransactionItem::where('transaction_id', $activeTransaction->id)->get()->sum('subtotal');
@@ -528,7 +540,11 @@ class TransactionController extends Controller
 
     public function confirmAddon(Transaction $transaction)
     {
-        $transaction->update(['has_unconfirmed_addon' => false]);
+        $transaction->update([
+            'has_unconfirmed_addon' => false,
+            'addon_summary' => null,
+            'status' => 'processed'
+        ]);
         return response()->json([
             'message' => 'Order tambahan berhasil dikonfirmasi',
             'transaction' => $transaction->load(['items.product', 'outlet', 'user', 'table'])

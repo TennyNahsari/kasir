@@ -30,6 +30,7 @@ class Transaction extends Model
         'order_type',
         'status',
         'has_unconfirmed_addon',
+        'addon_summary',
         'completed_at',
     ];
 

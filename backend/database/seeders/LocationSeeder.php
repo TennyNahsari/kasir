@@ -79,6 +79,17 @@ class LocationSeeder extends Seeder
                 'is_active' => true,
                 'outlet_id' => $outlet ? $outlet->id : null,
             ],
+            // F&B Locations
+            [
+                'code' => 'FNB-001',
+                'name' => 'Resto & Cafe Utama',
+                'type' => 'FNB',
+                'address' => 'Jl. Ahmad Yani No. 789, Jakarta',
+                'phone' => '021-5555-3001',
+                'person_in_charge' => 'Budi Sudarsono',
+                'is_active' => true,
+                'outlet_id' => Outlet::where('business_type', 'fnb')->first()?->id ?? ($outlet ? $outlet->id : null),
+            ],
         ];
 
         foreach ($locations as $location) {

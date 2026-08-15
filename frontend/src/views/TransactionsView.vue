@@ -36,7 +36,6 @@
           <select v-model="businessType" class="input text-sm">
             <option value="">{{ $t('transactions.all') }}</option>
             <option value="retail">{{ $t('transactions.retail') }}</option>
-            <option value="minimarket">{{ $t('transactions.minimarket') }}</option>
             <option value="fnb">{{ $t('transactions.fnb') }}</option>
           </select>
         </div>
@@ -46,6 +45,7 @@
             <option value="">{{ $t('transactions.all') }}</option>
             <option value="dine_in">Dine In (Makan di Tempat)</option>
             <option value="take_away">Take Away (Bawa Pulang)</option>
+            <option value="online">Online (Pesanan Online)</option>
           </select>
         </div>
         <div>
@@ -98,7 +98,12 @@
                 </span>
 
                 <!-- Addon Order Badge -->
-                <span v-if="hasAddonOrder(transaction)" class="text-[11px] font-bold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-300 inline-flex items-center gap-1 animate-pulse">
+                <span 
+                  v-if="hasAddonOrder(transaction)" 
+                  @click="openConfirmAddonModal(transaction)"
+                  class="text-[11px] font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 px-1.5 py-0.5 rounded border border-amber-300 inline-flex items-center gap-1 animate-pulse cursor-pointer"
+                  title="Klik untuk melihat & mengonfirmasi order tambahan"
+                >
                   🔔 Order Tambahan
                 </span>
               </div>
@@ -118,15 +123,17 @@
                   v-if="transaction.order_type"
                   :class="[
                     'px-2 py-0.5 rounded text-[11px] font-semibold border',
-                    transaction.order_type === 'take_away' ? 'bg-orange-50 text-orange-800 border-orange-200' : 'bg-blue-50 text-blue-800 border-blue-200'
+                    transaction.order_type === 'take_away' ? 'bg-orange-50 text-orange-800 border-orange-200' :
+                    transaction.order_type === 'online' ? 'bg-purple-50 text-purple-800 border-purple-200' :
+                    'bg-blue-50 text-blue-800 border-blue-200'
                   ]"
                 >
-                  {{ transaction.order_type === 'take_away' ? '🛍️ Take Away' : '🍽️ Dine In' }}
+                  {{ transaction.order_type === 'take_away' ? '🛍️ Take Away' : (transaction.order_type === 'online' ? '🛵 Online' : '🍽️ Dine In') }}
                 </span>
               </div>
             </td>
             <td class="px-4 py-3 text-sm font-semibold text-gray-900">
-              {{ transaction.user?.name || 'Cutomers' }}
+              {{ transaction.user?.name || $t('transactions.customerOrder') }}
             </td>
             <td class="px-4 py-3 text-sm capitalize">{{ transaction.payment_method || '-' }}</td>
             <td class="px-4 py-3 text-sm text-right font-semibold">
@@ -151,9 +158,9 @@
               <div class="flex items-center justify-center gap-2">
                 <button 
                   v-if="transaction.has_unconfirmed_addon"
-                  @click="confirmAddonOrder(transaction)" 
+                  @click="openConfirmAddonModal(transaction)" 
                   class="text-xs font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 border border-amber-300 px-2 py-1 rounded transition-all active:scale-95 flex items-center gap-1 shadow-sm"
-                  title="Klik untuk mengonfirmasi order tambahan"
+                  title="Klik untuk melihat & mengonfirmasi order tambahan"
                 >
                   ✓ Konfirmasi Order
                 </button>
@@ -217,10 +224,12 @@
               v-if="transaction.order_type"
               :class="[
                 'px-2 py-0.5 rounded text-[11px] font-semibold border',
-                transaction.order_type === 'take_away' ? 'bg-orange-50 text-orange-800 border-orange-200' : 'bg-blue-50 text-blue-800 border-blue-200'
+                transaction.order_type === 'take_away' ? 'bg-orange-50 text-orange-800 border-orange-200' :
+                transaction.order_type === 'online' ? 'bg-purple-50 text-purple-800 border-purple-200' :
+                'bg-blue-50 text-blue-800 border-blue-200'
               ]"
             >
-              {{ transaction.order_type === 'take_away' ? '🛍️ Take Away' : '🍽️ Dine In' }}
+              {{ transaction.order_type === 'take_away' ? '🛍️ Take Away' : (transaction.order_type === 'online' ? '🛵 Online' : '🍽️ Dine In') }}
             </span>
           </div>
         </div>
@@ -228,7 +237,7 @@
         <div class="grid grid-cols-2 gap-2 text-xs mb-3">
           <div>
             <span class="text-gray-600">{{ $t('transactions.cashier') }}:</span>
-            <span class="font-semibold ml-1 text-gray-900">{{ transaction.user?.name || 'Customer' }}</span>
+            <span class="font-semibold ml-1 text-gray-900">{{ transaction.user?.name || $t('transactions.customerOrder') }}</span>
           </div>
           <div>
             <span class="text-gray-600">{{ $t('transactions.payment') }}:</span>
@@ -249,7 +258,7 @@
           <div class="flex items-center gap-2">
             <button 
               v-if="transaction.has_unconfirmed_addon"
-              @click="confirmAddonOrder(transaction)" 
+              @click="openConfirmAddonModal(transaction)" 
               class="text-xs font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 border border-amber-300 px-2 py-1 rounded-lg transition-all active:scale-95 shadow-sm"
             >
               ✓ Konfirmasi Order
@@ -286,6 +295,19 @@
         {{ $t('transactions.noTransactions') }}
       </div>
     </div>
+
+    <!-- Pagination (Visible for both Desktop and Mobile) -->
+    <Pagination
+      v-if="totalItems > 0"
+      :current-page="currentPage"
+      :last-page="lastPage"
+      :per-page="perPage"
+      :total="totalItems"
+      :from="fromItem"
+      :to="toItem"
+      @update:currentPage="onPageChange"
+      @update:perPage="onPerPageChange"
+    />
 
     <!-- Detail Modal -->
   <div v-if="showDetail && selectedTransaction" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -446,15 +468,76 @@
   </div>
   </div>
 
+  <!-- Add-on Order Confirmation Modal -->
+  <div v-if="showAddonModal && addonModalTransaction" class="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-4 sm:p-6 space-y-4 animate-fade-in">
+      <div class="flex items-center justify-between border-b pb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">🔔</span>
+          <h3 class="text-base sm:text-lg font-bold text-gray-900">Konfirmasi Order Tambahan</h3>
+        </div>
+        <button @click="showAddonModal = false" class="text-gray-400 hover:text-gray-600 font-bold">✕</button>
+      </div>
+
+      <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 space-y-1.5 text-xs sm:text-sm">
+        <div class="flex justify-between text-amber-950 font-semibold">
+          <span>No. Transaksi:</span>
+          <span>{{ addonModalTransaction.transaction_no }}</span>
+        </div>
+        <div v-if="getTableDisplay(addonModalTransaction)" class="flex justify-between text-amber-900">
+          <span>Meja / Lokasi:</span>
+          <span>🪑 {{ getTableDisplay(addonModalTransaction) }}</span>
+        </div>
+        <div v-if="addonModalTransaction.customer_name" class="flex justify-between text-amber-900">
+          <span>Nama Pemesan:</span>
+          <span>👤 {{ addonModalTransaction.customer_name }}</span>
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <label class="label text-xs sm:text-sm font-semibold text-gray-700">Rincian Menu Tambahan Baru:</label>
+        <div class="p-3 bg-gray-50 border rounded-lg space-y-1 text-xs sm:text-sm">
+          <div v-if="addonModalTransaction.addon_summary" class="flex flex-wrap gap-1.5">
+            <span 
+              v-for="(itemStr, idx) in addonModalTransaction.addon_summary.split('|')" 
+              :key="idx"
+              class="inline-block px-2.5 py-1 bg-amber-100 text-amber-900 font-bold rounded-md border border-amber-300 text-xs"
+            >
+              {{ itemStr.trim() }}
+            </span>
+          </div>
+          <div v-else class="text-gray-500 italic">
+            Ada penambahan menu baru pada transaksi meja ini.
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center pt-2 border-t text-sm font-semibold">
+        <span class="text-gray-600">Total Tagihan Baru:</span>
+        <span class="text-emerald-700 font-bold text-base sm:text-lg">{{ formatCurrency(addonModalTransaction.total) }}</span>
+      </div>
+
+      <div class="flex flex-col-reverse sm:flex-row gap-2 pt-2">
+        <button @click="showAddonModal = false" class="btn btn-secondary flex-1 text-sm">
+          Batal
+        </button>
+        <button @click="executeConfirmAddon" class="btn bg-amber-500 hover:bg-amber-600 text-white flex-1 text-sm font-bold shadow">
+          ✓ Terima & Konfirmasi
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Receipt Print Component (hidden, only for printing) -->
   <ReceiptPrint v-if="printTransaction" :transaction="printTransaction" />
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import api from '@/services/api'
 import ReceiptPrint from '@/components/ReceiptPrint.vue'
+import Pagination from '@/components/Pagination.vue'
 import * as XLSX from 'xlsx'
 
 const { t } = useI18n()
@@ -464,6 +547,14 @@ const dateTo = ref('')
 const businessType = ref('')
 const paymentMethod = ref('')
 const orderType = ref('')
+
+// Pagination state
+const currentPage = ref(1)
+const perPage = ref(10)
+const lastPage = ref(1)
+const totalItems = ref(0)
+const fromItem = ref(0)
+const toItem = ref(0)
 const showDetail = ref(false)
 const selectedTransaction = ref(null)
 const showStatusUpdate = ref(false)
@@ -503,12 +594,25 @@ const hasAddonOrder = (transaction) => {
   return Boolean(transaction.has_unconfirmed_addon)
 }
 
-const confirmAddonOrder = async (transaction) => {
+const showAddonModal = ref(false)
+const addonModalTransaction = ref(null)
+
+const openConfirmAddonModal = (transaction) => {
+  addonModalTransaction.value = transaction
+  showAddonModal.value = true
+}
+
+const executeConfirmAddon = async () => {
+  if (!addonModalTransaction.value) return
   try {
-    await api.post(`/transactions/${transaction.id}/confirm-addon`)
-    transaction.has_unconfirmed_addon = false
+    await api.post(`/transactions/${addonModalTransaction.value.id}/confirm-addon`)
+    addonModalTransaction.value.has_unconfirmed_addon = false
+    addonModalTransaction.value.addon_summary = null
+    showAddonModal.value = false
+    await loadTransactions()
   } catch (error) {
     console.error('Failed to confirm addon order:', error)
+    alert('Gagal mengonfirmasi order tambahan')
   }
 }
 
@@ -528,23 +632,46 @@ const getTableDisplay = (transaction) => {
 
 const loadTransactions = async () => {
   try {
-    const params = {}
+    const params = {
+      page: currentPage.value,
+      per_page: perPage.value
+    }
     if (dateFrom.value) params.date_from = dateFrom.value
     if (dateTo.value) params.date_to = dateTo.value
     if (businessType.value) params.business_type = businessType.value
     if (paymentMethod.value) params.payment_method = paymentMethod.value
     if (orderType.value) params.order_type = orderType.value
-    // Backend will auto-filter by user's location_id or outlet_id
-    // No need to send outlet_id from frontend
 
     console.log('Loading transactions with params:', params)
     const response = await api.get('/transactions', { params })
-    console.log('Transactions loaded:', response.data.data?.length || 0, 'transactions')
-    transactions.value = response.data.data
+    const resData = response.data || {}
+    transactions.value = resData.data || []
+    currentPage.value = resData.current_page || 1
+    lastPage.value = resData.last_page || 1
+    perPage.value = resData.per_page || 10
+    totalItems.value = resData.total || 0
+    fromItem.value = resData.from || 0
+    toItem.value = resData.to || 0
   } catch (error) {
     console.error('Failed to load transactions:', error)
   }
 }
+
+const onPageChange = (page) => {
+  currentPage.value = page
+  loadTransactions()
+}
+
+const onPerPageChange = (size) => {
+  perPage.value = size
+  currentPage.value = 1
+  loadTransactions()
+}
+
+watch([dateFrom, dateTo, businessType, paymentMethod, orderType], () => {
+  currentPage.value = 1
+  loadTransactions()
+})
 
 // Remove unused loadOutlets function
 // const loadOutlets = async () => {
@@ -620,21 +747,26 @@ const exportToExcel = async () => {
     if (dateTo.value) params.date_to = dateTo.value
     if (businessType.value) params.business_type = businessType.value
     if (paymentMethod.value) params.payment_method = paymentMethod.value
+    if (orderType.value) params.order_type = orderType.value
 
     // Fetch all transactions for export (no pagination)
     const response = await api.get('/transactions', { params })
     const exportData = (response.data.data || []).map(transaction => ({
       'Transaction No': transaction.transaction_no,
+      'Customer Name': transaction.customer_name || '-',
+      'Table Number': getTableDisplay(transaction) || '-',
+      'Addon Order': transaction.has_unconfirmed_addon ? 'Yes' : 'No',
       'Date': formatDate(transaction.created_at),
       'Business Type': getBusinessTypeLabel(transaction.business_type),
-      'Cashier': transaction.user?.name || t('transactions.customer'),
+      'Order Type': transaction.order_type === 'take_away' ? 'Take Away' : (transaction.order_type === 'dine_in' ? 'Dine In' : '-'),
+      'Channel': transaction.user?.name || t('transactions.customerOrder'),
       'Payment Method': transaction.payment_method || '-',
       'Subtotal': transaction.subtotal,
       'Discount': transaction.discount || 0,
       'Tax': transaction.tax || 0,
       'Total': transaction.total,
-      'Paid Amount': transaction.paid_amount,
-      'Change': transaction.change_amount,
+      'Paid Amount': transaction.paid_amount || 0,
+      'Change': transaction.change_amount || 0,
       'Status': transaction.status,
       'Notes': transaction.notes || ''
     }))
@@ -650,11 +782,15 @@ const exportToExcel = async () => {
 
     // Set column widths
     ws['!cols'] = [
-      { wch: 20 },  // Transaction No
+      { wch: 22 },  // Transaction No
+      { wch: 20 },  // Customer Name
+      { wch: 15 },  // Table Number
+      { wch: 14 },  // Addon Order
       { wch: 20 },  // Date
       { wch: 15 },  // Business Type
-      { wch: 20 },  // Cashier
-      { wch: 15 },  // Payment Method
+      { wch: 15 },  // Order Type
+      { wch: 20 },  // Channel
+      { wch: 16 },  // Payment Method
       { wch: 15 },  // Subtotal
       { wch: 12 },  // Discount
       { wch: 12 },  // Tax
@@ -683,10 +819,9 @@ const exportToExcel = async () => {
 }
 
 onMounted(() => {
-  // Set default date range (today)
-  const today = new Date().toISOString().split('T')[0]
-  dateFrom.value = today
-  dateTo.value = today
+  // Default to empty date range so all transactions (including historical seeded data) load immediately
+  dateFrom.value = ''
+  dateTo.value = ''
   
   loadTransactions()
 })

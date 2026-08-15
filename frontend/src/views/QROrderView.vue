@@ -139,43 +139,59 @@
         </div>
 
         <!-- Products -->
-        <div v-else class="grid grid-cols-2 gap-3 sm:gap-4">
-          <div
-            v-for="product in filteredProducts"
-            :key="product.id"
-            class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow"
-          >
-            <div class="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center overflow-hidden">
-              <img 
-                v-if="product.image" 
-                :src="`http://localhost:8000/storage/${product.image}`" 
-                :alt="product.name"
-                class="w-full h-full object-cover"
-              >
-              <svg v-else class="w-12 h-12 sm:w-16 sm:h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
+        <div v-else class="space-y-4">
+          <div class="grid grid-cols-2 gap-3 sm:gap-4">
+            <div
+              v-for="product in paginatedProducts"
+              :key="product.id"
+              class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+            >
+              <div class="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center overflow-hidden">
+                <img 
+                  v-if="product.image" 
+                  :src="`http://localhost:8000/storage/${product.image}`" 
+                  :alt="product.name"
+                  class="w-full h-full object-cover"
+                >
+                <svg v-else class="w-12 h-12 sm:w-16 sm:h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div class="p-2.5 sm:p-3">
+                <h3 class="font-medium text-gray-900 text-xs sm:text-sm mb-1 line-clamp-2 min-h-[2.5rem] sm:min-h-[2.25rem]">
+                  {{ product.name }}
+                </h3>
+                <p class="text-blue-600 font-bold text-sm sm:text-base mb-2">
+                  Rp {{ formatNumber(product.selling_price) }}
+                </p>
+                <button
+                  @click="addToCart(product)"
+                  :disabled="product.stock <= 0 && product.track_stock"
+                  :class="[
+                    'w-full py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all active:scale-95',
+                    (product.stock > 0 || !product.track_stock)
+                      ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
+                      : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  ]"
+                >
+                  {{ (product.stock > 0 || !product.track_stock) ? '+ Tambah' : 'Habis' }}
+                </button>
+              </div>
             </div>
-            <div class="p-2.5 sm:p-3">
-              <h3 class="font-medium text-gray-900 text-xs sm:text-sm mb-1 line-clamp-2 min-h-[2.5rem] sm:min-h-[2.25rem]">
-                {{ product.name }}
-              </h3>
-              <p class="text-blue-600 font-bold text-sm sm:text-base mb-2">
-                Rp {{ formatNumber(product.selling_price) }}
-              </p>
-              <button
-                @click="addToCart(product)"
-                :disabled="product.stock <= 0 && product.track_stock"
-                :class="[
-                  'w-full py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all active:scale-95',
-                  (product.stock > 0 || !product.track_stock)
-                    ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
-                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                ]"
-              >
-                {{ (product.stock > 0 || !product.track_stock) ? '+ Tambah' : 'Habis' }}
-              </button>
-            </div>
+          </div>
+
+          <!-- QR Order Pagination -->
+          <div v-if="filteredProducts.length > 0" class="mt-4 border-t pt-3">
+            <Pagination
+              :current-page="qrCurrentPage"
+              :last-page="qrLastPage"
+              :per-page="qrPerPage"
+              :total="filteredProducts.length"
+              :from="qrFromItem"
+              :to="qrToItem"
+              @update:currentPage="qrCurrentPage = $event"
+              @update:perPage="qrPerPage = $event; qrCurrentPage = 1"
+            />
           </div>
         </div>
       </div>
@@ -462,10 +478,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '@/services/api'
 import defaultRestaurantLogo from '@/assets/restaurant.png'
+import Pagination from '@/components/Pagination.vue'
 
 const route = useRoute()
 const locationId = route.params.locationId
@@ -477,6 +494,10 @@ const location = ref(null)
 const categories = ref([])
 const products = ref([])
 const selectedCategory = ref(null)
+
+// Pagination state
+const qrCurrentPage = ref(1)
+const qrPerPage = ref(10)
 const cart = ref([])
 const customerName = ref('')
 const customerNote = ref('')
@@ -511,6 +532,12 @@ const loadTableOrders = async () => {
       }
     })
     tableOrders.value = data.data || []
+    
+    // Auto-fill customerName if active order exists for this table
+    const active = tableOrders.value.find(o => ['pending', 'processed', 'delivered'].includes(o.status?.toLowerCase()))
+    if (active && active.customer_name && !customerName.value) {
+      customerName.value = active.customer_name
+    }
   } catch (err) {
     console.error('Failed to load table orders:', err)
   } finally {
@@ -555,6 +582,28 @@ const submitting = ref(false)
 const filteredProducts = computed(() => {
   if (!selectedCategory.value) return products.value
   return products.value.filter(p => p.category_id === selectedCategory.value)
+})
+
+const qrLastPage = computed(() => {
+  return Math.ceil(filteredProducts.value.length / qrPerPage.value) || 1
+})
+
+const qrFromItem = computed(() => {
+  if (filteredProducts.value.length === 0) return 0
+  return (qrCurrentPage.value - 1) * qrPerPage.value + 1
+})
+
+const qrToItem = computed(() => {
+  return Math.min(qrCurrentPage.value * qrPerPage.value, filteredProducts.value.length)
+})
+
+const paginatedProducts = computed(() => {
+  const start = (qrCurrentPage.value - 1) * qrPerPage.value
+  return filteredProducts.value.slice(start, start + qrPerPage.value)
+})
+
+watch(selectedCategory, () => {
+  qrCurrentPage.value = 1
 })
 
 const totalPrice = computed(() => {
@@ -745,9 +794,9 @@ const submitOrder = async () => {
 
 const resetOrder = () => {
   cart.value = []
-  customerName.value = ''
   customerNote.value = ''
   showSuccess.value = false
+  loadTableOrders()
 }
 
 onMounted(() => {
