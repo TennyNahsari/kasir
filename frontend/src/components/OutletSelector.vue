@@ -102,8 +102,8 @@ const loadOutlets = async () => {
     console.log('Locations data:', locationsData)
     
     // Map locations to outlet format (with outlet info)
-    // For POS: Show all locations with type OUTLET, INVENTORY, or FNB (regardless of outlet_id)
-    const defaultValidTypes = ['OUTLET', 'FNB', 'INVENTORY', 'WAREHOUSE']
+    // For POS: Show all locations with type OUTLET or FNB
+    const defaultValidTypes = ['OUTLET', 'FNB']
     const validTypes = props.allowedTypes && props.allowedTypes.length > 0
       ? props.allowedTypes.map(t => t.toUpperCase())
       : defaultValidTypes
@@ -120,7 +120,7 @@ const loadOutlets = async () => {
     
     console.log('All locations before filtering:', allLocations)
     
-    // Filter: Only OUTLET, INVENTORY, and FNB type locations
+    // Filter: Only valid location types (OUTLET and FNB)
     outlets.value = allLocations.filter(loc => loc.isValidType)
     
     console.log('Filtered outlets for POS:', outlets.value)

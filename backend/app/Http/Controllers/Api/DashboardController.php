@@ -16,22 +16,31 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        $outletId = $request->outlet_id ?? auth()->user()->outlet_id;
-        $locationId = $request->location_id ?? auth()->user()->location_id;
-        $dateFrom = $request->date_from ?? now()->startOfDay();
-        $dateTo = $request->date_to ?? now()->endOfDay();
+        $user = auth()->user();
+        $isOwner = $user && ($user->role === 'owner' || ($user->role === 'inventory' && !$user->outlet_id));
+
+        if (!$isOwner && $user?->location_id) {
+            $locationId = $user->location_id;
+            $outletId = $user->outlet_id;
+        } else {
+            $outletId = $request->outlet_id ?? $user?->outlet_id;
+            $locationId = $request->location_id ?? $user?->location_id;
+        }
+        
+        $dateFrom = $request->date_from ? \Carbon\Carbon::parse($request->date_from)->startOfDay() : null;
+        $dateTo = $request->date_to ? \Carbon\Carbon::parse($request->date_to)->endOfDay() : now()->endOfDay();
 
         // Today's stats
-        $todayStats = $this->getTodayStats($outletId);
+        $todayStats = $this->getTodayStats($outletId, $locationId);
 
         // Sales chart (last 7 days)
-        $salesChart = $this->getSalesChart($outletId, 7);
+        $salesChart = $this->getSalesChart($outletId, $locationId, 7);
 
-        // Top products
-        $topProducts = $this->getTopProducts($outletId, $dateFrom, $dateTo);
+        // Top products (default to last 30 days / fallback to all-time if no sales in 30 days)
+        $topProducts = $this->getTopProducts($outletId, $locationId, $dateFrom, $dateTo);
 
         // Payment method breakdown
-        $paymentBreakdown = $this->getPaymentBreakdown($outletId, $dateFrom, $dateTo);
+        $paymentBreakdown = $this->getPaymentBreakdown($outletId, $locationId, $dateFrom, $dateTo);
 
         // Low stock products (filtered by outlet or location)
         $lowStockProducts = $this->getLowStockProducts($outletId, $locationId);
@@ -45,14 +54,16 @@ class DashboardController extends Controller
         ]);
     }
 
-    private function getTodayStats($outletId)
+    private function getTodayStats($outletId = null, $locationId = null)
     {
         $today = now()->startOfDay();
         
         $query = Transaction::where('status', 'completed')
             ->whereDate('created_at', $today);
         
-        if ($outletId) {
+        if ($locationId) {
+            $query->where('location_id', $locationId);
+        } elseif ($outletId) {
             $query->where('outlet_id', $outletId);
         }
         
@@ -72,14 +83,14 @@ class DashboardController extends Controller
         $cashInHand = $cashFlowQuery->sum(DB::raw("CASE WHEN type = 'in' THEN amount ELSE -amount END"));
 
         return [
-            'total_revenue' => $totalRevenue,
-            'total_transactions' => $totalTransactions,
-            'average_transaction' => $averageTransaction,
-            'cash_in_hand' => $cashInHand,
+            'total_revenue' => (float) $totalRevenue,
+            'total_transactions' => (int) $totalTransactions,
+            'average_transaction' => (float) $averageTransaction,
+            'cash_in_hand' => (float) $cashInHand,
         ];
     }
 
-    private function getSalesChart($outletId, $days)
+    private function getSalesChart($outletId = null, $locationId = null, $days = 7)
     {
         $data = [];
         
@@ -89,7 +100,9 @@ class DashboardController extends Controller
             $query = Transaction::where('status', 'completed')
                 ->whereDate('created_at', $date);
             
-            if ($outletId) {
+            if ($locationId) {
+                $query->where('location_id', $locationId);
+            } elseif ($outletId) {
                 $query->where('outlet_id', $outletId);
             }
             
@@ -97,26 +110,31 @@ class DashboardController extends Controller
 
             $data[] = [
                 'date' => $date->format('Y-m-d'),
-                'total' => $total,
+                'total' => (float) $total,
             ];
         }
 
         return $data;
     }
 
-    private function getTopProducts($outletId, $dateFrom, $dateTo, $limit = 10)
+    private function getTopProducts($outletId = null, $locationId = null, $dateFrom = null, $dateTo = null, $limit = 10)
     {
+        $from = $dateFrom ?? now()->subDays(30)->startOfDay();
+        $to = $dateTo ?? now()->endOfDay();
+
         $query = DB::table('transaction_items')
             ->join('transactions', 'transaction_items.transaction_id', '=', 'transactions.id')
             ->join('products', 'transaction_items.product_id', '=', 'products.id')
             ->where('transactions.status', 'completed')
-            ->whereBetween('transactions.created_at', [$dateFrom, $dateTo]);
+            ->whereBetween('transactions.created_at', [$from, $to]);
         
-        if ($outletId) {
+        if ($locationId) {
+            $query->where('transactions.location_id', $locationId);
+        } elseif ($outletId) {
             $query->where('transactions.outlet_id', $outletId);
         }
         
-        return $query->select(
+        $results = $query->select(
                 'products.id',
                 'products.name',
                 DB::raw('SUM(transaction_items.quantity) as total_quantity'),
@@ -126,14 +144,56 @@ class DashboardController extends Controller
             ->orderBy('total_quantity', 'desc')
             ->limit($limit)
             ->get();
+
+        // Fallback to all-time if no transactions in last 30 days and dateFrom was not explicitly requested
+        if ($results->isEmpty() && !$dateFrom) {
+            $fallbackQuery = DB::table('transaction_items')
+                ->join('transactions', 'transaction_items.transaction_id', '=', 'transactions.id')
+                ->join('products', 'transaction_items.product_id', '=', 'products.id')
+                ->where('transactions.status', 'completed');
+            
+            if ($locationId) {
+                $fallbackQuery->where('transactions.location_id', $locationId);
+            } elseif ($outletId) {
+                $fallbackQuery->where('transactions.outlet_id', $outletId);
+            }
+
+            $results = $fallbackQuery->select(
+                    'products.id',
+                    'products.name',
+                    DB::raw('SUM(transaction_items.quantity) as total_quantity'),
+                    DB::raw('SUM(transaction_items.subtotal) as total_revenue')
+                )
+                ->groupBy('products.id', 'products.name')
+                ->orderBy('total_quantity', 'desc')
+                ->limit($limit)
+                ->get();
+        }
+
+        $mapped = $results->map(function ($item) {
+            $qty = (float) $item->total_quantity;
+            return [
+                'id' => $item->id,
+                'name' => $item->name,
+                'total_quantity' => $qty == (int) $qty ? (int) $qty : $qty,
+                'total_revenue' => (float) $item->total_revenue,
+            ];
+        });
+
+        return array_values($mapped->all());
     }
 
-    private function getPaymentBreakdown($outletId, $dateFrom, $dateTo)
+    private function getPaymentBreakdown($outletId = null, $locationId = null, $dateFrom = null, $dateTo = null)
     {
+        $from = $dateFrom ?? now()->subDays(30)->startOfDay();
+        $to = $dateTo ?? now()->endOfDay();
+
         $query = Transaction::where('status', 'completed')
-            ->whereBetween('created_at', [$dateFrom, $dateTo]);
+            ->whereBetween('created_at', [$from, $to]);
         
-        if ($outletId) {
+        if ($locationId) {
+            $query->where('location_id', $locationId);
+        } elseif ($outletId) {
             $query->where('outlet_id', $outletId);
         }
         
@@ -144,72 +204,40 @@ class DashboardController extends Controller
 
     private function getLowStockProducts($outletId = null, $locationId = null, $limit = 10)
     {
-        $query = \App\Models\InventoryStock::with(['product.category', 'location'])
+        $query = \App\Models\InventoryStock::whereHas('product')
+            ->with(['product.category', 'location'])
             ->whereRaw('quantity <= reorder_level')
             ->where('reorder_level', '>', 0); // Only check products with reorder level set
-        
-        \Log::info('Dashboard getLowStockProducts: start', [
-            'outlet_id' => $outletId,
-            'location_id' => $locationId
-        ]);
         
         // Priority: If specific location is specified, use it. Otherwise use outlet filter
         if ($locationId) {
             $query->where('location_id', $locationId);
-            \Log::info('Dashboard: Filtering by location_id', ['location_id' => $locationId]);
-            
-            $location = \App\Models\Location::find($locationId);
-            
-            if ($location && strtoupper($location->type) === 'FNB') {
-                // Filter only FNB categories for FNB locations
-                $query->whereHas('product.category', function($q) {
-                    $q->where(function($subQ) {
-                        $subQ->where('name', 'like', '%FNB%')
-                             ->orWhere('slug', 'like', '%fnb%')
-                             ->orWhere('slug', 'like', '%FNB%');
-                    });
-                });
-                
-                \Log::info('Dashboard: Filtering low stock for FNB location', [
-                    'location_id' => $locationId,
-                    'location_type' => $location->type
-                ]);
-            }
         } elseif ($outletId) {
             // Filter by outlet (all locations in the outlet)
             $query->whereHas('location', function($q) use ($outletId) {
                 $q->where('outlet_id', $outletId);
             });
-            \Log::info('Dashboard: Filtering by outlet_id', ['outlet_id' => $outletId]);
         }
         
         $results = $query->orderBy('quantity', 'asc')
             ->limit($limit)
             ->get();
         
-        \Log::info('Dashboard getLowStockProducts: results', [
-            'count' => $results->count(),
-            'items' => $results->map(function($s) {
-                return [
-                    'product' => $s->product->name,
-                    'quantity' => $s->quantity,
-                    'reorder_level' => $s->reorder_level,
-                    'location_id' => $s->location_id
-                ];
-            })->toArray()
-        ]);
-        
-        return $results->map(function ($stock) {
-                // Transform to match expected structure for frontend
-                return (object) [
-                    'id' => $stock->product->id,
-                    'name' => $stock->product->name,
-                    'sku' => $stock->product->sku,
-                    'stock' => $stock->quantity, // This will show as "Stok: X" in the frontend 
-                    'min_stock' => $stock->reorder_level,
-                    'category' => $stock->product->category,
-                ];
-            });
+        $mapped = [];
+        foreach ($results as $stock) {
+            if (!$stock->product) continue;
+
+            $mapped[] = [
+                'id' => $stock->product->id,
+                'name' => $stock->product->name,
+                'sku' => $stock->product->sku ?? '',
+                'stock' => (float) $stock->quantity == (int) $stock->quantity ? (int) $stock->quantity : (float) $stock->quantity,
+                'min_stock' => (float) $stock->reorder_level == (int) $stock->reorder_level ? (int) $stock->reorder_level : (float) $stock->reorder_level,
+                'category' => $stock->product->category,
+            ];
+        }
+
+        return $mapped;
     }
 
     public function salesReport(Request $request)

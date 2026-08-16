@@ -18,17 +18,21 @@ class TransactionController extends Controller
     {
         $query = Transaction::with(['user', 'outlet', 'items.product', 'table']);
 
-        // Filter by location or outlet
-        if ($request->has('location_id')) {
-            $query->where('location_id', $request->location_id);
-        } elseif ($request->has('outlet_id')) {
-            $query->where('outlet_id', $request->outlet_id);
-        } elseif (auth()->user()->location_id) {
-            // User with location_id: filter by location
-            $query->where('location_id', auth()->user()->location_id);
-        } elseif (auth()->user()->outlet_id) {
-            // User with outlet_id: filter by outlet
-            $query->where('outlet_id', auth()->user()->outlet_id);
+        $user = auth()->user();
+        $isOwner = $user && ($user->role === 'owner' || ($user->role === 'inventory' && !$user->outlet_id));
+
+        // Enforce user location scoping for non-owner users
+        if (!$isOwner && $user?->location_id) {
+            $query->where('location_id', $user->location_id);
+        } elseif (!$isOwner && $user?->outlet_id) {
+            $query->where('outlet_id', $user->outlet_id);
+        } else {
+            // Owner can filter by location_id or outlet_id if provided
+            if ($request->has('location_id') && $request->filled('location_id')) {
+                $query->where('location_id', $request->location_id);
+            } elseif ($request->has('outlet_id') && $request->filled('outlet_id')) {
+                $query->where('outlet_id', $request->outlet_id);
+            }
         }
 
         // Filter by date range

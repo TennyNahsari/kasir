@@ -3,7 +3,7 @@
     <h2 class="text-xl sm:text-2xl font-bold">{{ $t('dashboard.title') }}</h2>
     
     <!-- Outlet Selector for Owner -->
-    <OutletSelector @outlet-changed="handleOutletChange" />
+    <OutletSelector :allowed-types="['OUTLET', 'FNB']" @outlet-changed="handleOutletChange" />
 
     <!-- No Outlet Warning -->
     <div v-if="showNoOutletWarning" class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
@@ -62,6 +62,9 @@
                 {{ formatCurrency(product.total_revenue) }}
               </div>
             </div>
+          </div>
+          <div v-if="!stats?.top_products?.length" class="text-center text-gray-500 py-4 text-sm">
+            Belum ada data produk terlaris
           </div>
         </div>
       </div>

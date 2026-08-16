@@ -25,8 +25,18 @@ class ProductController extends Controller
 
         $query = Product::with('category');
 
+        $user = auth()->user();
+        $isOwner = $user && ($user->role === 'owner' || ($user->role === 'inventory' && !$user->outlet_id));
+
+        $locationId = null;
+        if (!$isOwner && $user?->location_id) {
+            $locationId = $user->location_id;
+        } elseif ($request->has('location_id') && $request->filled('location_id')) {
+            $locationId = $request->location_id;
+        }
+
         // If location_id is provided, exclude the global stock column and use inventory_stocks instead
-        if ($request->has('location_id')) {
+        if ($locationId) {
             // Select all columns EXCEPT the stock column to avoid confusion
             $query->select([
                 'id', 'sku', 'barcode', 'name', 'description', 'category_id', 
@@ -37,13 +47,13 @@ class ProductController extends Controller
             ]);
             
             // Load inventory stocks for this location
-            $query->with(['inventoryStocks' => function($q) use ($request) {
-                $q->where('location_id', $request->location_id);
+            $query->with(['inventoryStocks' => function($q) use ($locationId) {
+                $q->where('location_id', $locationId);
             }]);
             
             // IMPORTANT: Only return products that have inventory stock for this location
-            $query->whereHas('inventoryStocks', function($q) use ($request) {
-                $q->where('location_id', $request->location_id)
+            $query->whereHas('inventoryStocks', function($q) use ($locationId) {
+                $q->where('location_id', $locationId)
                   ->where('quantity', '>', 0);
             });
         }

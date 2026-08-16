@@ -363,9 +363,9 @@ const loadLocations = async () => {
       console.error('Locations data is not an array:', allLocations)
       locations.value = []
     } else {
-      // Filter only INVENTORY, OUTLET, and FNB types
+      // Filter only OUTLET and FNB types for Kasir app
       locations.value = allLocations.filter(loc => 
-        ['INVENTORY', 'WAREHOUSE', 'OUTLET', 'FNB'].includes(loc.type?.toUpperCase())
+        ['OUTLET', 'FNB'].includes(loc.type?.toUpperCase())
       )
     }
     
