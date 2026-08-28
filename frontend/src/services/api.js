@@ -24,9 +24,15 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Only redirect if not already on login page
-      if (!window.location.pathname.includes('/login')) {
-        window.location.href = '/kasir/login'
+      const currentPath = window.location.pathname
+      const requestUrl = error.config?.url || ''
+      
+      const isPublicPage = currentPath === '/' || currentPath.startsWith('/order/')
+      const isPublicApi = requestUrl.includes('/public/') || requestUrl.includes('/me')
+      const isLoginPage = currentPath.includes('/login')
+      
+      if (!isPublicPage && !isPublicApi && !isLoginPage) {
+        window.location.href = '/login'
       }
     }
     return Promise.reject(error)

@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\AssetController;
 use App\Http\Controllers\Api\ServiceContractController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\TableController;
+use App\Http\Controllers\Api\AppSettingController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\DashboardController as TicketDashboardController;
 use Illuminate\Support\Facades\Route;
@@ -25,13 +26,16 @@ use Illuminate\Support\Facades\Route;
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);
 
-// Public routes for QR Order (customer)
+// Public routes for QR Order & Homepage (customer)
+Route::get('/public/locations', [LocationController::class, 'publicIndex']);
 Route::get('/public/categories', [CategoryController::class, 'index']);
 Route::get('/public/products', [ProductController::class, 'index']);
 Route::get('/public/locations/{location}', [LocationController::class, 'show']);
 Route::get('/public/orders', [TransactionController::class, 'publicOrders']);
 Route::post('/public/orders', [TransactionController::class, 'store']);
 Route::get('/public/tables', [TableController::class, 'index']);
+Route::get('/public/settings/whatsapp', [AppSettingController::class, 'whatsapp']);
+Route::get('/public/settings/payment', [AppSettingController::class, 'payment']);
 
 // Public routes for Asset QR Code (anyone can scan)
 Route::get('/public/assets/{asset}', [AssetController::class, 'show']);
@@ -42,6 +46,13 @@ Route::middleware('auth:sanctum')->group(function () {
     // Auth
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+
+    // Global application settings (Owner only)
+    Route::get('/settings/whatsapp', [AppSettingController::class, 'whatsapp']);
+    Route::put('/settings/whatsapp', [AppSettingController::class, 'updateWhatsapp']);
+    Route::get('/settings/payment', [AppSettingController::class, 'payment']);
+    Route::post('/settings/payment', [AppSettingController::class, 'updatePayment']);
+    Route::delete('/settings/payment/qris', [AppSettingController::class, 'deleteQrisImage']);
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index']);

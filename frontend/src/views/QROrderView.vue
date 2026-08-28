@@ -1,7 +1,7 @@
 <template>
-  <div class="min-h-screen bg-gray-50 pb-safe">
+  <div class="qr-page min-h-screen bg-[#F9F6F0] text-[#2C2C2C] pb-safe">
     <!-- Header -->
-    <div class="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 shadow-lg sticky top-0 z-20 backdrop-blur-md">
+    <div class="bg-gradient-to-r from-[#6B2E3E] via-[#6B2E3E] to-[#2C2C2C] shadow-lg sticky top-0 z-20 backdrop-blur-md">
       <div class="max-w-3xl mx-auto px-4 py-3 sm:py-4">
         <div class="flex items-center justify-between gap-3 text-white">
           <!-- Logo & Outlet Info -->
@@ -18,12 +18,12 @@
             </div>
             <div class="min-w-0">
               <h1 class="text-base sm:text-2xl font-bold tracking-tight text-white truncate">{{ outlet?.name || 'Kasir Resto' }}</h1>
-              <div class="flex items-center gap-2 text-xs sm:text-sm text-blue-100/90 font-medium mt-0.5">
+              <div class="flex items-center gap-2 text-xs sm:text-sm text-[#E5D9C5] font-medium mt-0.5">
                 <span class="inline-flex items-center gap-1 bg-white/10 px-2 py-0.5 rounded-full text-[11px] sm:text-xs">
-                  <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span> Buka
+                  <span class="w-1.5 h-1.5 rounded-full bg-[#C9A96E] animate-pulse"></span> Buka
                 </span>
                 <span class="hidden sm:inline">•</span>
-                <span class="hidden sm:inline">Menu Self Order</span>
+                <span class="hidden sm:inline text-[#E5D9C5]">Menu Self Order</span>
               </div>
             </div>
           </div>
@@ -33,7 +33,7 @@
             <div class="bg-white/15 backdrop-blur-md border border-white/25 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold text-white shadow-inner flex items-center gap-1.5">
               <span class="text-base sm:text-lg">📍</span>
               <div class="text-right sm:text-left">
-                <span class="text-[10px] sm:text-xs block text-blue-200 uppercase tracking-wider leading-none">Meja</span>
+                <span class="text-[10px] sm:text-xs block text-[#E5D9C5] uppercase tracking-wider leading-none">Meja</span>
                 <span class="text-sm sm:text-base font-extrabold leading-none">{{ tableNumber }}</span>
               </div>
             </div>
@@ -45,7 +45,7 @@
     <!-- Loading -->
     <div v-if="loading" class="flex justify-center items-center py-20">
       <div class="text-center">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C9A96E] mx-auto mb-4"></div>
         <p class="text-gray-600 text-sm">Memuat menu...</p>
       </div>
     </div>
@@ -64,14 +64,14 @@
     <!-- Content -->
     <div v-else class="max-w-2xl mx-auto px-3 sm:px-4 py-4 sm:py-6 pb-28 sm:pb-32">
       <!-- Top Navigation Tabs (Menu vs Status Pesanan) -->
-      <div class="flex border border-gray-200 mb-4 sm:mb-6 bg-white rounded-xl p-1 shadow-sm">
+        <div class="flex border border-[#E5D9C5] mb-4 sm:mb-6 bg-white rounded-xl p-1 shadow-sm">
         <button
           @click="activeTab = 'menu'"
           :class="[
             'flex-1 py-2.5 px-3 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-1.5',
             activeTab === 'menu'
-              ? 'bg-blue-600 text-white shadow'
-              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              ? 'bg-[#6B2E3E] text-white shadow'
+              : 'text-[#5A5A5A] hover:text-[#2C2C2C] hover:bg-[#F9F6F0]'
           ]"
         >
           <span>🍽️ Menu</span>
@@ -81,8 +81,8 @@
           :class="[
             'flex-1 py-2.5 px-3 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-1.5 relative',
             activeTab === 'status'
-              ? 'bg-blue-600 text-white shadow'
-              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              ? 'bg-[#6B2E3E] text-white shadow'
+              : 'text-[#5A5A5A] hover:text-[#2C2C2C] hover:bg-[#F9F6F0]'
           ]"
         >
           <span>📋 Status Pesanan</span>
@@ -90,7 +90,7 @@
             v-if="tableOrders.length > 0"
             :class="[
               'px-1.5 py-0.5 text-[10px] font-bold rounded-full ml-1',
-              activeTab === 'status' ? 'bg-white text-blue-700' : 'bg-blue-600 text-white'
+              activeTab === 'status' ? 'bg-white text-[#6B2E3E]' : 'bg-[#6B2E3E] text-white'
             ]"
           >
             {{ tableOrders.length }}
@@ -110,8 +110,8 @@
               :class="[
                 'px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all flex-shrink-0',
                 selectedCategory === category.id
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'bg-white text-gray-700 hover:bg-gray-100 shadow-sm'
+                  ? 'bg-[#6B2E3E] text-white shadow-md'
+                  : 'bg-white text-[#5A5A5A] hover:bg-[#F9F6F0] shadow-sm'
               ]"
             >
               {{ formatCategoryName(category.name) }}
@@ -121,8 +121,8 @@
               :class="[
                 'px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all flex-shrink-0',
                 selectedCategory === null
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'bg-white text-gray-700 hover:bg-gray-100 shadow-sm'
+                  ? 'bg-[#6B2E3E] text-white shadow-md'
+                  : 'bg-white text-[#5A5A5A] hover:bg-[#F9F6F0] shadow-sm'
               ]"
             >
               Semua
@@ -144,7 +144,7 @@
             <div
               v-for="product in paginatedProducts"
               :key="product.id"
-              class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+              class="bg-white rounded-2xl border border-[#E5D9C5] shadow-sm overflow-hidden hover:shadow-lg transition-all hover:-translate-y-0.5"
             >
               <div class="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center overflow-hidden">
                 <img 
@@ -161,7 +161,7 @@
                 <h3 class="font-medium text-gray-900 text-xs sm:text-sm mb-1 line-clamp-2 min-h-[2.5rem] sm:min-h-[2.25rem]">
                   {{ product.name }}
                 </h3>
-                <p class="text-blue-600 font-bold text-sm sm:text-base mb-2">
+              <p class="text-[#C9A96E] font-bold text-sm sm:text-base mb-2">
                   Rp {{ formatNumber(product.selling_price) }}
                 </p>
                 <button
@@ -170,7 +170,7 @@
                   :class="[
                     'w-full py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all active:scale-95',
                     (product.stock > 0 || !product.track_stock)
-                      ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
+                      ? 'bg-[#C9A96E] text-white hover:bg-[#B59458] shadow-sm'
                       : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                   ]"
                 >
@@ -204,7 +204,7 @@
           </h2>
           <button 
             @click="loadTableOrders" 
-            class="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1 font-medium bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200 active:scale-95 transition-all"
+            class="text-xs text-[#6B2E3E] hover:text-[#C9A96E] flex items-center gap-1 font-medium bg-[#F9F6F0] px-2.5 py-1 rounded-lg border border-[#E5D9C5] active:scale-95 transition-all"
             :disabled="loadingOrders"
           >
             <svg class="w-3.5 h-3.5" :class="{ 'animate-spin': loadingOrders }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -215,7 +215,7 @@
         </div>
 
         <div v-if="loadingOrders" class="text-center py-10 bg-white rounded-xl shadow-sm p-6">
-          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C9A96E] mx-auto mb-2"></div>
           <p class="text-xs text-gray-500">Memuat status pesanan...</p>
         </div>
 
@@ -227,7 +227,7 @@
           <p class="text-xs text-gray-500 mt-1">Belum ada pesanan aktif untuk Meja {{ tableNumber }} saat ini.</p>
           <button 
             @click="activeTab = 'menu'" 
-            class="mt-4 px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+            class="mt-4 px-4 py-2 bg-[#C9A96E] text-white text-xs font-semibold rounded-lg hover:bg-[#B59458] transition-colors shadow-sm"
           >
             + Buat Pesanan Baru
           </button>
@@ -284,7 +284,7 @@
             <!-- Total Footer -->
             <div class="mt-3 pt-2 border-t border-dashed border-gray-200 flex justify-between items-center text-xs sm:text-sm">
               <span class="text-gray-500 font-medium">Total Tagihan</span>
-              <span class="text-blue-600 font-extrabold text-sm sm:text-base">Rp {{ formatNumber(order.total) }}</span>
+              <span class="text-[#C9A96E] font-extrabold text-sm sm:text-base">Rp {{ formatNumber(order.total) }}</span>
             </div>
           </div>
         </div>
@@ -299,10 +299,10 @@
       <div class="max-w-2xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
         <button
           @click="showCart = true"
-          class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3 sm:py-3.5 rounded-xl font-bold flex items-center justify-between shadow-lg active:scale-95 transition-all"
+          class="w-full bg-gradient-to-r from-[#6B2E3E] to-[#2C2C2C] hover:from-[#5A2634] hover:to-[#1E1E1E] text-white py-3 sm:py-3.5 rounded-xl font-bold flex items-center justify-between shadow-lg active:scale-95 transition-all"
         >
           <div class="flex items-center gap-2">
-            <span class="bg-white text-blue-600 px-2.5 py-0.5 rounded-full text-xs font-bold">
+            <span class="bg-white text-[#6B2E3E] px-2.5 py-0.5 rounded-full text-xs font-bold">
               {{ cart.length }}
             </span>
             <span class="text-sm sm:text-base">Lihat Pesanan</span>
@@ -320,7 +320,7 @@
     >
       <div class="bg-white w-full sm:max-w-lg sm:mx-4 rounded-t-2xl sm:rounded-2xl max-h-[85vh] sm:max-h-[90vh] overflow-hidden flex flex-col animate-slide-up">
         <!-- Header -->
-        <div class="flex-shrink-0 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 sm:px-6 py-4">
+        <div class="flex-shrink-0 bg-gradient-to-r from-[#6B2E3E] to-[#2C2C2C] text-white px-4 sm:px-6 py-4">
           <div class="flex justify-between items-center">
             <div>
               <h2 class="text-lg sm:text-xl font-bold">🛒 Pesanan Anda</h2>
@@ -348,7 +348,7 @@
               <h3 class="font-semibold text-gray-900 text-sm sm:text-base truncate">
                 {{ item.product_name }}
               </h3>
-              <p class="text-xs sm:text-sm text-blue-600 font-medium">
+              <p class="text-xs sm:text-sm text-[#C9A96E] font-medium">
                 Rp {{ formatNumber(item.price) }}
               </p>
             </div>
@@ -366,7 +366,7 @@
               </span>
               <button
                 @click="increaseQuantity(item)"
-                class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700 transition-colors active:scale-90"
+                class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#C9A96E] text-white flex items-center justify-center hover:bg-[#B59458] transition-colors active:scale-90"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" />
@@ -381,7 +381,7 @@
           <div class="bg-blue-50 p-3 rounded-xl">
             <div class="flex justify-between items-center">
               <span class="text-gray-700 font-medium text-sm sm:text-base">Total Pembayaran</span>
-              <span class="text-blue-600 font-bold text-lg sm:text-xl">
+              <span class="text-[#C9A96E] font-bold text-lg sm:text-xl">
                 Rp {{ formatNumber(totalPrice) }}
               </span>
             </div>
@@ -435,7 +435,7 @@
           <button
             @click="submitOrder"
             :disabled="submitting"
-            class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3 sm:py-3.5 rounded-xl font-bold text-sm sm:text-base disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed shadow-lg active:scale-95 transition-all"
+            class="w-full bg-gradient-to-r from-[#6B2E3E] to-[#2C2C2C] hover:from-[#5A2634] hover:to-[#1E1E1E] text-white py-3 sm:py-3.5 rounded-xl font-bold text-sm sm:text-base disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed shadow-lg active:scale-95 transition-all"
           >
             {{ submitting ? 'Mengirim...' : 'Kirim Pesanan' }}
           </button>
@@ -461,7 +461,7 @@
         <div class="space-y-2 mt-4">
           <button
             @click="activeTab = 'status'; showSuccess = false; loadTableOrders()"
-            class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3 rounded-xl font-bold text-sm shadow-md active:scale-95 transition-all"
+            class="w-full bg-gradient-to-r from-[#6B2E3E] to-[#2C2C2C] hover:from-[#5A2634] hover:to-[#1E1E1E] text-white py-3 rounded-xl font-bold text-sm shadow-md active:scale-95 transition-all"
           >
             📋 Cek Status Pesanan
           </button>

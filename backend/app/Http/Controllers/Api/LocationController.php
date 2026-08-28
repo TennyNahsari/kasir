@@ -15,7 +15,7 @@ class LocationController extends Controller
 
         // Authorization: owner and inventory see all, others see locations based on their assignment
         $user = auth()->user();
-        if (!in_array($user->role, ['owner', 'inventory'])) {
+        if ($user && !in_array($user->role, ['owner', 'inventory'])) {
             if ($user->location_id) {
                 // User assigned to specific location - see only their location
                 $query->where('id', $user->location_id);
@@ -51,6 +51,28 @@ class LocationController extends Controller
         $locations = $query->orderBy('name')->paginate($request->per_page ?? 25);
 
         return response()->json($locations);
+    }
+
+    /**
+     * Public listing of active FNB locations (no auth required).
+     */
+    public function publicIndex(Request $request)
+    {
+        $query = Location::query()
+            ->where('type', 'FNB')
+            ->where('is_active', true);
+
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('code', 'ilike', "%{$search}%")
+                    ->orWhere('name', 'ilike', "%{$search}%");
+            });
+        }
+
+        $locations = $query->orderBy('name')->get();
+
+        return response()->json(['data' => $locations]);
     }
 
     /**

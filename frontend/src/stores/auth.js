@@ -9,31 +9,25 @@ export const useAuthStore = defineStore('auth', () => {
 
   // Initialize by checking if user is authenticated via cookie
   const initAuth = async () => {
-    console.log('🔧 initAuth called, initialized:', initialized.value)
-    if (initialized.value) {
-      console.log('⏭️ initAuth skipped - already initialized')
-      return
-    }
+    if (initialized.value) return
     
     initialized.value = true
     loading.value = true
     
-    // Don't check auth on login page to prevent issues
-    if (window.location.pathname.includes('/login')) {
-      console.log('⏭️ initAuth skipped - on login page')
+    // Don't check auth on login page or if no login flag in localStorage
+    const hasLoginFlag = localStorage.getItem('is_logged_in') === 'true'
+    if (window.location.pathname.includes('/login') || !hasLoginFlag) {
+      user.value = null
       loading.value = false
       return
     }
     
     try {
-      console.log('📡 initAuth: Calling GET /me...')
-      // Try to get current user from API (cookie will be sent automatically)
       const response = await api.get('/me')
-      console.log('✅ initAuth: GET /me success:', response.data)
       user.value = response.data
+      localStorage.setItem('is_logged_in', 'true')
     } catch (error) {
-      console.warn('⚠️ initAuth: GET /me failed:', error.message)
-      // Not authenticated or session expired
+      localStorage.removeItem('is_logged_in')
       user.value = null
     } finally {
       loading.value = false
@@ -44,10 +38,8 @@ export const useAuthStore = defineStore('auth', () => {
     loading.value = true
     try {
       const response = await api.post('/login', { email, password })
-      console.log('🔐 Login API Response:', response.data)
-      console.log('👤 User object:', response.data.user)
-      console.log('🎭 User role:', response.data.user?.role)
       user.value = response.data.user
+      localStorage.setItem('is_logged_in', 'true')
       initialized.value = true
       return true
     } catch (error) {
@@ -63,6 +55,7 @@ export const useAuthStore = defineStore('auth', () => {
     } catch (error) {
       console.error('Logout error:', error)
     } finally {
+      localStorage.removeItem('is_logged_in')
       user.value = null
       initialized.value = false
     }

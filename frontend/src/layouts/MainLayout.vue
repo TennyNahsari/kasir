@@ -9,18 +9,18 @@
 
     <!-- Sidebar -->
     <aside 
-      class="fixed lg:static inset-y-0 left-0 transform transition-transform duration-300 ease-in-out z-50 lg:translate-x-0 w-64 bg-white shadow-lg flex flex-col"
+      class="fixed lg:static inset-y-0 left-0 transform transition-transform duration-300 ease-in-out z-50 lg:translate-x-0 w-64 bg-[#F9F6F0] border-r border-[#E5D9C5] shadow-md flex flex-col"
       :class="showMobileMenu ? 'translate-x-0' : '-translate-x-full'"
     >
       <!-- Sidebar Header -->
       <div class="p-4 border-b">
         <div class="flex items-center justify-between">
-          <div>
-            <h1 class="text-xl font-bold text-primary-600">Unified POS</h1>
-            <span v-if="authStore.user?.outlet" class="text-xs text-gray-600">
+          <router-link to="/dashboard" class="block">
+            <h1 class="text-xl font-bold font-display tracking-wide text-[#2C2C2C] hover:text-[#6B2E3E] transition-colors">L'ÉTOILE POS</h1>
+            <span v-if="authStore.user?.outlet" class="text-xs text-[#5A5A5A]">
               {{ authStore.user.outlet.name }}
             </span>
-          </div>
+          </router-link>
           <button @click="showMobileMenu = false" class="lg:hidden p-2 hover:bg-gray-100 rounded-lg">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -40,8 +40,8 @@
             @click="showMobileMenu = false"
             class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors"
             :class="$route.path === item.path 
-              ? 'bg-primary-50 text-primary-600' 
-              : 'text-gray-700 hover:bg-gray-100'"
+              ? 'bg-[#C9A96E]/20 text-[#6B2E3E] font-semibold border-l-4 border-[#C9A96E]' 
+              : 'text-[#2C2C2C] hover:bg-[#E5D9C5]/40'"
           >
             <component :is="item.icon" class="w-5 h-5" />
             <span>{{ item.name }}</span>
@@ -61,8 +61,8 @@
               @click="showMobileMenu = false"
               class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors"
               :class="$route.path === item.path 
-                ? 'bg-primary-50 text-primary-600' 
-                : 'text-gray-700 hover:bg-gray-100'"
+                ? 'bg-[#C9A96E]/20 text-[#6B2E3E] font-semibold border-l-4 border-[#C9A96E]' 
+                : 'text-[#2C2C2C] hover:bg-[#E5D9C5]/40'"
             >
               <component :is="item.icon" class="w-5 h-5" />
               <span>{{ item.name }}</span>
@@ -83,7 +83,9 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <h1 class="text-lg font-bold text-primary-600">Unified POS</h1>
+            <router-link to="/dashboard">
+              <h1 class="text-lg font-bold text-primary-600 hover:text-primary-700 transition-colors">Unified POS</h1>
+            </router-link>
             <!-- Language Switcher Mobile -->
             <div class="relative">
               <button @click="showLangMenu = !showLangMenu" class="p-2 hover:bg-gray-100 rounded-lg flex items-center gap-1">
@@ -206,7 +208,7 @@ const navigation = computed(() => {
   const items = [
     { 
       name: t('nav.dashboard'), 
-      path: '/',
+      path: '/dashboard',
       icon: () => h('svg', { class: 'w-5 h-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
         h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' })
       ])
@@ -262,6 +264,22 @@ const settingsMenu = computed(() => [
     icon: () => h('svg', { class: 'w-5 h-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
       h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z' }),
       h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M15 11a3 3 0 11-6 0 3 3 0 016 0z' })
+    ])
+  },
+  {
+    name: 'WhatsApp',
+    path: '/settings/whatsapp',
+    roles: ['owner'],
+    icon: () => h('svg', { class: 'w-5 h-5', fill: 'currentColor', viewBox: '0 0 24 24' }, [
+      h('path', { d: 'M20.52 3.48A11.86 11.86 0 0012.08 0C5.52 0 .18 5.34.18 11.9c0 2.1.55 4.15 1.59 5.96L.08 24l6.28-1.65a11.9 11.9 0 005.72 1.46h.01c6.56 0 11.9-5.34 11.9-11.9 0-3.18-1.24-6.16-3.47-8.43zM12.09 21.8h-.01a9.9 9.9 0 01-5.05-1.38l-.36-.21-3.73.98 1-3.64-.23-.37a9.87 9.87 0 01-1.52-5.28C2.19 6.45 6.63 2 12.08 2a9.9 9.9 0 017.02 2.92A9.9 9.9 0 0122 11.94c0 5.45-4.45 9.86-9.91 9.86zm5.42-7.4c-.3-.15-1.77-.87-2.05-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.95 1.17-.17.2-.35.22-.65.07-1.72-.86-2.85-1.53-3.99-3.47-.3-.51.3-.47.86-1.56.1-.2.05-.37-.03-.52-.08-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.08 4.49 1.89.82 2.63.89 3.57.75.58-.09 1.77-.72 2.02-1.42.25-.7.25-1.3.17-1.42-.07-.13-.27-.2-.57-.35z' })
+    ])
+  },
+  {
+    name: 'Pembayaran',
+    path: '/settings/payment',
+    roles: ['owner'],
+    icon: () => h('svg', { class: 'w-5 h-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z' })
     ])
   }
 ])

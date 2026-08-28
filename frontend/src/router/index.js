@@ -6,8 +6,14 @@ import api from '@/services/api'
 let accessValidated = false
 
 const router = createRouter({
-  history: createWebHistory('/kasir'),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
+    {
+      path: '/',
+      name: 'Home',
+      component: () => import('@/views/HomeView.vue'),
+      meta: { public: true }
+    },
     {
       path: '/login',
       name: 'Login',
@@ -21,7 +27,7 @@ const router = createRouter({
       meta: { public: true }
     },
     {
-      path: '/',
+      path: '/dashboard',
       component: () => import('@/layouts/MainLayout.vue'),
       meta: { requiresAuth: true },
       children: [
@@ -31,44 +37,56 @@ const router = createRouter({
           component: () => import('@/views/DashboardView.vue')
         },
         {
-          path: 'pos',
+          path: '/pos',
           name: 'POS',
           component: () => import('@/views/POSView.vue')
         },
         {
-          path: 'transactions',
+          path: '/transactions',
           name: 'Transactions',
           component: () => import('@/views/TransactionsView.vue')
         },
         {
-          path: 'reports',
+          path: '/reports',
           name: 'Reports',
           component: () => import('@/views/ReportsView.vue'),
           meta: { roles: ['owner', 'inventory', 'supervisor'] }
         },
         {
-          path: 'settings/users',
+          path: '/settings/users',
           name: 'SettingsUsers',
           component: () => import('@/views/UserManagement.vue'),
           meta: { roles: ['owner'] }
         },
         {
-          path: 'settings/products',
+          path: '/settings/products',
           name: 'SettingsProducts',
           component: () => import('@/views/ProductsView.vue'),
           meta: { roles: ['owner', 'inventory'] }
         },
         {
-          path: 'settings/stocks',
+          path: '/settings/stocks',
           name: 'SettingsStocks',
           component: () => import('@/views/StockManagement.vue'),
           meta: { roles: ['owner', 'inventory', 'supervisor'] }
         },
         {
-          path: 'settings/locations',
+          path: '/settings/locations',
           name: 'SettingsLocations',
           component: () => import('@/views/LocationsManagement.vue'),
           meta: { roles: ['owner', 'inventory'] }
+        },
+        {
+          path: '/settings/whatsapp',
+          name: 'SettingsWhatsapp',
+          component: () => import('@/views/WhatsappSettings.vue'),
+          meta: { roles: ['owner'] }
+        },
+        {
+          path: '/settings/payment',
+          name: 'SettingsPayment',
+          component: () => import('@/views/PaymentSettings.vue'),
+          meta: { roles: ['owner'] }
         }
       ]
     }
@@ -84,9 +102,9 @@ router.beforeEach(async (to, from, next) => {
   }
   
   const isAuthenticated = !!authStore.user
-  const isPublicRoute = to.meta.public === true
-  const isGuestRoute = to.meta.guest === true
-  const requiresAuth = to.meta.requiresAuth === true
+  const isPublicRoute = to.matched.some(r => r.meta.public === true) || to.meta.public === true
+  const isGuestRoute = to.matched.some(r => r.meta.guest === true) || to.meta.guest === true
+  const requiresAuth = !isPublicRoute && !isGuestRoute && (to.matched.some(r => r.meta.requiresAuth === true) || to.meta.requiresAuth === true)
   
   // Public routes - always allow
   if (isPublicRoute) {
@@ -95,7 +113,7 @@ router.beforeEach(async (to, from, next) => {
   
   // Guest routes (login) - redirect to home if already authenticated
   if (isGuestRoute && isAuthenticated) {
-    return next('/')
+    return next('/dashboard')
   }
   
   // Protected routes - redirect to login if not authenticated
@@ -187,7 +205,7 @@ router.beforeEach(async (to, from, next) => {
   // Role check for protected routes
   if (requiresAuth && to.meta.roles) {
     if (!to.meta.roles.includes(authStore.user?.role)) {
-      return next('/')
+      return next('/dashboard')
     }
   }
   
