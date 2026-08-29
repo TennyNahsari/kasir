@@ -1,44 +1,44 @@
 <template>
   <div class="max-w-2xl">
     <div class="mb-6">
-      <h2 class="text-2xl font-bold text-gray-900">Pengaturan Pembayaran Online</h2>
-      <p class="text-sm text-gray-500 mt-1">Informasi rekening bank dan QRIS yang ditampilkan pada halaman order online.</p>
+      <h2 class="text-2xl font-bold text-gray-900">{{ $t('settings.payment.title') }}</h2>
+      <p class="text-sm text-gray-500 mt-1">{{ $t('settings.payment.subtitle') }}</p>
     </div>
 
     <form @submit.prevent="save" class="card space-y-6">
       <!-- Bank Transfer Section -->
       <div>
         <h3 class="text-base font-semibold text-gray-800 mb-3 flex items-center gap-2">
-          <span>🏦</span> Rekening Bank Transfer
+          <span>🏦</span> {{ $t('settings.payment.bankSection') }}
         </h3>
         <div class="space-y-4">
           <div>
-            <label class="label">Nama Bank</label>
+            <label class="label">{{ $t('settings.payment.bankName') }}</label>
             <input
               v-model="form.bank_name"
               type="text"
               class="input"
-              placeholder="BCA / BNI / Mandiri / dll"
+              :placeholder="$t('settings.payment.bankPlaceholder')"
               :disabled="loading"
             >
           </div>
           <div>
-            <label class="label">Nomor Rekening</label>
+            <label class="label">{{ $t('settings.payment.accountNumber') }}</label>
             <input
               v-model="form.bank_account_number"
               type="text"
               class="input"
-              placeholder="1234567890"
+              :placeholder="$t('settings.payment.accountPlaceholder')"
               :disabled="loading"
             >
           </div>
           <div>
-            <label class="label">Atas Nama</label>
+            <label class="label">{{ $t('settings.payment.accountName') }}</label>
             <input
               v-model="form.bank_account_name"
               type="text"
               class="input"
-              placeholder="PT. Contoh Usaha"
+              :placeholder="$t('settings.payment.ownerPlaceholder')"
               :disabled="loading"
             >
           </div>
@@ -48,12 +48,12 @@
       <!-- QRIS Section -->
       <div class="pt-4 border-t">
         <h3 class="text-base font-semibold text-gray-800 mb-3 flex items-center gap-2">
-          <span>📱</span> QRIS (QR Code Pembayaran)
+          <span>📱</span> {{ $t('settings.payment.qrisSection') }}
         </h3>
 
         <!-- Current QRIS Image Preview -->
         <div v-if="currentQrisUrl" class="mb-4">
-          <p class="text-xs text-gray-500 mb-2">Gambar QRIS saat ini:</p>
+          <p class="text-xs text-gray-500 mb-2">{{ $t('settings.payment.currentQris') }}</p>
           <div class="relative inline-block">
             <img
               :src="currentQrisUrl"
@@ -64,7 +64,7 @@
               type="button"
               @click="deleteQris"
               class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
-              title="Hapus gambar QRIS"
+              :title="$t('settings.payment.deleteQrisConfirm')"
             >
               ✕
             </button>
@@ -73,7 +73,7 @@
 
         <!-- Upload QRIS -->
         <div>
-          <label class="label">{{ currentQrisUrl ? 'Ganti Gambar QRIS' : 'Upload Gambar QRIS' }}</label>
+          <label class="label">{{ currentQrisUrl ? $t('settings.payment.changeQris') : $t('settings.payment.uploadQris') }}</label>
           <input
             type="file"
             ref="qrisFileInput"
@@ -82,12 +82,12 @@
             class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#F9F6F0] file:text-[#6B2E3E] hover:file:bg-[#E5D9C5] transition-all"
             :disabled="loading"
           >
-          <p class="text-xs text-gray-400 mt-1">Format: JPG, PNG, WebP. Maks: 2MB.</p>
+          <p class="text-xs text-gray-400 mt-1">{{ $t('settings.payment.imageHelpText') }}</p>
         </div>
 
         <!-- Preview new upload -->
         <div v-if="qrisPreview" class="mt-3">
-          <p class="text-xs text-green-600 mb-1 font-medium">Preview upload baru:</p>
+          <p class="text-xs text-green-600 mb-1 font-medium">{{ $t('settings.payment.previewNew') }}</p>
           <img
             :src="qrisPreview"
             alt="Preview QRIS"
@@ -102,7 +102,7 @@
 
       <div class="flex justify-end pt-2">
         <button type="submit" class="btn-primary" :disabled="loading">
-          {{ loading ? 'Menyimpan...' : 'Simpan Pengaturan' }}
+          {{ loading ? $t('settings.payment.savingButton') : $t('settings.payment.saveButton') }}
         </button>
       </div>
     </form>
@@ -111,7 +111,10 @@
 
 <script setup>
 import { onMounted, ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import api from '@/services/api'
+
+const { t } = useI18n()
 
 const form = ref({
   bank_name: '',
@@ -141,14 +144,14 @@ const onQrisFileChange = (e) => {
   if (!file) return
 
   if (!file.type.startsWith('image/')) {
-    message.value = 'File QRIS harus berupa gambar.'
+    message.value = t('settings.payment.fileMustBeImage')
     saved.value = false
     e.target.value = ''
     return
   }
 
   if (file.size > 2 * 1024 * 1024) {
-    message.value = 'Ukuran gambar QRIS maksimal 2MB.'
+    message.value = t('settings.payment.fileTooLarge')
     saved.value = false
     e.target.value = ''
     return
@@ -168,7 +171,7 @@ const load = async () => {
     form.value.bank_account_name = data.bank_account_name || ''
     currentQrisImage.value = data.qris_image || ''
   } catch (error) {
-    message.value = 'Gagal memuat pengaturan pembayaran.'
+    message.value = t('settings.payment.loadFailed')
     saved.value = false
   }
 }
@@ -187,8 +190,6 @@ const save = async () => {
     }
 
     const { data } = await api.post('/settings/payment', formData, {
-      // Remove the axios instance's JSON header. The browser must set the
-      // multipart boundary itself, otherwise Laravel may not detect the file.
       transformRequest: [(payload, headers) => {
         if (typeof headers.delete === 'function') {
           headers.delete('Content-Type')
@@ -204,10 +205,10 @@ const save = async () => {
     qrisPreview.value = null
     if (qrisFileInput.value) qrisFileInput.value.value = ''
 
-    message.value = 'Pengaturan pembayaran berhasil disimpan.'
+    message.value = t('settings.payment.saveSuccess')
     saved.value = true
   } catch (error) {
-    message.value = error.response?.data?.message || 'Gagal menyimpan pengaturan pembayaran.'
+    message.value = error.response?.data?.message || t('settings.payment.saveFailed')
     saved.value = false
   } finally {
     loading.value = false
@@ -215,14 +216,14 @@ const save = async () => {
 }
 
 const deleteQris = async () => {
-  if (!confirm('Hapus gambar QRIS?')) return
+  if (!confirm(t('settings.payment.deleteQrisConfirm'))) return
   try {
     await api.delete('/settings/payment/qris')
     currentQrisImage.value = ''
-    message.value = 'Gambar QRIS berhasil dihapus.'
+    message.value = t('settings.payment.deleteQrisSuccess')
     saved.value = true
   } catch (error) {
-    message.value = 'Gagal menghapus gambar QRIS.'
+    message.value = t('settings.payment.deleteQrisFailed')
     saved.value = false
   }
 }

@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\ServiceContractController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\TableController;
 use App\Http\Controllers\Api\AppSettingController;
+use App\Http\Controllers\Api\TableBookingController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\DashboardController as TicketDashboardController;
 use Illuminate\Support\Facades\Route;
@@ -32,10 +33,14 @@ Route::get('/public/categories', [CategoryController::class, 'index']);
 Route::get('/public/products', [ProductController::class, 'index']);
 Route::get('/public/locations/{location}', [LocationController::class, 'show']);
 Route::get('/public/orders', [TransactionController::class, 'publicOrders']);
+Route::get('/public/orders/search', [TransactionController::class, 'publicShowByNo']);
 Route::post('/public/orders', [TransactionController::class, 'store']);
+Route::post('/public/table-bookings', [TableBookingController::class, 'storePublic']);
+Route::get('/public/table-bookings/search', [TableBookingController::class, 'searchPublic']);
 Route::get('/public/tables', [TableController::class, 'index']);
 Route::get('/public/settings/whatsapp', [AppSettingController::class, 'whatsapp']);
 Route::get('/public/settings/payment', [AppSettingController::class, 'payment']);
+Route::post('/public/orders/{transaction}/payment-proof', [TransactionController::class, 'uploadPaymentProof']);
 
 // Public routes for Asset QR Code (anyone can scan)
 Route::get('/public/assets/{asset}', [AssetController::class, 'show']);
@@ -71,6 +76,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Tables
     Route::apiResource('tables', TableController::class);
 
+    // Table Bookings
+    Route::get('/table-bookings', [TableBookingController::class, 'index']);
+    Route::put('/table-bookings/{tableBooking}/status', [TableBookingController::class, 'updateStatus']);
+    Route::delete('/table-bookings/{tableBooking}', [TableBookingController::class, 'destroy']);
+
     // Categories
     Route::apiResource('categories', CategoryController::class);
 
@@ -84,6 +94,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('transactions', TransactionController::class);
     Route::post('/transactions/{transaction}/void', [TransactionController::class, 'void']);
     Route::post('/transactions/{transaction}/confirm-addon', [TransactionController::class, 'confirmAddon']);
+    Route::delete('/transactions/{transaction}/payment-proof', [TransactionController::class, 'deletePaymentProof']);
 
     // ==================== INVENTORY & PROCUREMENT ROUTES ====================
     

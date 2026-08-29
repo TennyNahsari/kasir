@@ -24,6 +24,8 @@ class Transaction extends Model
         'change_amount',
         'payment_method',
         'payment_details',
+        'payment_proof',
+        'booking_code',
         'customer_name',
         'notes',
         'table_id',

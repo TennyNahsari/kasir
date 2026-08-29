@@ -12,8 +12,15 @@ class AppSettingController extends Controller
 {
     public function whatsapp()
     {
+        $keys = ['whatsapp_number', 'instagram_url', 'facebook_url', 'tiktok_url', 'youtube_url'];
+        $settings = AppSetting::whereIn('key', $keys)->pluck('value', 'key');
+
         return response()->json([
-            'whatsapp_number' => AppSetting::where('key', 'whatsapp_number')->value('value'),
+            'whatsapp_number' => $settings['whatsapp_number'] ?? '',
+            'instagram_url' => $settings['instagram_url'] ?? '',
+            'facebook_url' => $settings['facebook_url'] ?? '',
+            'tiktok_url' => $settings['tiktok_url'] ?? '',
+            'youtube_url' => $settings['youtube_url'] ?? '',
         ]);
     }
 
@@ -23,14 +30,23 @@ class AppSettingController extends Controller
 
         $validated = $request->validate([
             'whatsapp_number' => ['nullable', 'string', 'max:30'],
+            'instagram_url' => ['nullable', 'string', 'max:255'],
+            'facebook_url' => ['nullable', 'string', 'max:255'],
+            'tiktok_url' => ['nullable', 'string', 'max:255'],
+            'youtube_url' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $setting = AppSetting::updateOrCreate(
-            ['key' => 'whatsapp_number'],
-            ['value' => trim($validated['whatsapp_number'] ?? '')]
-        );
+        $keys = ['whatsapp_number', 'instagram_url', 'facebook_url', 'tiktok_url', 'youtube_url'];
+        foreach ($keys as $key) {
+            if (array_key_exists($key, $validated)) {
+                AppSetting::updateOrCreate(
+                    ['key' => $key],
+                    ['value' => trim($validated[$key] ?? '')]
+                );
+            }
+        }
 
-        return response()->json(['whatsapp_number' => $setting->value]);
+        return $this->whatsapp();
     }
 
     public function payment()

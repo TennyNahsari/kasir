@@ -97,6 +97,11 @@
                   🪑 {{ getTableDisplay(transaction) }}
                 </span>
 
+                <!-- Booking Code -->
+                <span v-if="transaction.booking_code" class="text-xs font-semibold text-blue-800 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200 inline-flex items-center gap-1">
+                  🔑 Kode Booking: {{ transaction.booking_code }}
+                </span>
+
                 <!-- Addon Order Badge -->
                 <span 
                   v-if="hasAddonOrder(transaction)" 
@@ -135,7 +140,23 @@
             <td class="px-4 py-3 text-sm font-semibold text-gray-900">
               {{ transaction.user?.name || $t('transactions.customerOrder') }}
             </td>
-            <td class="px-4 py-3 text-sm capitalize">{{ transaction.payment_method || '-' }}</td>
+            <td class="px-4 py-3 text-sm capitalize">
+              <div class="flex flex-col gap-1 items-start">
+                <span>{{ transaction.payment_method || '-' }}</span>
+                <button
+                  v-if="transaction.payment_proof"
+                  @click.stop.prevent="openProofsModal(transaction)"
+                  class="mt-1 flex items-center gap-1.5 px-2 py-0.5 rounded bg-green-50 hover:bg-green-100 border border-green-200 text-green-700 text-[11px] font-semibold transition-all shadow-sm cursor-pointer"
+                  :title="$t('transactions.viewProofsTooltip')"
+                >
+                  <span>🖼️</span> {{ $t('transactions.viewProofsButton', { count: getPaymentProofs(transaction).length }) }}
+                  <span class="flex h-1.5 w-1.5 relative">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500"></span>
+                  </span>
+                </button>
+              </div>
+            </td>
             <td class="px-4 py-3 text-sm text-right font-semibold">
               {{ formatCurrency(transaction.total) }}
             </td>
@@ -206,31 +227,51 @@
               🪑 {{ getTableDisplay(transaction) }}
             </span>
 
+            <!-- Booking Code -->
+            <span v-if="transaction.booking_code" class="text-xs font-semibold text-blue-800 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200 inline-flex items-center gap-1">
+              🔑 Kode Booking: {{ transaction.booking_code }}
+            </span>
+
             <!-- Addon Order Badge -->
             <span v-if="hasAddonOrder(transaction)" class="text-[11px] font-bold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-300 inline-flex items-center gap-1 animate-pulse">
               🔔 Order Tambahan
             </span>
           </div>
-          <div class="flex items-center gap-1.5 flex-wrap">
-            <span :class="[
-              'px-2 py-0.5 rounded text-xs font-medium',
-              transaction.business_type === 'retail' ? 'bg-blue-100 text-blue-700' :
-              transaction.business_type === 'minimarket' ? 'bg-green-100 text-green-700' :
-              'bg-orange-100 text-orange-700'
-            ]">
-              {{ getBusinessTypeLabel(transaction.business_type) }}
-            </span>
-            <span 
-              v-if="transaction.order_type"
-              :class="[
-                'px-2 py-0.5 rounded text-[11px] font-semibold border',
-                transaction.order_type === 'take_away' ? 'bg-orange-50 text-orange-800 border-orange-200' :
-                transaction.order_type === 'online' ? 'bg-purple-50 text-purple-800 border-purple-200' :
-                'bg-blue-50 text-blue-800 border-blue-200'
-              ]"
+          <div class="flex flex-col items-end gap-1.5 flex-shrink-0">
+            <div class="flex items-center gap-1.5 flex-wrap justify-end">
+              <span :class="[
+                'px-2 py-0.5 rounded text-xs font-medium',
+                transaction.business_type === 'retail' ? 'bg-blue-100 text-blue-700' :
+                transaction.business_type === 'minimarket' ? 'bg-green-100 text-green-700' :
+                'bg-orange-100 text-orange-700'
+              ]">
+                {{ getBusinessTypeLabel(transaction.business_type) }}
+              </span>
+              <span 
+                v-if="transaction.order_type"
+                :class="[
+                  'px-2 py-0.5 rounded text-[11px] font-semibold border',
+                  transaction.order_type === 'take_away' ? 'bg-orange-50 text-orange-800 border-orange-200' :
+                  transaction.order_type === 'online' ? 'bg-purple-50 text-purple-800 border-purple-200' :
+                  'bg-blue-50 text-blue-800 border-blue-200'
+                ]"
+              >
+                {{ transaction.order_type === 'take_away' ? '🛍️ Take Away' : (transaction.order_type === 'online' ? '🛵 Online' : '🍽️ Dine In') }}
+              </span>
+            </div>
+            
+            <!-- Proof Trigger Button for Mobile -->
+            <button
+              v-if="transaction.payment_proof"
+              @click.stop.prevent="openProofsModal(transaction)"
+              class="mt-1 inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-green-50 border border-green-200 text-green-700 text-[11px] font-semibold shadow-sm transition-all cursor-pointer"
             >
-              {{ transaction.order_type === 'take_away' ? '🛍️ Take Away' : (transaction.order_type === 'online' ? '🛵 Online' : '🍽️ Dine In') }}
-            </span>
+              <span>🖼️</span> {{ $t('transactions.viewProofsButtonMobile', { count: getPaymentProofs(transaction).length }) }}
+              <span class="flex h-1.5 w-1.5 relative">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500"></span>
+              </span>
+            </button>
           </div>
         </div>
 
@@ -261,7 +302,7 @@
               @click="openConfirmAddonModal(transaction)" 
               class="text-xs font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 border border-amber-300 px-2 py-1 rounded-lg transition-all active:scale-95 shadow-sm"
             >
-              ✓ Konfirmasi Order
+              ✓ {{ $t('transactions.confirmAddonButton') }}
             </button>
             <span :class="[
               'px-2 py-1 rounded text-xs font-medium',
@@ -361,6 +402,14 @@
               </span>
             </div>
           </div>
+          <div v-if="selectedTransaction.booking_code">
+            <div class="text-gray-600">Kode Booking</div>
+            <div class="font-bold text-blue-800 flex items-center gap-1 mt-0.5">
+              <span class="bg-blue-50 border border-blue-200 px-2 py-0.5 rounded text-xs">
+                🔑 {{ selectedTransaction.booking_code }}
+              </span>
+            </div>
+          </div>
         </div>
 
         <!-- Notes Section -->
@@ -416,6 +465,8 @@
             <span class="text-green-600">{{ formatCurrency(selectedTransaction.change_amount) }}</span>
           </div>
         </div>
+
+
 
         <div class="border-t pt-3 sm:pt-4">
           <button @click="printReceipt" class="btn btn-primary w-full text-sm sm:text-base">
@@ -523,6 +574,88 @@
         </button>
         <button @click="executeConfirmAddon" class="btn bg-amber-500 hover:bg-amber-600 text-white flex-1 text-sm font-bold shadow">
           ✓ Terima & Konfirmasi
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROOFS MODAL -->
+  <div
+    v-if="showProofsModal && activeProofsTransaction"
+    class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]"
+    @click.self="closeProofsModal"
+  >
+    <div class="bg-white rounded-2xl max-w-lg w-full max-h-[85vh] overflow-hidden shadow-2xl flex flex-col animate-[scaleUp_0.2s_ease-out]">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gray-50">
+        <div class="text-left">
+          <h3 class="text-base font-bold text-gray-900">
+            {{ $t('transactions.paymentProofTitle') }}
+          </h3>
+          <p class="text-xs text-gray-500 mt-0.5">
+            {{ $t('transactions.transactionNo') }} #{{ activeProofsTransaction.transaction_no }} ({{ activeProofsTransaction.customer_name || $t('transactions.customer') }})
+          </p>
+        </div>
+        <button 
+          @click="closeProofsModal"
+          class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-1.5 rounded-full transition-colors cursor-pointer text-xl leading-none"
+        >
+          ×
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-6 overflow-y-auto space-y-4">
+        <p class="text-xs text-gray-500 leading-relaxed bg-blue-50 border border-blue-100 text-blue-800 p-3 rounded-lg flex items-start gap-2 text-left">
+          <span>💡</span>
+          <span>{{ $t('transactions.paymentProofHelpText') }}</span>
+        </p>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div 
+            v-for="(proof, index) in getPaymentProofs(activeProofsTransaction)" 
+            :key="index"
+            class="group relative border border-gray-200 rounded-xl overflow-hidden bg-gray-50 hover:shadow transition-shadow"
+          >
+            <!-- Proof image -->
+            <a 
+              :href="getPaymentProofUrl(proof)" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              class="block aspect-[3/4] overflow-hidden bg-black"
+            >
+              <img 
+                :src="getPaymentProofUrl(proof)" 
+                alt="Bukti Transfer" 
+                class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+              />
+            </a>
+
+            <!-- Image Index Label -->
+            <div class="absolute top-2 left-2 bg-black/70 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+              {{ $t('transactions.proofLabel', { index: index + 1 }) }}
+            </div>
+
+            <!-- Delete action overlay -->
+            <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2 text-center">
+              <button
+                @click.stop.prevent="confirmDeleteProof(activeProofsTransaction, proof)"
+                class="w-full bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-1.5 px-3 rounded-lg shadow transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <span>🗑️</span> {{ $t('transactions.deleteProofButton') }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-5 py-4 border-t border-gray-100 flex justify-end bg-gray-50">
+        <button 
+          @click="closeProofsModal"
+          class="px-4 py-2 rounded-xl border border-gray-300 text-gray-700 text-sm font-semibold hover:bg-gray-100 transition-colors cursor-pointer"
+        >
+          {{ $t('common.close') }}
         </button>
       </div>
     </div>
@@ -816,6 +949,73 @@ const exportToExcel = async () => {
     console.error('Export error:', error)
     alert(t('transactions.exportFailed'))
   }
+}
+
+const showProofsModal = ref(false)
+const activeProofsTransaction = ref(null)
+
+const openProofsModal = (transaction) => {
+  activeProofsTransaction.value = transaction
+  showProofsModal.value = true
+}
+
+const closeProofsModal = () => {
+  activeProofsTransaction.value = null
+  showProofsModal.value = false
+}
+
+const confirmDeleteProof = async (transaction, proofPath) => {
+  if (!confirm(t('transactions.deleteProofConfirm'))) return
+  try {
+    await api.delete(`/transactions/${transaction.id}/payment-proof`, {
+      params: { file_path: proofPath }
+    })
+    
+    // Reload transactions to reflect deletion
+    await loadTransactions()
+    
+    // Update local modal state
+    if (activeProofsTransaction.value && activeProofsTransaction.value.id === transaction.id) {
+      const currentArray = getPaymentProofs(activeProofsTransaction.value)
+      const updatedArray = currentArray.filter(p => p !== proofPath)
+      
+      activeProofsTransaction.value.payment_proof = updatedArray.length > 0 ? JSON.stringify(updatedArray) : null
+      
+      if (updatedArray.length === 0) {
+        closeProofsModal()
+      }
+    }
+    
+    if (selectedTransaction.value && selectedTransaction.value.id === transaction.id) {
+      // Re-fetch detail
+      const res = await api.get(`/transactions/${transaction.id}`)
+      selectedTransaction.value = res.data
+    }
+    
+    alert(t('transactions.deleteProofSuccess'))
+  } catch (error) {
+    console.error('Failed to delete payment proof:', error)
+    alert(t('transactions.deleteProofFailed'))
+  }
+}
+
+const getPaymentProofs = (transaction) => {
+  if (!transaction || !transaction.payment_proof) return []
+  const raw = transaction.payment_proof
+  try {
+    if (raw.startsWith('[') && raw.endsWith(']')) {
+      return JSON.parse(raw)
+    }
+  } catch (e) {
+    console.error('Failed to parse payment proof JSON:', e)
+  }
+  return [raw]
+}
+
+const getPaymentProofUrl = (path) => {
+  if (!path) return ''
+  if (path.startsWith('http')) return path
+  return `http://localhost:8000/storage/${path}`
 }
 
 onMounted(() => {

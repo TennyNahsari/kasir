@@ -85,6 +85,18 @@ class TransactionController extends Controller
 
     public function destroy(Transaction $transaction)
     {
+        $rawProof = $transaction->payment_proof;
+        if ($rawProof) {
+            $proofs = [];
+            if (str_starts_with($rawProof, '[') && str_ends_with($rawProof, ']')) {
+                $proofs = json_decode($rawProof, true) ?: [];
+            } else {
+                $proofs = [$rawProof];
+            }
+            foreach ($proofs as $proof) {
+                \Illuminate\Support\Facades\File::delete(public_path('storage/' . $proof));
+            }
+        }
         $transaction->delete();
         return response()->json(['message' => 'Transaction deleted successfully']);
     }
@@ -111,6 +123,7 @@ class TransactionController extends Controller
                 'table_id' => 'nullable',
                 'order_type' => 'nullable|in:dine_in,take_away,online',
                 'customer_name' => 'nullable|string|max:255',
+                'booking_code' => 'nullable|string|max:255',
                 'status' => 'nullable|in:pending,processed,delivered,completed,void,refund',
             ]);
             
@@ -225,16 +238,17 @@ class TransactionController extends Controller
                 }
             }
 
-            // Check if this is an F&B / QR Table order that should append to an active transaction
-            $isFnbOrTableOrder = ($businessType === 'fnb')
-                || (isset($location) && strtoupper($location->type) === 'FNB')
-                || !empty($tableVal);
-
-            $isOnlineOrder = isset($validated['order_type']) && $validated['order_type'] === 'online';
+            // Search for active transaction using booking_code if provided
             $activeTransaction = null;
+            $bookingCode = $validated['booking_code'] ?? null;
 
-            if (!$isOnlineOrder && $isFnbOrTableOrder && (!empty($tableIdToStore) || !empty($tableVal))) {
-                $activeQuery = Transaction::whereIn('status', ['pending', 'processed', 'delivered']);
+            if (!empty($bookingCode)) {
+                $activeQuery = Transaction::where(function($q) use ($bookingCode) {
+                    $cleanCode = strtoupper(trim($bookingCode));
+                    $q->whereRaw('UPPER(booking_code) = ?', [$cleanCode])
+                      ->orWhereRaw('UPPER(transaction_no) = ?', [$cleanCode])
+                      ->orWhere('transaction_no', 'ilike', '%' . $cleanCode . '%');
+                })->whereIn('status', ['pending', 'processed', 'delivered']);
 
                 if (isset($validated['location_id'])) {
                     $activeQuery->where('location_id', $validated['location_id']);
@@ -242,20 +256,12 @@ class TransactionController extends Controller
                     $activeQuery->where('outlet_id', $outletIdForTransaction);
                 }
 
-                $activeQuery->where(function($q) use ($tableIdToStore, $tableVal) {
-                    if ($tableIdToStore) {
-                        $q->where('table_id', $tableIdToStore);
-                    }
-                    if ($tableVal) {
-                        $q->orWhere('notes', 'like', "%Meja: {$tableVal}%");
-                    }
-                });
-
                 $activeTransaction = $activeQuery->latest()->first();
             }
 
             if ($activeTransaction) {
-                \Log::info('Appending order items to active FNB transaction', [
+                \Log::info('Appending order items to active transaction matching booking code', [
+                    'booking_code' => $bookingCode,
                     'transaction_id' => $activeTransaction->id,
                     'transaction_no' => $activeTransaction->transaction_no
                 ]);
@@ -305,10 +311,7 @@ class TransactionController extends Controller
                     }
                 }
 
-                // Update customer_name & order_type if provided
-                if (!empty($validated['customer_name'])) {
-                    $activeTransaction->customer_name = $validated['customer_name'];
-                }
+                // Keep original customer_name and table_id from the first order. Only update order_type if needed.
                 if (!empty($validated['order_type'])) {
                     $activeTransaction->order_type = $validated['order_type'];
                 }
@@ -369,6 +372,7 @@ class TransactionController extends Controller
                 'payment_method' => $validated['payment_method'] ?? null,
                 'payment_details' => $validated['payment_details'] ?? null,
                 'customer_name' => $validated['customer_name'] ?? null,
+                'booking_code' => $bookingCode,
                 'notes' => $notesToStore,
                 'table_id' => $tableIdToStore,
                 'order_type' => $validated['order_type'] ?? null,
@@ -542,6 +546,33 @@ class TransactionController extends Controller
         ]);
     }
 
+    public function publicShowByNo(Request $request)
+    {
+        $validated = $request->validate([
+            'transaction_no' => 'required|string',
+        ]);
+
+        $no = strtoupper(trim($validated['transaction_no']));
+
+        $transaction = Transaction::with(['items.product', 'table'])
+            ->where(function($q) use ($no) {
+                $q->whereRaw('UPPER(transaction_no) = ?', [$no])
+                  ->orWhereRaw('UPPER(booking_code) = ?', [$no]);
+            })
+            ->first();
+
+        if (!$transaction) {
+            return response()->json([
+                'message' => 'Transaksi tidak ditemukan. Pastikan nomor transaksi Anda benar.'
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $transaction
+        ]);
+    }
+
     public function confirmAddon(Transaction $transaction)
     {
         $transaction->update([
@@ -552,6 +583,83 @@ class TransactionController extends Controller
         return response()->json([
             'message' => 'Order tambahan berhasil dikonfirmasi',
             'transaction' => $transaction->load(['items.product', 'outlet', 'user', 'table'])
+        ]);
+    }
+
+    public function uploadPaymentProof(Request $request, Transaction $transaction)
+    {
+        $request->validate([
+            'payment_proof' => 'required|image|mimes:jpg,jpeg,png,webp|max:3072',
+        ]);
+
+        $directory = public_path('storage/payment_proofs');
+        \Illuminate\Support\Facades\File::ensureDirectoryExists($directory);
+        $file = $request->file('payment_proof');
+        $filename = \Illuminate\Support\Str::uuid() . '.' . $file->getClientOriginalExtension();
+        $file->move($directory, $filename);
+        $newPath = 'payment_proofs/' . $filename;
+
+        // Get current proofs array
+        $currentProofs = [];
+        $rawProof = $transaction->payment_proof;
+        if ($rawProof) {
+            if (str_starts_with($rawProof, '[') && str_ends_with($rawProof, ']')) {
+                $currentProofs = json_decode($rawProof, true) ?: [];
+            } else {
+                $currentProofs = [$rawProof];
+            }
+        }
+
+        // Append the new payment proof
+        $currentProofs[] = $newPath;
+
+        $transaction->update([
+            'payment_proof' => json_encode($currentProofs),
+        ]);
+
+        return response()->json([
+            'message' => 'Bukti pembayaran berhasil diupload',
+            'payment_proof' => $newPath,
+            'transaction' => $transaction->load(['items.product', 'outlet', 'user', 'table']),
+        ]);
+    }
+
+    public function deletePaymentProof(Request $request, Transaction $transaction)
+    {
+        $fileToDelete = $request->input('file_path');
+        
+        $currentProofs = [];
+        $rawProof = $transaction->payment_proof;
+        if ($rawProof) {
+            if (str_starts_with($rawProof, '[') && str_ends_with($rawProof, ']')) {
+                $currentProofs = json_decode($rawProof, true) ?: [];
+            } else {
+                $currentProofs = [$rawProof];
+            }
+        }
+
+        if ($fileToDelete) {
+            // Find and delete the specific file
+            if (($key = array_search($fileToDelete, $currentProofs)) !== false) {
+                unset($currentProofs[$key]);
+                $currentProofs = array_values($currentProofs);
+                \Illuminate\Support\Facades\File::delete(public_path('storage/' . $fileToDelete));
+            }
+        } else {
+            // Delete all if no specific file requested
+            foreach ($currentProofs as $proof) {
+                \Illuminate\Support\Facades\File::delete(public_path('storage/' . $proof));
+            }
+            $currentProofs = [];
+        }
+
+        $transaction->update([
+            'payment_proof' => empty($currentProofs) ? null : json_encode($currentProofs),
+        ]);
+
+        return response()->json([
+            'message' => 'Bukti pembayaran berhasil dihapus',
+            'transaction' => $transaction->load(['items.product', 'outlet', 'user', 'table']),
         ]);
     }
 }
