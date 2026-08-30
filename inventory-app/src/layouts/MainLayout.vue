@@ -1,10 +1,10 @@
 <template>
   <div class="flex h-screen bg-gray-50">
     <!-- Sidebar -->
-    <aside class="hidden lg:flex lg:flex-col lg:w-64 bg-white border-r">
+    <aside class="hidden lg:flex lg:flex-col lg:w-64 bg-[#F9F6F0] border-r border-[#E5D9C5] shadow-md">
       <!-- Logo/Header -->
-      <div class="h-16 flex items-center px-6 border-b">
-        <h1 class="text-lg font-bold text-blue-600">{{ $t('header.inventoryTitle') }}</h1>
+      <div class="h-16 flex items-center px-6 border-b border-[#E5D9C5]">
+        <h1 class="text-xl font-bold font-display tracking-wide text-[#2C2C2C] hover:text-[#6B2E3E] transition-colors">{{ $t('header.inventoryTitle') }}</h1>
       </div>
       
       <!-- Navigation -->
@@ -14,8 +14,8 @@
           to="/"
           class="flex items-center px-4 py-3 mb-1 text-sm font-medium rounded-lg transition-colors"
           :class="$route.path === '/' 
-            ? 'bg-blue-50 text-blue-600' 
-            : 'text-gray-700 hover:bg-gray-100'"
+            ? 'bg-[#C9A96E]/20 text-[#6B2E3E] font-semibold border-l-4 border-[#C9A96E]' 
+            : 'text-[#2C2C2C] hover:bg-[#E5D9C5]/40'"
         >
           {{ $t('nav.dashboard') }}
         </router-link>
@@ -25,8 +25,8 @@
           to="/inventory/products"
           class="flex items-center px-4 py-3 mb-1 text-sm font-medium rounded-lg transition-colors"
           :class="$route.path === '/inventory/products' 
-            ? 'bg-blue-50 text-blue-600' 
-            : 'text-gray-700 hover:bg-gray-100'"
+            ? 'bg-[#C9A96E]/20 text-[#6B2E3E] font-semibold border-l-4 border-[#C9A96E]' 
+            : 'text-[#2C2C2C] hover:bg-[#E5D9C5]/40'"
         >
           {{ $t('nav.masterProduct') }}
         </router-link>

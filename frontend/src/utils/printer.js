@@ -1,184 +1,40 @@
-// ESC/POS Thermal Printer Integration
-export class ThermalPrinter {
-  constructor() {
-    this.device = null
-    this.connected = false
-  }
+// Thermal Printer Utility for 80mm Browser Thermal Receipt Printing
 
-  // Connect to USB Thermal Printer via WebUSB
-  async connect() {
-    try {
-      // Request USB device
-      this.device = await navigator.usb.requestDevice({
-        filters: [
-          { vendorId: 0x0416 }, // Common thermal printer vendor
-          { vendorId: 0x04b8 }, // Epson
-          { vendorId: 0x1504 }  // Other thermal printers
-        ]
-      })
-
-      await this.device.open()
-      await this.device.selectConfiguration(1)
-      await this.device.claimInterface(0)
-      
-      this.connected = true
-      return true
-    } catch (error) {
-      console.error('Printer connection failed:', error)
-      return false
-    }
-  }
-
-  // Disconnect from printer
-  async disconnect() {
-    if (this.device) {
-      try {
-        await this.device.close()
-        this.connected = false
-      } catch (error) {
-        console.error('Disconnect error:', error)
-      }
-    }
-  }
-
-  // Print receipt
-  async printReceipt(transaction) {
-    if (!this.connected) {
-      throw new Error('Printer not connected')
-    }
-
-    const commands = this.buildReceiptCommands(transaction)
-    
-    try {
-      await this.device.transferOut(1, commands)
-      return true
-    } catch (error) {
-      console.error('Print error:', error)
-      throw error
-    }
-  }
-
-  // Build ESC/POS commands for receipt
-  buildReceiptCommands(transaction) {
-    const ESC = 0x1b
-    const GS = 0x1d
-    const LF = 0x0a
-    
-    let commands = []
-    
-    // Initialize printer
-    commands.push(ESC, 0x40)
-    
-    // Center align
-    commands.push(ESC, 0x61, 0x01)
-    
-    // Store name (large font)
-    commands.push(ESC, 0x21, 0x30) // Double height & width
-    commands.push(...this.textToBytes(transaction.outlet.name))
-    commands.push(LF)
-    
-    // Normal font
-    commands.push(ESC, 0x21, 0x00)
-    commands.push(...this.textToBytes(transaction.outlet.address || ''))
-    commands.push(LF)
-    commands.push(...this.textToBytes(transaction.outlet.phone || ''))
-    commands.push(LF, LF)
-    
-    // Left align
-    commands.push(ESC, 0x61, 0x00)
-    
-    // Transaction info
-    commands.push(...this.textToBytes('No: ' + transaction.transaction_no))
-    commands.push(LF)
-    commands.push(...this.textToBytes('Tanggal: ' + new Date(transaction.created_at).toLocaleString('id-ID')))
-    commands.push(LF)
-    commands.push(...this.textToBytes('Kasir: ' + transaction.user.name))
-    commands.push(LF)
-    commands.push(...this.textToBytes('-'.repeat(48)))
-    commands.push(LF)
-    
-    // Items
-    transaction.items.forEach(item => {
-      commands.push(...this.textToBytes(item.product_name))
-      commands.push(LF)
-      commands.push(...this.textToBytes(`  ${item.quantity} x ${this.formatCurrency(item.price)}`))
-      commands.push(...this.textToBytes(this.formatCurrency(item.subtotal).padStart(20)))
-      commands.push(LF)
-    })
-    
-    commands.push(...this.textToBytes('-'.repeat(48)))
-    commands.push(LF)
-    
-    // Totals
-    commands.push(...this.textToBytes('Subtotal:'.padEnd(30) + this.formatCurrency(transaction.subtotal).padStart(18)))
-    commands.push(LF)
-    
-    if (transaction.discount > 0) {
-      commands.push(...this.textToBytes('Diskon:'.padEnd(30) + this.formatCurrency(transaction.discount).padStart(18)))
-      commands.push(LF)
-    }
-    
-    // Total (bold)
-    commands.push(ESC, 0x21, 0x08) // Bold
-    commands.push(...this.textToBytes('TOTAL:'.padEnd(30) + this.formatCurrency(transaction.total).padStart(18)))
-    commands.push(LF)
-    
-    // Normal font
-    commands.push(ESC, 0x21, 0x00)
-    
-    commands.push(...this.textToBytes('Bayar:'.padEnd(30) + this.formatCurrency(transaction.paid_amount).padStart(18)))
-    commands.push(LF)
-    commands.push(...this.textToBytes('Kembali:'.padEnd(30) + this.formatCurrency(transaction.change_amount).padStart(18)))
-    commands.push(LF, LF)
-    
-    // Center align
-    commands.push(ESC, 0x61, 0x01)
-    commands.push(...this.textToBytes('Terima Kasih'))
-    commands.push(LF, LF, LF)
-    
-    // Cut paper
-    commands.push(GS, 0x56, 0x00)
-    
-    return new Uint8Array(commands)
-  }
-
-  // Helper: Convert text to bytes
-  textToBytes(text) {
-    return new TextEncoder().encode(text)
-  }
-
-  // Helper: Format currency
-  formatCurrency(amount) {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
-    }).format(amount)
-  }
-
-  // Open cash drawer (connected to printer)
-  async openCashDrawer() {
-    if (!this.connected) {
-      throw new Error('Printer not connected')
-    }
-
-    // ESC/POS command to open cash drawer
-    const command = new Uint8Array([0x1b, 0x70, 0x00, 0x19, 0xfa])
-    
-    try {
-      await this.device.transferOut(1, command)
-      return true
-    } catch (error) {
-      console.error('Cash drawer error:', error)
-      throw error
-    }
-  }
-}
-
-// Alternative: Print using browser's print dialog
-export function printReceiptBrowser(transaction) {
+export function printReceiptBrowser(transaction, labels = {}, locale = 'id', activeOutlet = null) {
   const printWindow = window.open('', '_blank')
-  
+  if (!printWindow) return
+
+  const loc = locale === 'en' ? 'en-US' : 'id-ID'
+  const formatCurr = (amt) => new Intl.NumberFormat(loc, { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amt || 0)
+  const formatDateStr = (dt) => new Date(dt).toLocaleString(loc, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+
+  // Determine Location/Outlet Name: Prioritize transaction.location.name (FNB location name)
+  const storeName = transaction.location?.name || transaction.outlet?.name || activeOutlet?.location?.name || activeOutlet?.name || labels.store || 'Resto & Cafe Utama'
+  const storeAddress = transaction.location?.address || transaction.outlet?.address || activeOutlet?.address || ''
+  const storePhone = transaction.location?.phone || transaction.outlet?.phone || activeOutlet?.phone || ''
+
+  const labelTxNo = labels.transactionNo || 'No. TRX'
+  const labelDate = labels.date || 'Tanggal'
+  const labelCashier = labels.cashier || 'Kasir'
+  const labelTable = labels.table || 'Meja'
+  const labelSubtotal = labels.subtotal || 'Subtotal'
+  const labelDiscount = labels.discount || 'Diskon'
+  const labelTax = labels.tax || 'Pajak'
+  const labelTotal = labels.totalAmount || 'TOTAL'
+  const labelPaid = labels.paid || 'Dibayar'
+  const labelChange = labels.change || 'Kembali'
+  const labelPayment = labels.paymentMethod || 'Metode Pembayaran'
+  const labelThankYou = labels.thankYou || 'Terima kasih atas kunjungan Anda!'
+  const labelPolicy = labels.nonRefundable || 'Barang yang sudah dibeli tidak dapat dikembalikan'
+
+  let tableNo = null
+  if (transaction.table?.table_number) {
+    tableNo = transaction.table.table_number
+  } else if (transaction.notes) {
+    const match = transaction.notes.match(/Meja:\s*([^|]+)/i)
+    if (match && match[1]) tableNo = match[1].trim()
+  }
+
   const html = `
     <!DOCTYPE html>
     <html>
@@ -187,70 +43,92 @@ export function printReceiptBrowser(transaction) {
       <style>
         @media print {
           @page { margin: 0; size: 80mm auto; }
-          body { margin: 0; padding: 10mm; }
+          body { margin: 0; padding: 5mm; }
         }
         body {
           font-family: 'Courier New', monospace;
-          font-size: 12px;
+          font-size: 11px;
+          line-height: 1.4;
           width: 80mm;
+          margin: 0 auto;
+          color: #000;
         }
         .center { text-align: center; }
         .bold { font-weight: bold; }
-        .large { font-size: 18px; }
-        .line { border-top: 1px dashed #000; margin: 5px 0; }
-        table { width: 100%; }
+        .large { font-size: 16px; }
+        .line { border-top: 1px dashed #000; margin: 6px 0; }
+        table { width: 100%; border-collapse: collapse; margin: 4px 0; }
+        td, th { padding: 2px 0; font-size: 11px; }
         .right { text-align: right; }
+        .uppercase { text-transform: uppercase; }
+        .footer { font-size: 10px; margin-top: 8px; }
       </style>
     </head>
     <body>
-      <div class="center large bold">${transaction.outlet.name}</div>
-      <div class="center">${transaction.outlet.address || ''}</div>
-      <div class="center">${transaction.outlet.phone || ''}</div>
+      <div class="center large bold">${storeName}</div>
+      ${storeAddress ? `<div class="center">${storeAddress}</div>` : ''}
+      ${storePhone ? `<div class="center">${storePhone}</div>` : ''}
       <div class="line"></div>
-      <div>No: ${transaction.transaction_no}</div>
-      <div>Tanggal: ${new Date(transaction.created_at).toLocaleString('id-ID')}</div>
-      <div>Kasir: ${transaction.user.name}</div>
+      <div>${labelTxNo}: ${transaction.transaction_no}</div>
+      <div>${labelDate}: ${formatDateStr(transaction.created_at)}</div>
+      <div>${labelCashier}: ${transaction.user?.name || transaction.customer_name || '-'}</div>
+      ${tableNo ? `<div>${labelTable}: ${tableNo}</div>` : ''}
       <div class="line"></div>
-      ${transaction.items.map(item => `
+      ${(transaction.items || []).map(item => `
         <div>${item.product_name}</div>
         <table>
           <tr>
-            <td>${item.quantity} x ${formatCurrency(item.price)}</td>
-            <td class="right">${formatCurrency(item.subtotal)}</td>
+            <td>${item.quantity} x ${formatCurr(item.price)}</td>
+            <td class="right">${formatCurr(item.subtotal)}</td>
           </tr>
         </table>
       `).join('')}
       <div class="line"></div>
       <table>
         <tr>
-          <td>Subtotal:</td>
-          <td class="right">${formatCurrency(transaction.subtotal)}</td>
+          <td>${labelSubtotal}:</td>
+          <td class="right">${formatCurr(transaction.subtotal)}</td>
         </tr>
         ${transaction.discount > 0 ? `
         <tr>
-          <td>Diskon:</td>
-          <td class="right">${formatCurrency(transaction.discount)}</td>
+          <td>${labelDiscount}:</td>
+          <td class="right">-${formatCurr(transaction.discount)}</td>
+        </tr>
+        ` : ''}
+        ${transaction.tax > 0 ? `
+        <tr>
+          <td>${labelTax}:</td>
+          <td class="right">${formatCurr(transaction.tax)}</td>
         </tr>
         ` : ''}
         <tr class="bold">
-          <td>TOTAL:</td>
-          <td class="right">${formatCurrency(transaction.total)}</td>
+          <td>${labelTotal}:</td>
+          <td class="right">${formatCurr(transaction.total)}</td>
         </tr>
+        ${transaction.paid_amount ? `
         <tr>
-          <td>Bayar:</td>
-          <td class="right">${formatCurrency(transaction.paid_amount)}</td>
+          <td>${labelPaid}:</td>
+          <td class="right">${formatCurr(transaction.paid_amount)}</td>
         </tr>
+        ` : ''}
+        ${transaction.change_amount !== undefined && transaction.change_amount !== null ? `
         <tr>
-          <td>Kembali:</td>
-          <td class="right">${formatCurrency(transaction.change_amount)}</td>
+          <td>${labelChange}:</td>
+          <td class="right">${formatCurr(transaction.change_amount)}</td>
         </tr>
+        ` : ''}
       </table>
+      ${transaction.payment_method ? `
       <div class="line"></div>
-      <div class="center">Terima Kasih</div>
+      <div>${labelPayment}: <span class="uppercase">${transaction.payment_method}</span></div>
+      ` : ''}
+      <div class="line"></div>
+      <div class="center footer">${labelThankYou}</div>
+      <div class="center footer">${labelPolicy}</div>
       <script>
         window.onload = function() {
           window.print()
-          setTimeout(() => window.close(), 100)
+          setTimeout(() => window.close(), 200)
         }
       </script>
     </body>
@@ -259,12 +137,4 @@ export function printReceiptBrowser(transaction) {
   
   printWindow.document.write(html)
   printWindow.document.close()
-}
-
-function formatCurrency(amount) {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0
-  }).format(amount)
 }

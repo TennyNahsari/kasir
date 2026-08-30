@@ -3,9 +3,9 @@
     <div class="receipt">
       <!-- Header -->
       <div class="receipt-header">
-        <h2 class="store-name">{{ transaction.outlet?.name || 'Toko' }}</h2>
-        <p class="store-address">{{ transaction.outlet?.address }}</p>
-        <p class="store-phone">{{ transaction.outlet?.phone }}</p>
+        <h2 class="store-name">{{ storeName }}</h2>
+        <p class="store-address" v-if="storeAddress">{{ storeAddress }}</p>
+        <p class="store-phone" v-if="storePhone">{{ storePhone }}</p>
       </div>
 
       <div class="divider">==========================================</div>
@@ -13,20 +13,20 @@
       <!-- Transaction Info -->
       <div class="receipt-info">
         <div class="info-row">
-          <span>No. Transaksi</span>
+          <span>{{ $t('receipt.transactionNo') }}</span>
           <span>{{ transaction.transaction_no }}</span>
         </div>
         <div class="info-row">
-          <span>Tanggal</span>
+          <span>{{ $t('receipt.date') }}</span>
           <span>{{ formatDate(transaction.created_at) }}</span>
         </div>
         <div class="info-row">
-          <span>Kasir</span>
-          <span>{{ transaction.user?.name || 'Customer' }}</span>
+          <span>{{ $t('receipt.cashier') }}</span>
+          <span>{{ transaction.user?.name || transaction.customer_name || $t('receipt.customer') }}</span>
         </div>
-        <div class="info-row" v-if="transaction.table">
-          <span>Meja</span>
-          <span>{{ transaction.table.table_number }}</span>
+        <div class="info-row" v-if="transaction.table || getTableNumber(transaction)">
+          <span>{{ $t('receipt.table') }}</span>
+          <span>{{ getTableNumber(transaction) }}</span>
         </div>
       </div>
 
@@ -36,10 +36,10 @@
       <table class="receipt-items">
         <thead>
           <tr>
-            <th>Item</th>
-            <th>Qty</th>
-            <th>Harga</th>
-            <th>Total</th>
+            <th>{{ $t('receipt.item') }}</th>
+            <th>{{ $t('receipt.qty') }}</th>
+            <th>{{ $t('receipt.price') }}</th>
+            <th>{{ $t('receipt.total') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -57,27 +57,27 @@
       <!-- Totals -->
       <div class="receipt-totals">
         <div class="total-row">
-          <span>Subtotal</span>
+          <span>{{ $t('receipt.subtotal') }}</span>
           <span>{{ formatCurrency(transaction.subtotal) }}</span>
         </div>
         <div class="total-row" v-if="transaction.discount > 0">
-          <span>Diskon</span>
+          <span>{{ $t('receipt.discount') }}</span>
           <span>-{{ formatCurrency(transaction.discount) }}</span>
         </div>
         <div class="total-row" v-if="transaction.tax > 0">
-          <span>Pajak</span>
+          <span>{{ $t('receipt.tax') }}</span>
           <span>{{ formatCurrency(transaction.tax) }}</span>
         </div>
         <div class="total-row total-amount">
-          <span>TOTAL</span>
+          <span>{{ $t('receipt.totalAmount') }}</span>
           <span>{{ formatCurrency(transaction.total) }}</span>
         </div>
         <div class="total-row" v-if="transaction.paid_amount">
-          <span>Dibayar</span>
+          <span>{{ $t('receipt.paid') }}</span>
           <span>{{ formatCurrency(transaction.paid_amount) }}</span>
         </div>
         <div class="total-row" v-if="transaction.change_amount">
-          <span>Kembali</span>
+          <span>{{ $t('receipt.change') }}</span>
           <span>{{ formatCurrency(transaction.change_amount) }}</span>
         </div>
       </div>
@@ -87,7 +87,7 @@
       <!-- Payment Method -->
       <div class="receipt-payment">
         <div class="info-row">
-          <span>Metode Pembayaran</span>
+          <span>{{ $t('receipt.paymentMethod') }}</span>
           <span class="uppercase">{{ transaction.payment_method || '-' }}</span>
         </div>
       </div>
@@ -96,15 +96,22 @@
 
       <!-- Footer -->
       <div class="receipt-footer">
-        <p>Terima kasih atas kunjungan Anda!</p>
-        <p>Barang yang sudah dibeli tidak dapat dikembalikan</p>
-        <p class="powered-by">Powered by KasirWeb</p>
+        <p>{{ $t('receipt.thankYou') }}</p>
+        <p>{{ $t('receipt.nonRefundable') }}</p>
+        <p class="powered-by">{{ $t('receipt.poweredBy') }}</p>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useAuthStore } from '@/stores/auth'
+
+const { t, locale } = useI18n()
+const authStore = useAuthStore()
+
 const props = defineProps({
   transaction: {
     type: Object,
@@ -112,8 +119,31 @@ const props = defineProps({
   }
 })
 
+const storeName = computed(() => {
+  return props.transaction.location?.name || props.transaction.outlet?.name || authStore.user?.location?.name || authStore.user?.outlet?.name || t('receipt.store') || 'Resto & Cafe Utama'
+})
+
+const storeAddress = computed(() => {
+  return props.transaction.location?.address || props.transaction.outlet?.address || authStore.user?.location?.address || authStore.user?.outlet?.address || ''
+})
+
+const storePhone = computed(() => {
+  return props.transaction.location?.phone || props.transaction.outlet?.phone || authStore.user?.location?.phone || authStore.user?.outlet?.phone || ''
+})
+
+const getTableNumber = (tx) => {
+  if (!tx) return null
+  if (tx.table?.table_number) return tx.table.table_number
+  if (tx.notes) {
+    const match = tx.notes.match(/Meja:\s*([^|]+)/i)
+    if (match && match[1]) return match[1].trim()
+  }
+  return null
+}
+
 const formatCurrency = (amount) => {
-  return new Intl.NumberFormat('id-ID', {
+  const loc = locale.value === 'en' ? 'en-US' : 'id-ID'
+  return new Intl.NumberFormat(loc, {
     style: 'currency',
     currency: 'IDR',
     minimumFractionDigits: 0
@@ -121,7 +151,8 @@ const formatCurrency = (amount) => {
 }
 
 const formatDate = (date) => {
-  return new Date(date).toLocaleString('id-ID', {
+  const loc = locale.value === 'en' ? 'en-US' : 'id-ID'
+  return new Date(date).toLocaleString(loc, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',

@@ -56,6 +56,11 @@ class Transaction extends Model
         return $this->belongsTo(Outlet::class);
     }
 
+    public function location()
+    {
+        return $this->belongsTo(Location::class);
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);

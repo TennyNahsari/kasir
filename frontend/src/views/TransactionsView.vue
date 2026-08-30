@@ -193,6 +193,9 @@
                 <button @click="viewDetail(transaction)" class="text-blue-600 hover:text-blue-700 font-medium">
                   {{ $t('transactions.detail') }}
                 </button>
+                <button @click="handleBrowserPrint(transaction)" class="text-amber-600 hover:text-amber-700 font-medium" :title="$t('transactions.printReceipt')">
+                  {{ $t('transactions.printReceipt') }}
+                </button>
                 <button 
                   v-if="['pending', 'processed', 'delivered'].includes(transaction.status)"
                   @click="showStatusModal(transaction)" 
@@ -334,6 +337,9 @@
             </button>
             <button @click="viewDetail(transaction)" class="text-xs font-medium text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100">
               {{ $t('transactions.detail') }}
+            </button>
+            <button @click="handleBrowserPrint(transaction)" class="text-xs font-medium text-amber-700 bg-amber-50 px-2 py-1.5 rounded-lg hover:bg-amber-100 border border-amber-200">
+              {{ $t('transactions.printReceipt') }}
             </button>
             <button @click="deleteTransaction(transaction)" class="text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded-lg hover:bg-red-100">
               {{ $t('transactions.delete') }}
@@ -487,7 +493,7 @@
 
 
         <div class="border-t pt-3 sm:pt-4">
-          <button @click="printReceipt" class="btn btn-primary w-full text-sm sm:text-base">
+          <button @click="handleBrowserPrint(selectedTransaction)" class="btn bg-amber-600 hover:bg-amber-700 text-white w-full text-sm sm:text-base font-semibold flex items-center justify-center gap-2 shadow-sm">
             {{ $t('transactions.printReceipt') }}
           </button>
         </div>
@@ -687,12 +693,49 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useAuthStore } from '@/stores/auth'
 import api from '@/services/api'
 import ReceiptPrint from '@/components/ReceiptPrint.vue'
 import Pagination from '@/components/Pagination.vue'
+import { printReceiptBrowser } from '@/utils/printer'
 import * as XLSX from 'xlsx'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
+const authStore = useAuthStore()
+
+const getReceiptLabels = () => {
+  return {
+    store: t('receipt.store'),
+    transactionNo: t('receipt.transactionNo'),
+    date: t('receipt.date'),
+    cashier: t('receipt.cashier'),
+    customer: t('receipt.customer'),
+    table: t('receipt.table'),
+    item: t('receipt.item'),
+    qty: t('receipt.qty'),
+    price: t('receipt.price'),
+    total: t('receipt.total'),
+    subtotal: t('receipt.subtotal'),
+    discount: t('receipt.discount'),
+    tax: t('receipt.tax'),
+    totalAmount: t('receipt.totalAmount'),
+    paid: t('receipt.paid'),
+    change: t('receipt.change'),
+    paymentMethod: t('receipt.paymentMethod'),
+    thankYou: t('receipt.thankYou'),
+    nonRefundable: t('receipt.nonRefundable')
+  }
+}
+
+const handleBrowserPrint = (transaction) => {
+  if (!transaction) return
+  try {
+    printReceiptBrowser(transaction, getReceiptLabels(), locale.value, authStore.user?.outlet)
+  } catch (err) {
+    console.error('Browser print failed:', err)
+    alert(t('transactions.printFailed'))
+  }
+}
 const transactions = ref([])
 const dateFrom = ref('')
 const dateTo = ref('')

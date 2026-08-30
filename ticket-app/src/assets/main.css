@@ -4,29 +4,68 @@
 
 @layer base {
   body {
-    @apply bg-gray-50 text-gray-900;
+    background-color: #F9F6F0;
+    color: #2C2C2C;
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  
+  h1, h2, h3, .font-serif-title {
+    font-family: 'Playfair Display', serif;
   }
 }
 
 @layer components {
   .btn {
-    @apply px-4 py-2 rounded-lg font-medium transition-colors duration-200;
+    @apply px-5 py-2.5 rounded-lg font-medium transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm tracking-wide;
   }
   
-  .btn-primary {
-    @apply bg-blue-600 text-white hover:bg-blue-700;
+  .btn-primary, .btn-gold {
+    @apply bg-brand-gold text-brand-cream hover:bg-brand-gold-dark shadow-sm hover:shadow active:scale-[0.99];
   }
   
   .btn-secondary {
-    @apply bg-gray-200 text-gray-700 hover:bg-gray-300;
+    @apply bg-brand-beige/50 text-brand-black hover:bg-brand-beige border border-brand-beige;
+  }
+
+  .btn-burgundy {
+    @apply bg-brand-burgundy text-brand-cream hover:bg-brand-burgundy/90 shadow-sm;
   }
   
   .btn-danger {
-    @apply bg-red-600 text-white hover:bg-red-700;
+    @apply bg-red-700 text-white hover:bg-red-800;
+  }
+  
+  .btn-success {
+    @apply bg-emerald-700 text-white hover:bg-emerald-800;
   }
   
   .card {
-    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
+    @apply bg-white rounded-xl shadow-sm border border-brand-beige/60 p-6;
+  }
+  
+  .card-luxury {
+    @apply bg-brand-cream rounded-xl shadow-sm border border-brand-beige p-6 transition-all duration-300 hover:shadow-md;
+  }
+  
+  .input {
+    @apply w-full px-4 py-2.5 bg-white border border-brand-beige rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-gold focus:border-transparent text-brand-black placeholder-gray-400;
+  }
+  
+  .label {
+    @apply block text-sm font-medium text-brand-black mb-1.5;
+  }
+  
+  .modal-overlay {
+    @apply fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4;
+  }
+  
+  .modal-content {
+    @apply bg-brand-cream rounded-2xl shadow-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-brand-beige;
+  }
+
+  .divider-gold {
+    @apply w-16 h-0.5 bg-brand-beige my-4 mx-auto;
   }
   
   .badge {

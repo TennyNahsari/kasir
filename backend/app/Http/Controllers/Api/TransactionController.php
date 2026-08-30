@@ -26,7 +26,7 @@ class TransactionController extends Controller
                 'completed_at' => now(),
             ]);
 
-        $query = Transaction::with(['user', 'outlet', 'items.product', 'table']);
+        $query = Transaction::with(['user', 'outlet', 'location', 'items.product', 'table']);
 
         $user = auth()->user();
         $isOwner = $user && ($user->role === 'owner' || ($user->role === 'inventory' && !$user->outlet_id));
@@ -473,7 +473,7 @@ class TransactionController extends Controller
 
     public function show(Transaction $transaction)
     {
-        return response()->json($transaction->load(['items.product', 'outlet', 'user', 'table']));
+        return response()->json($transaction->load(['items.product', 'outlet', 'location', 'user', 'table']));
     }
 
     public function void(Transaction $transaction)
