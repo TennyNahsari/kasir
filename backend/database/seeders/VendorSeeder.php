@@ -91,7 +91,7 @@ class VendorSeeder extends Seeder
         ];
 
         foreach ($vendors as $vendor) {
-            Vendor::create($vendor);
+            Vendor::firstOrCreate(['code' => $vendor['code']], $vendor);
         }
 
         $this->command->info('Vendors seeded successfully!');

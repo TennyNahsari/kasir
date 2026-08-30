@@ -91,6 +91,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/products/{product}/generate-barcode', [ProductController::class, 'generateBarcode']);
 
     // Transactions
+    Route::post('/transactions/cancel-expired', [TransactionController::class, 'cancelExpired']);
     Route::apiResource('transactions', TransactionController::class);
     Route::post('/transactions/{transaction}/void', [TransactionController::class, 'void']);
     Route::post('/transactions/{transaction}/confirm-addon', [TransactionController::class, 'confirmAddon']);

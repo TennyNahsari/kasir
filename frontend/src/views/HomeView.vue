@@ -845,7 +845,7 @@
             {{ $t('home.successModal.subtitle') }}
           </p>
           
-          <div v-if="lastOrderNo" class="flex items-center justify-center gap-2 mb-4">
+          <div v-if="lastOrderNo" class="flex items-center justify-center gap-2 mb-2">
             <p class="text-xs text-[#C9A96E] font-sans font-semibold">{{ $t('home.successModal.txNo') }} <span class="font-mono">{{ lastOrderNo }}</span></p>
             <button
               type="button"
@@ -855,6 +855,19 @@
             >
               {{ orderNoCopied ? $t('home.successModal.copied') : '📋 ' + $t('home.successModal.copy') }}
             </button>
+          </div>
+
+          <!-- Payment Due Deadline Box -->
+          <div v-if="lastOrderPaymentDueAt" class="bg-amber-50 border-2 border-amber-300 rounded-xl p-3.5 my-3 text-center shadow-xs">
+            <p class="text-xs font-bold text-amber-800 uppercase tracking-wider flex items-center justify-center gap-1 font-sans">
+              <span>⏰</span> {{ $t('home.successModal.paymentDeadlineTitle') }}
+            </p>
+            <p class="text-lg font-extrabold text-amber-900 font-mono mt-1">
+              {{ $t('home.successModal.paymentDeadlineText', { time: formatTimeOnly(lastOrderPaymentDueAt) }) }}
+            </p>
+            <p class="text-[11px] text-amber-700 font-sans mt-0.5">
+              ({{ formatPaymentDueAt(lastOrderPaymentDueAt) }})
+            </p>
           </div>
 
           <!-- Rincian Pesanan (Order Summary) -->
@@ -1104,6 +1117,12 @@
                 <span class="text-gray-500">{{ $t('home.statusModal.tableNumber') }}</span>
                 <span class="font-bold text-gray-900">🪑 Meja {{ searchResult.table.number }}</span>
               </div>
+              <div v-if="searchResult.payment_due_at" class="flex justify-between items-center text-xs pt-1 border-t border-gray-200">
+                <span class="text-amber-800 font-semibold flex items-center gap-1">⏰ {{ $t('home.statusModal.paymentDeadlineLabel') }}</span>
+                <span class="font-bold font-mono text-amber-900 bg-amber-100 px-2 py-0.5 rounded border border-amber-200">
+                  {{ $t('home.statusModal.paymentDeadlineValue', { time: formatTimeOnly(searchResult.payment_due_at) }) }}
+                </span>
+              </div>
             </div>
 
             <!-- Order Status Single Badge -->
@@ -1129,7 +1148,7 @@
                       'bg-red-500'
                     "
                   ></span>
-                  {{ searchResult.status }}
+                  {{ searchResult.status === 'void' ? 'cancelled (dibatalkan)' : searchResult.status }}
                 </span>
               </div>
             </div>
@@ -1426,6 +1445,7 @@ const orderBookingCode = ref('')
 const orderType = ref('dine_in')
 const lastOrderNo = ref('')
 const lastOrderId = ref(null)
+const lastOrderPaymentDueAt = ref(null)
 
 // ── Payment Proof Upload State ──
 const proofUploading = ref(false)
@@ -1526,6 +1546,30 @@ const paymentWhatsappUrl = computed(() => {
   const msg = `Halo, saya ingin konfirmasi pembayaran untuk pesanan:\n\n📋 No. Pesanan: ${lastOrderNo.value}\n👤 Nama: ${orderCustomerName.value || '-'}\n💰 Total: ${formatCurrency(cartTotalPrice.value)}\n\nTerima kasih.`
   return `https://wa.me/${number}?text=${encodeURIComponent(msg)}`
 })
+
+const formatTimeOnly = (dateStr) => {
+  if (!dateStr) return '-'
+  const d = new Date(dateStr)
+  if (isNaN(d.getTime())) return dateStr
+  const hours = String(d.getHours()).padStart(2, '0')
+  const minutes = String(d.getMinutes()).padStart(2, '0')
+  return `${hours}:${minutes}`
+}
+
+const formatPaymentDueAt = (dateStr) => {
+  if (!dateStr) return '-'
+  const d = new Date(dateStr)
+  if (isNaN(d.getTime())) return dateStr
+  const hours = String(d.getHours()).padStart(2, '0')
+  const minutes = String(d.getMinutes()).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  const monthNamesId = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+  const monthNamesEn = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  const monthNames = locale.value === 'id' ? monthNamesId : monthNamesEn
+  const month = monthNames[d.getMonth()]
+  const year = d.getFullYear()
+  return `${hours}:${minutes} WIB, ${day} ${month} ${year}`
+}
 
 const bankAccountCopied = ref(false)
 const orderNoCopied = ref(false)
@@ -1904,8 +1948,10 @@ const submitOnlineOrder = async () => {
     }
     
     const res = await api.post('/public/orders', payload)
-    lastOrderNo.value = res.data?.data?.transaction_no || res.data?.transaction_no || ''
-    lastOrderId.value = res.data?.data?.id || res.data?.id || null
+    const orderData = res.data?.data || res.data || {}
+    lastOrderNo.value = orderData.transaction_no || ''
+    lastOrderId.value = orderData.id || null
+    lastOrderPaymentDueAt.value = orderData.payment_due_at || null
     
     showOrderModal.value = false
     showOrderSuccess.value = true
@@ -1926,6 +1972,7 @@ const resetOnlineOrder = () => {
   orderType.value = 'dine_in'
   lastOrderNo.value = ''
   lastOrderId.value = null
+  lastOrderPaymentDueAt.value = null
   proofUploading.value = false
   proofUploaded.value = false
   if (proofPreviewUrl.value) {

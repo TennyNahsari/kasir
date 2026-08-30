@@ -16,6 +16,16 @@ class TransactionController extends Controller
 {
     public function index(Request $request)
     {
+        // Auto-cancel pending transactions created today whose payment deadline has passed
+        Transaction::whereDate('created_at', now()->today())
+            ->where('status', 'pending')
+            ->whereNotNull('payment_due_at')
+            ->where('payment_due_at', '<', now())
+            ->update([
+                'status' => 'void',
+                'completed_at' => now(),
+            ]);
+
         $query = Transaction::with(['user', 'outlet', 'items.product', 'table']);
 
         $user = auth()->user();
@@ -125,6 +135,7 @@ class TransactionController extends Controller
                 'customer_name' => 'nullable|string|max:255',
                 'booking_code' => 'nullable|string|max:255',
                 'status' => 'nullable|in:pending,processed,delivered,completed,void,refund',
+                'payment_due_at' => 'nullable|date',
             ]);
             
             // If location_id is provided, get outlet_id from location
@@ -378,6 +389,7 @@ class TransactionController extends Controller
                 'order_type' => $validated['order_type'] ?? null,
                 'status' => $validated['status'] ?? 'pending',
                 'completed_at' => (isset($validated['status']) && $validated['status'] === 'completed') ? now() : null,
+                'payment_due_at' => $validated['payment_due_at'] ?? now()->addHour(),
             ]);
 
             // Create transaction items
@@ -546,6 +558,31 @@ class TransactionController extends Controller
         ]);
     }
 
+    public function cancelExpired(Request $request)
+    {
+        $todayOnly = $request->boolean('today_only', true);
+
+        $query = Transaction::where('status', 'pending')
+            ->whereNotNull('payment_due_at')
+            ->where('payment_due_at', '<', now());
+
+        if ($todayOnly) {
+            $query->whereDate('created_at', now()->today());
+        }
+
+        $count = $query->count();
+
+        $query->update([
+            'status' => 'void',
+            'completed_at' => now(),
+        ]);
+
+        return response()->json([
+            'message' => "Berhasil membatalkan {$count} transaksi yang lewat masa bayar.",
+            'cancelled_count' => $count
+        ]);
+    }
+
     public function publicShowByNo(Request $request)
     {
         $validated = $request->validate([
@@ -565,6 +602,15 @@ class TransactionController extends Controller
             return response()->json([
                 'message' => 'Transaksi tidak ditemukan. Pastikan nomor transaksi Anda benar.'
             ], 404);
+        }
+
+        // Auto-expire if payment_due_at has passed and status is pending
+        if ($transaction->status === 'pending' && $transaction->payment_due_at && $transaction->payment_due_at->isPast()) {
+            $transaction->update([
+                'status' => 'void',
+                'completed_at' => now(),
+            ]);
+            $transaction->refresh();
         }
 
         return response()->json([

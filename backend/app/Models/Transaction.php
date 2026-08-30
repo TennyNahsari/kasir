@@ -34,6 +34,7 @@ class Transaction extends Model
         'has_unconfirmed_addon',
         'addon_summary',
         'completed_at',
+        'payment_due_at',
     ];
 
     protected $casts = [
@@ -46,6 +47,7 @@ class Transaction extends Model
         'payment_details' => 'array',
         'has_unconfirmed_addon' => 'boolean',
         'completed_at' => 'datetime',
+        'payment_due_at' => 'datetime',
     ];
 
     // Relationships

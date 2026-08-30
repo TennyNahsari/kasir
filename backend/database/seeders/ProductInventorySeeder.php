@@ -152,7 +152,7 @@ class ProductInventorySeeder extends Seeder
         ];
 
         foreach ($newProducts as $product) {
-            Product::create($product);
+            Product::firstOrCreate(['sku' => $product['sku']], $product);
         }
 
         // Seed initial InventoryStock & InventoryLedger entries across locations

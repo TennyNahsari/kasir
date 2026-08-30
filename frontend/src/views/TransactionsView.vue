@@ -40,12 +40,12 @@
           </select>
         </div>
         <div>
-          <label class="label text-xs sm:text-sm">Tipe Pesanan</label>
+          <label class="label text-xs sm:text-sm">{{ $t('transactions.orderTypeLabel') }}</label>
           <select v-model="orderType" class="input text-sm">
             <option value="">{{ $t('transactions.all') }}</option>
-            <option value="dine_in">Dine In (Makan di Tempat)</option>
-            <option value="take_away">Take Away (Bawa Pulang)</option>
-            <option value="online">Online (Pesanan Online)</option>
+            <option value="dine_in">🍽️ {{ $t('transactions.dineIn') }}</option>
+            <option value="take_away">🛍️ {{ $t('transactions.takeAway') }}</option>
+            <option value="online">🛵 {{ $t('transactions.online') }}</option>
           </select>
         </div>
         <div>
@@ -99,7 +99,12 @@
 
                 <!-- Booking Code -->
                 <span v-if="transaction.booking_code" class="text-xs font-semibold text-blue-800 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200 inline-flex items-center gap-1">
-                  🔑 Kode Booking: {{ transaction.booking_code }}
+                  🔑 {{ $t('transactions.bookingCode') }}: {{ transaction.booking_code }}
+                </span>
+
+                <!-- Payment Due At Badge -->
+                <span v-if="transaction.payment_due_at" class="text-xs font-semibold text-amber-900 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 inline-flex items-center gap-1">
+                  ⏰ {{ $t('transactions.paymentDeadline') }}: Jam {{ formatTimeOnly(transaction.payment_due_at) }}
                 </span>
 
                 <!-- Addon Order Badge -->
@@ -107,9 +112,9 @@
                   v-if="hasAddonOrder(transaction)" 
                   @click="openConfirmAddonModal(transaction)"
                   class="text-[11px] font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 px-1.5 py-0.5 rounded border border-amber-300 inline-flex items-center gap-1 animate-pulse cursor-pointer"
-                  title="Klik untuk melihat & mengonfirmasi order tambahan"
+                  :title="$t('transactions.confirmAddonButton')"
                 >
-                  🔔 Order Tambahan
+                  🔔 {{ $t('transactions.addonOrder') }}
                 </span>
               </div>
             </td>
@@ -172,7 +177,7 @@
                   'bg-purple-100 text-purple-700': transaction.status === 'delivered'
                 }"
               >
-                {{ transaction.status }}
+                {{ formatStatusLabel(transaction.status) }}
               </span>
             </td>
             <td class="px-4 py-3 text-sm text-center">
@@ -284,6 +289,11 @@
             <span class="text-gray-600">{{ $t('transactions.payment') }}:</span>
             <span class="font-medium ml-1 capitalize">{{ transaction.payment_method || '-' }}</span>
           </div>
+          <div v-if="transaction.payment_due_at" class="col-span-2">
+            <span class="text-amber-800 font-semibold text-xs bg-amber-50 px-2 py-0.5 rounded border border-amber-200 inline-flex items-center gap-1">
+              ⏰ {{ $t('transactions.paymentDeadline') }}: Jam {{ formatTimeOnly(transaction.payment_due_at) }} WIB
+            </span>
+          </div>
         </div>
 
         <!-- Notes Preview for Mobile -->
@@ -313,7 +323,7 @@
               transaction.status === 'delivered' ? 'bg-purple-100 text-purple-700' :
               'bg-gray-100 text-gray-700'
             ]">
-              {{ transaction.status }}
+              {{ formatStatusLabel(transaction.status) }}
             </span>
             <button 
               v-if="['pending', 'processed', 'delivered'].includes(transaction.status)"
@@ -395,7 +405,7 @@
             </div>
           </div>
           <div v-if="getTableDisplay(selectedTransaction)">
-            <div class="text-gray-600">Nomor Meja</div>
+            <div class="text-gray-600">{{ $t('transactions.tableNumber') }}</div>
             <div class="font-bold text-emerald-800 flex items-center gap-1 mt-0.5">
               <span class="bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded text-xs">
                 🪑 {{ getTableDisplay(selectedTransaction) }}
@@ -403,10 +413,18 @@
             </div>
           </div>
           <div v-if="selectedTransaction.booking_code">
-            <div class="text-gray-600">Kode Booking</div>
+            <div class="text-gray-600">{{ $t('transactions.bookingCode') }}</div>
             <div class="font-bold text-blue-800 flex items-center gap-1 mt-0.5">
               <span class="bg-blue-50 border border-blue-200 px-2 py-0.5 rounded text-xs">
                 🔑 {{ selectedTransaction.booking_code }}
+              </span>
+            </div>
+          </div>
+          <div v-if="selectedTransaction.payment_due_at">
+            <div class="text-gray-600">{{ $t('transactions.paymentDeadline') }}</div>
+            <div class="font-bold text-amber-900 flex items-center gap-1 mt-0.5">
+              <span class="bg-amber-50 border border-amber-200 px-2 py-0.5 rounded text-xs font-mono">
+                ⏰ Jam {{ formatTimeOnly(selectedTransaction.payment_due_at) }} WIB ({{ formatDate(selectedTransaction.payment_due_at) }})
               </span>
             </div>
           </div>
@@ -503,6 +521,7 @@
             <option value="processed">{{ $t('transactions.statusProcessed') }}</option>
             <option value="delivered">{{ $t('transactions.statusDelivered') }}</option>
             <option value="completed">{{ $t('transactions.statusCompleted') }}</option>
+            <option value="void">Void / Cancelled (Dibatalkan)</option>
           </select>
         </div>
 
@@ -525,28 +544,28 @@
       <div class="flex items-center justify-between border-b pb-3">
         <div class="flex items-center gap-2">
           <span class="text-xl">🔔</span>
-          <h3 class="text-base sm:text-lg font-bold text-gray-900">Konfirmasi Order Tambahan</h3>
+          <h3 class="text-base sm:text-lg font-bold text-gray-900">{{ $t('transactions.addonModalTitle') }}</h3>
         </div>
         <button @click="showAddonModal = false" class="text-gray-400 hover:text-gray-600 font-bold">✕</button>
       </div>
 
       <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 space-y-1.5 text-xs sm:text-sm">
         <div class="flex justify-between text-amber-950 font-semibold">
-          <span>No. Transaksi:</span>
+          <span>{{ $t('transactions.transactionNo') }}:</span>
           <span>{{ addonModalTransaction.transaction_no }}</span>
         </div>
         <div v-if="getTableDisplay(addonModalTransaction)" class="flex justify-between text-amber-900">
-          <span>Meja / Lokasi:</span>
+          <span>{{ $t('transactions.tableLocation') }}:</span>
           <span>🪑 {{ getTableDisplay(addonModalTransaction) }}</span>
         </div>
         <div v-if="addonModalTransaction.customer_name" class="flex justify-between text-amber-900">
-          <span>Nama Pemesan:</span>
+          <span>{{ $t('transactions.customerName') }}:</span>
           <span>👤 {{ addonModalTransaction.customer_name }}</span>
         </div>
       </div>
 
       <div class="space-y-2">
-        <label class="label text-xs sm:text-sm font-semibold text-gray-700">Rincian Menu Tambahan Baru:</label>
+        <label class="label text-xs sm:text-sm font-semibold text-gray-700">{{ $t('transactions.addonDetails') }}:</label>
         <div class="p-3 bg-gray-50 border rounded-lg space-y-1 text-xs sm:text-sm">
           <div v-if="addonModalTransaction.addon_summary" class="flex flex-wrap gap-1.5">
             <span 
@@ -564,16 +583,16 @@
       </div>
 
       <div class="flex justify-between items-center pt-2 border-t text-sm font-semibold">
-        <span class="text-gray-600">Total Tagihan Baru:</span>
+        <span class="text-gray-600">{{ $t('transactions.newTotalBill') }}:</span>
         <span class="text-emerald-700 font-bold text-base sm:text-lg">{{ formatCurrency(addonModalTransaction.total) }}</span>
       </div>
 
       <div class="flex flex-col-reverse sm:flex-row gap-2 pt-2">
         <button @click="showAddonModal = false" class="btn btn-secondary flex-1 text-sm">
-          Batal
+          {{ $t('transactions.cancel') }}
         </button>
         <button @click="executeConfirmAddon" class="btn bg-amber-500 hover:bg-amber-600 text-white flex-1 text-sm font-bold shadow">
-          ✓ Terima & Konfirmasi
+          ✓ {{ $t('transactions.acceptConfirm') }}
         </button>
       </div>
     </div>
@@ -713,6 +732,27 @@ const formatDate = (date) => {
   })
 }
 
+const formatTimeOnly = (dateStr) => {
+  if (!dateStr) return '-'
+  const d = new Date(dateStr)
+  if (isNaN(d.getTime())) return dateStr
+  const hours = String(d.getHours()).padStart(2, '0')
+  const minutes = String(d.getMinutes()).padStart(2, '0')
+  return `${hours}:${minutes}`
+}
+
+const formatStatusLabel = (status) => {
+  const labels = {
+    pending: 'Pending',
+    processed: 'Processed',
+    delivered: 'Delivered',
+    completed: 'Completed',
+    void: 'Cancelled (Void)',
+    refund: 'Refund'
+  }
+  return labels[status] || status
+}
+
 const getBusinessTypeLabel = (type) => {
   const labels = {
     retail: 'Retail',
@@ -765,6 +805,13 @@ const getTableDisplay = (transaction) => {
 
 const loadTransactions = async () => {
   try {
+    // Auto cancel transactions created today whose payment deadline has passed
+    try {
+      await api.post('/transactions/cancel-expired', { today_only: true })
+    } catch (cancelErr) {
+      console.warn('Auto cancel expired check warning:', cancelErr)
+    }
+
     const params = {
       page: currentPage.value,
       per_page: perPage.value
