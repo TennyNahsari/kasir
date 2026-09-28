@@ -573,6 +573,8 @@ export default {
       orderOnlineBtn: 'Pesan Online',
       bookTableBtn: 'Reservasi Meja',
       menuBtn: 'Menu',
+      prevPage: 'Outlet sebelumnya',
+      nextPage: 'Outlet berikutnya',
     },
     bookingModal: {
       title: '📅 Reservasi Meja',

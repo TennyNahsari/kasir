@@ -41,6 +41,7 @@ class AuthController extends Controller
         $response = response()->json([
             'user' => $user->load(['outlet', 'location']),
             'message' => 'Login successful',
+            'token' => $token,
         ]);
 
         // Attach HTTP-only cookie to response

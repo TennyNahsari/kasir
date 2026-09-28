@@ -159,6 +159,37 @@ router.beforeEach(async (to, from, next) => {
       try {
         let isValidLocationType = false
         
+        if (user.location_id) {
+          const locationResponse = await api.get('/locations/' + user.location_id)
+          const locationType = locationResponse.data?.type?.toUpperCase()
+          isValidLocationType = locationType === 'OUTLET' || locationType === 'FNB'
+          
+          if (!isValidLocationType) {
+            alert('Access Denied: This POS application is only for OUTLET and FNB locations.\n\nYour location type: ' + locationType + '\n\nPlease use the Inventory app instead.')
+            accessValidated = false
+            await authStore.logout()
+            return next('/login')
+          }
+        } else if (user.outlet_id) {
+          const locationsResponse = await api.get('/locations', {
+            params: { outlet_id: user.outlet_id, is_active: true }
+          })
+          
+          const validLocations = locationsResponse.data?.filter(loc => 
+            loc.type === 'OUTLET' || loc.type === 'FNB'
+          ) || []
+          
+          if (validLocations.length === 0) {
+            alert('Access Denied: This POS application is only for OUTLET and FNB locations.\n\nYour outlet has no valid POS locations.\n\nPlease use the Inventory app instead.')
+            accessValidated = false
+            await authStore.logout()
+            return next('/login')
+          }
+        }
+        
+        accessValidated = true
+        console.log('✅ Access validated successfully')
+      } catch (error) {
         console.error('Failed to validate location type:', error)
         // Don't block on API errors, just log and continue
         // User might be offline temporarily

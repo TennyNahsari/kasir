@@ -102,43 +102,54 @@ const props = defineProps({
 
 defineEmits(['update:currentPage', 'update:perPage'])
 
-// Calculate visible page numbers with ellipsis
+// Calculate visible page numbers showing initial pages, ending pages, and middle current page with ellipsis
 const visiblePages = computed(() => {
-  const pages = []
-  const delta = 2 // Number of pages to show on each side of current page
-  
-  if (props.lastPage <= 7) {
-    // Show all pages if total is small
-    for (let i = 1; i <= props.lastPage; i++) {
+  const total = props.lastPage
+  const current = props.currentPage
+
+  if (total <= 6) {
+    const pages = []
+    for (let i = 1; i <= total; i++) {
       pages.push(i)
     }
-  } else {
-    // Always show first page
-    pages.push(1)
-    
-    // Calculate range around current page
-    const start = Math.max(2, props.currentPage - delta)
-    const end = Math.min(props.lastPage - 1, props.currentPage + delta)
-    
-    // Add ellipsis after first page if needed
-    if (start > 2) {
-      pages.push('...')
-    }
-    
-    // Add pages around current page
-    for (let i = start; i <= end; i++) {
-      pages.push(i)
-    }
-    
-    // Add ellipsis before last page if needed
-    if (end < props.lastPage - 1) {
-      pages.push('...')
-    }
-    
-    // Always show last page
-    pages.push(props.lastPage)
+    return pages
   }
-  
+
+  const pages = []
+  const firstPages = [1, 2]
+  const lastPages = [total - 1, total]
+
+  firstPages.forEach(p => pages.push(p))
+
+  const middlePages = []
+  for (let i = current - 1; i <= current + 1; i++) {
+    if (i > 2 && i < total - 1) {
+      middlePages.push(i)
+    }
+  }
+
+  if (middlePages.length > 0 && middlePages[0] > 3) {
+    pages.push('...')
+  } else if (middlePages.length === 0 && current > 2 && current < total - 1) {
+    pages.push('...')
+  }
+
+  middlePages.forEach(p => {
+    if (!pages.includes(p)) pages.push(p)
+  })
+
+  if (middlePages.length > 0 && middlePages[middlePages.length - 1] < total - 2) {
+    pages.push('...')
+  } else if (middlePages.length === 0 && (current <= 2 || current >= total - 1) && total > 4) {
+    if (pages[pages.length - 1] !== '...') {
+      pages.push('...')
+    }
+  }
+
+  lastPages.forEach(p => {
+    if (!pages.includes(p)) pages.push(p)
+  })
+
   return pages
 })
 </script>

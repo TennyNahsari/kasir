@@ -245,23 +245,50 @@
             <span class="text-xs text-[#5A5A5A] font-sans">{{ $t('home.menu.outletTypeLabel') }}</span>
           </div>
 
-          <!-- Location Selector Tabs -->
-          <div v-if="fnbLocations.length > 0" class="flex flex-wrap gap-3">
-            <button 
-              v-for="loc in fnbLocations" 
-              :key="loc.id"
-              @click="selectLocation(loc.id)"
-              :class="selectedLocationId === loc.id 
-                ? 'bg-[#1E1E1E] text-[#F9F6F0] border-[#1E1E1E] shadow-md' 
-                : 'bg-[#F9F6F0] text-[#2C2C2C] border-[#E5D9C5] hover:border-[#C9A96E]'"
-              class="px-5 py-3 rounded-xl border text-sm font-sans font-medium transition-all flex items-center gap-2 cursor-pointer"
-            >
-              <span class="w-2 h-2 rounded-full" :class="selectedLocationId === loc.id ? 'bg-[#C9A96E]' : 'bg-[#E5D9C5]'"></span>
-              <span>{{ loc.name }}</span>
-              <span class="text-[10px] px-2 py-0.5 rounded bg-[#C9A96E]/20 text-[#C9A96E] font-semibold uppercase">
-                {{ loc.type || 'F&B' }}
+          <!-- Location Selector Tabs with Pagination -->
+          <div v-if="fnbLocations.length > 0">
+            <div class="flex flex-wrap gap-3">
+              <button 
+                v-for="loc in paginatedOutletTabs" 
+                :key="loc.id"
+                @click="selectLocation(loc.id)"
+                :class="selectedLocationId === loc.id 
+                  ? 'bg-[#1E1E1E] text-[#F9F6F0] border-[#1E1E1E] shadow-md' 
+                  : 'bg-[#F9F6F0] text-[#2C2C2C] border-[#E5D9C5] hover:border-[#C9A96E]'"
+                class="px-5 py-3 rounded-xl border text-sm font-sans font-medium transition-all flex items-center gap-2 cursor-pointer"
+              >
+                <span class="w-2 h-2 rounded-full" :class="selectedLocationId === loc.id ? 'bg-[#C9A96E]' : 'bg-[#E5D9C5]'"></span>
+                <span>{{ loc.name }}</span>
+                <span class="text-[10px] px-2 py-0.5 rounded bg-[#C9A96E]/20 text-[#C9A96E] font-semibold uppercase">
+                  {{ loc.type || 'F&B' }}
+                </span>
+              </button>
+            </div>
+
+            <!-- Pagination for Outlet Selector Tabs -->
+            <div v-if="outletTabPageCount > 1" class="flex items-center gap-4 mt-4">
+              <button
+                type="button"
+                @click="previousOutletTabPage"
+                :disabled="currentOutletTabPage === 1"
+                class="w-8 h-8 rounded-full border border-[#C9A96E] text-[#C9A96E] flex items-center justify-center transition-all hover:bg-[#C9A96E] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#C9A96E]"
+                :aria-label="$t('home.menu.prevPage')"
+              >
+                <span class="text-lg leading-none">‹</span>
+              </button>
+              <span class="text-xs text-[#5A5A5A] font-sans min-w-16 text-center font-medium">
+                {{ currentOutletTabPage }} / {{ outletTabPageCount }}
               </span>
-            </button>
+              <button
+                type="button"
+                @click="nextOutletTabPage"
+                :disabled="currentOutletTabPage === outletTabPageCount"
+                class="w-8 h-8 rounded-full border border-[#C9A96E] text-[#C9A96E] flex items-center justify-center transition-all hover:bg-[#C9A96E] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#C9A96E]"
+                :aria-label="$t('home.menu.nextPage')"
+              >
+                <span class="text-lg leading-none">›</span>
+              </button>
+            </div>
           </div>
 
           <!-- Fallback when no FNB location found in DB -->
@@ -408,7 +435,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <div 
-            v-for="loc in (fnbLocations.length > 0 ? fnbLocations : sampleOutlets)" 
+            v-for="loc in paginatedOutlets" 
             :key="loc.id"
             class="bg-white rounded-2xl p-8 border border-[#E5D9C5] shadow-xs hover:border-[#C9A96E] transition-all flex flex-col justify-between"
           >
@@ -455,6 +482,31 @@
               </button>
             </div>
           </div>
+        </div>
+
+        <!-- Outlets Grid Pagination -->
+        <div v-if="outletPageCount > 1" class="flex items-center justify-center gap-5 mt-10">
+          <button
+            type="button"
+            @click="previousOutletPage"
+            :disabled="currentOutletPage === 1"
+            class="w-10 h-10 rounded-full border border-[#C9A96E] text-[#C9A96E] flex items-center justify-center transition-all hover:bg-[#C9A96E] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#C9A96E]"
+            :aria-label="$t('home.outlets.prevPage')"
+          >
+            <span class="text-xl leading-none">‹</span>
+          </button>
+          <span class="text-sm text-[#5A5A5A] font-sans min-w-20 text-center font-medium">
+            {{ currentOutletPage }} / {{ outletPageCount }}
+          </span>
+          <button
+            type="button"
+            @click="nextOutletPage"
+            :disabled="currentOutletPage === outletPageCount"
+            class="w-10 h-10 rounded-full border border-[#C9A96E] text-[#C9A96E] flex items-center justify-center transition-all hover:bg-[#C9A96E] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#C9A96E]"
+            :aria-label="$t('home.outlets.nextPage')"
+          >
+            <span class="text-xl leading-none">›</span>
+          </button>
         </div>
 
       </div>
@@ -1431,6 +1483,50 @@ const socialSettings = ref({
 })
 const currentMenuPage = ref(1)
 const menuPerPage = 3
+
+// ── Outlet Tab Selector Pagination ──
+const currentOutletTabPage = ref(1)
+const outletTabPerPage = 4
+
+const outletTabPageCount = computed(() =>
+  Math.ceil(fnbLocations.value.length / outletTabPerPage) || 1
+)
+
+const paginatedOutletTabs = computed(() => {
+  const start = (currentOutletTabPage.value - 1) * outletTabPerPage
+  return fnbLocations.value.slice(start, start + outletTabPerPage)
+})
+
+const previousOutletTabPage = () => {
+  if (currentOutletTabPage.value > 1) currentOutletTabPage.value--
+}
+
+const nextOutletTabPage = () => {
+  if (currentOutletTabPage.value < outletTabPageCount.value) currentOutletTabPage.value++
+}
+
+// ── Outlets Section Cards Pagination ──
+const currentOutletPage = ref(1)
+const outletsPerPage = 3
+
+const outletPageCount = computed(() => {
+  const allOutlets = fnbLocations.value.length > 0 ? fnbLocations.value : sampleOutlets.value
+  return Math.ceil(allOutlets.length / outletsPerPage) || 1
+})
+
+const paginatedOutlets = computed(() => {
+  const allOutlets = fnbLocations.value.length > 0 ? fnbLocations.value : sampleOutlets.value
+  const start = (currentOutletPage.value - 1) * outletsPerPage
+  return allOutlets.slice(start, start + outletsPerPage)
+})
+
+const previousOutletPage = () => {
+  if (currentOutletPage.value > 1) currentOutletPage.value--
+}
+
+const nextOutletPage = () => {
+  if (currentOutletPage.value < outletPageCount.value) currentOutletPage.value++
+}
 
 // ── Online Order State ──
 const cart = ref([])

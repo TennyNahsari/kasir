@@ -569,6 +569,8 @@ export default {
       orderOnlineBtn: 'Order Online',
       bookTableBtn: 'Book a Table',
       menuBtn: 'Menu',
+      prevPage: 'Previous outlet',
+      nextPage: 'Next outlet',
     },
     bookingModal: {
       title: '📅 Table Reservation',
