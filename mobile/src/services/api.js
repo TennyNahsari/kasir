@@ -1,7 +1,7 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export const DEFAULT_BASE_URL = 'http://localhost:8000/api';
+export const DEFAULT_BASE_URL = 'https://kasir.tazkia.web.id/api';
 const STORAGE_KEYS = {
   TOKEN: '@auth_token',
   USER: '@auth_user',
