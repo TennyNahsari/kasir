@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => ['api/*', 'sanctum/csrf-cookie', '*'],
     'allowed_methods' => ['*'],
     'allowed_origins' => [
         'http://localhost:3000',
@@ -24,12 +24,15 @@ return [
         'http://127.0.0.1:8083',
         'http://127.0.0.1:19006',
         'https://tazkia-inv.duckdns.org',
+        'https://kasir.tazkia.web.id',
+        'http://kasir.tazkia.web.id',
     ],
     'allowed_origins_patterns' => [
         '#^http://localhost:\d+$#',
         '#^http://127\.0\.0\.1:\d+$#',
         '#^http://192\.168\.\d+\.\d+:\d+$#',
         '#^http://10\.\d+\.\d+\.\d+:\d+$#',
+        '#^https?://.*\.tazkia\.web\.id$#',
     ],
     'allowed_headers' => ['*'],
     'exposed_headers' => [],
