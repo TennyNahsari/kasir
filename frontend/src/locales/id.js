@@ -40,6 +40,7 @@ export default {
 
   // Navigation
   nav: {
+    landing: 'Landing Page',
     dashboard: 'Dashboard',
     pos: 'POS',
     transactions: 'Transaksi',

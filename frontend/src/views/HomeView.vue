@@ -56,10 +56,6 @@
               {{ $t('home.nav.viewMenu') }}
             </a>
 
-            <router-link v-if="!authStore.user" to="/login" class="hidden sm:inline-flex px-4 py-2.5 rounded-lg border border-[#6B2E3E] text-[#6B2E3E] font-sans font-medium text-xs sm:text-sm tracking-wider uppercase hover:bg-[#6B2E3E] hover:text-[#F9F6F0] transition-all">
-              {{ $t('home.nav.login') }}
-            </router-link>
-
             <!-- Language Switcher in Header -->
             <button 
               @click="toggleLanguage" 
@@ -97,11 +93,7 @@
         >
           🌐 {{ locale === 'id' ? 'English (EN)' : 'Bahasa Indonesia (ID)' }}
         </button>
-        <div class="pt-4 border-t border-[#E5D9C5] flex flex-col gap-2">
-          <router-link v-if="!authStore.user" to="/login" @click="mobileMenuOpen = false" class="text-center py-2.5 rounded-lg border border-[#6B2E3E] text-[#6B2E3E]">
-            {{ $t('home.nav.login') }}
-          </router-link>
-        </div>
+
       </div>
     </header>
 
