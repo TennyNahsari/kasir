@@ -1,6 +1,16 @@
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-500 to-primary-700 p-3 sm:p-4">
     <div class="max-w-md w-full">
+      <!-- Back Link Above Card -->
+      <div class="mb-3">
+        <router-link to="/" class="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-white/90 hover:text-white transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+          </svg>
+          <span>Kembali ke Landing Page</span>
+        </router-link>
+      </div>
+
       <div class="card">
         <div class="text-center mb-6 sm:mb-8">
           <img src="/logo.png" alt="Tazkia Web" class="mx-auto mb-4 h-16 sm:h-20 w-auto" />
@@ -43,6 +53,15 @@
             {{ loading ? 'Loading...' : 'Login' }}
           </button>
         </form>
+
+        <div class="mt-4 pt-4 border-t border-gray-200 text-center">
+          <router-link to="/" class="inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 hover:text-primary-700 hover:underline">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            <span>Kembali ke Landing Page</span>
+          </router-link>
+        </div>
 
         <div class="mt-4 sm:mt-6 text-xs sm:text-sm text-gray-600">
           <p class="font-semibold mb-2">Demo Credentials:</p>
