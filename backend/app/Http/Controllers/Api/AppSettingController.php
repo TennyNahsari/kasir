@@ -182,18 +182,20 @@ class AppSettingController extends Controller
             'image' => 'required|image|max:5120',
         ]);
 
-        $directory = public_path('storage/slider');
-        File::ensureDirectoryExists($directory);
-        
         $file = $request->file('image');
         $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-        $file->move($directory, $filename);
-        $path = 'slider/' . $filename;
 
-        // Also copy to storage/app/public/slider
+        // 1. Primary destination: storage/app/public/slider (Nginx location /storage root)
         $storageDir = storage_path('app/public/slider');
         File::ensureDirectoryExists($storageDir);
-        File::copy($directory . '/' . $filename, $storageDir . '/' . $filename);
+        $file->move($storageDir, $filename);
+
+        // 2. Secondary destination: public/storage/slider (fallback / symlink)
+        $publicDir = public_path('storage/slider');
+        File::ensureDirectoryExists($publicDir);
+        @copy($storageDir . '/' . $filename, $publicDir . '/' . $filename);
+
+        $path = 'slider/' . $filename;
 
         return response()->json([
             'path' => $path,

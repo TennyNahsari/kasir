@@ -199,8 +199,9 @@ const getSlideImageUrl = (imagePath) => {
   if (imagePath.startsWith('http') || imagePath.startsWith('blob:') || imagePath.startsWith('data:')) {
     return imagePath
   }
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
-  return `${baseUrl.replace(/\/api\/?$/, '')}/storage/${imagePath.replace(/^\//, '')}`
+  const cleanPath = imagePath.replace(/^\//, '').replace(/^storage\//, '')
+  const origin = window.location.origin
+  return `${origin}/storage/${cleanPath}`
 }
 
 const handleImageError = (e) => {

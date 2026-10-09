@@ -2290,9 +2290,10 @@ const fetchHeroSlides = async () => {
 
 const getSlideImageUrl = (imagePath) => {
   if (!imagePath) return 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80'
-  if (imagePath.startsWith('http')) return imagePath
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
-  return `${baseUrl.replace(/\/api\/?$/, '')}/storage/${imagePath.replace(/^\//, '')}`
+  if (imagePath.startsWith('http') || imagePath.startsWith('blob:') || imagePath.startsWith('data:')) return imagePath
+  const cleanPath = imagePath.replace(/^\//, '').replace(/^storage\//, '')
+  const origin = window.location.origin
+  return `${origin}/storage/${cleanPath}`
 }
 
 const handleSlideImageError = (e) => {
