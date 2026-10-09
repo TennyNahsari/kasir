@@ -47,11 +47,11 @@
           <div class="flex flex-col md:flex-row gap-5 items-start">
             
             <!-- Slide Image Preview & File Upload Box -->
-            <div class="w-full md:w-64 shrink-0">
+            <div class="w-full md:w-72 lg:w-80 shrink-0">
               <label class="block text-xs font-semibold text-gray-700 mb-1.5">Gambar Slide #{{ index + 1 }}</label>
               
-              <!-- Image Preview Box -->
-              <div class="aspect-16/9 rounded-lg overflow-hidden border-2 border-dashed border-gray-300 bg-gray-50 relative group flex items-center justify-center">
+              <!-- Image Preview Box (Enlarged Aspect Ratio) -->
+              <div class="w-full aspect-[4/3] sm:aspect-[16/10] rounded-xl overflow-hidden border-2 border-dashed border-gray-300 bg-gray-50 relative group flex items-center justify-center shadow-xs">
                 <img 
                   :src="getSlideImageUrl(slide.previewUrl || slide.image)" 
                   alt="Slide Image" 
@@ -59,8 +59,14 @@
                   @error="handleImageError"
                 />
                 
+                <!-- Overlay Caption Preview -->
+                <div class="absolute bottom-2 left-2 right-2 p-1.5 bg-black/60 rounded backdrop-blur-xs text-center pointer-events-none">
+                  <p class="text-[11px] font-semibold text-[#C9A96E] truncate">{{ slide.title || 'Judul Slide' }}</p>
+                  <p class="text-[9px] text-[#E5D9C5] truncate">{{ slide.subtitle || 'Sub-judul' }}</p>
+                </div>
+                
                 <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2 text-center">
-                  <label class="px-3 py-1.5 bg-white text-gray-800 text-xs font-semibold rounded-lg cursor-pointer hover:bg-gray-100 shadow-sm">
+                  <label class="px-3.5 py-2 bg-white text-gray-800 text-xs font-semibold rounded-lg cursor-pointer hover:bg-gray-100 shadow-md">
                     📷 Ganti File Gambar
                     <input 
                       type="file" 
@@ -73,8 +79,8 @@
               </div>
 
               <!-- Visible File Upload Button -->
-              <div class="mt-2.5">
-                <label class="block w-full text-center px-3 py-2 bg-[#F9F6F0] border border-[#E5D9C5] rounded-lg text-xs font-semibold text-[#6B2E3E] hover:bg-[#E5D9C5]/50 transition-colors cursor-pointer">
+              <div class="mt-3">
+                <label class="block w-full text-center px-3.5 py-2.5 bg-[#F9F6F0] border border-[#E5D9C5] rounded-lg text-xs font-bold text-[#6B2E3E] hover:bg-[#E5D9C5]/50 transition-colors cursor-pointer shadow-2xs">
                   <span v-if="slide.uploading">⏳ Mengunggah...</span>
                   <span v-else>📁 Upload Gambar dari File</span>
                   <input 

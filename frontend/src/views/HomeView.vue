@@ -104,9 +104,9 @@
       <div class="absolute inset-0 bg-[radial-gradient(#C9A96E_1px,transparent_1px)] [background-size:24px_24px] opacity-10"></div>
 
       <div class="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center md:text-left">
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-12 items-center">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 items-center">
           
-          <div class="md:col-span-8 space-y-6">
+          <div class="md:col-span-6 lg:col-span-6 space-y-6">
             <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#C9A96E]/40 bg-[#C9A96E]/10 text-[#C9A96E] text-xs font-sans tracking-[0.15em] uppercase">
               <span>✦</span>
               <span>Timeless Culinary & Artisanal Coffee</span>
@@ -135,12 +135,11 @@
             </div>
           </div>
 
-          <!-- Hero Visual Card / Hero Slider -->
-          <div class="md:col-span-4 block w-full">
-            <div class="relative p-2 rounded-2xl border border-[#C9A96E]/30 bg-[#2C2C2C]/80 shadow-2xl backdrop-blur-xs">
+          <!-- Hero Visual Card / Hero Slider (Enlarged & Fully Responsive) -->
+          <div class="md:col-span-6 lg:col-span-6 block w-full mt-6 md:mt-0">
+            <div class="relative p-2.5 sm:p-3 rounded-2xl border border-[#C9A96E]/30 bg-[#2C2C2C]/80 shadow-2xl backdrop-blur-xs">
               <div 
-                class="w-full relative rounded-xl overflow-hidden group cursor-pointer min-h-[380px] sm:min-h-[440px]"
-                style="aspect-ratio: 4 / 5;"
+                class="w-full relative rounded-xl overflow-hidden group cursor-pointer min-h-[420px] sm:min-h-[500px] lg:min-h-[580px] aspect-[4/5] sm:aspect-[4/5] md:aspect-[3/4]"
                 @mouseenter="stopSlider"
                 @mouseleave="startSlider"
               >
@@ -158,21 +157,21 @@
                       class="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-700"
                       @error="handleSlideImageError"
                     />
-                    <div class="absolute inset-0 bg-gradient-to-t from-[#1E1E1E] via-transparent to-transparent opacity-90"></div>
+                    <div class="absolute inset-0 bg-gradient-to-t from-[#1E1E1E] via-[#1E1E1E]/30 to-transparent opacity-90"></div>
                     
                     <!-- Overlay Caption -->
-                    <div class="absolute bottom-6 left-6 right-6 text-center z-10">
-                      <p class="font-display italic text-lg sm:text-xl text-[#C9A96E] leading-snug">{{ slide.title || "L'ÉTOILE Signature Experience" }}</p>
-                      <p class="font-sans text-xs text-[#E5D9C5] uppercase tracking-widest mt-1.5">{{ slide.subtitle || 'White Marble • Dark Wood • Fine Coffee' }}</p>
+                    <div class="absolute bottom-8 left-4 right-4 sm:left-6 sm:right-6 text-center z-10">
+                      <p class="font-display italic text-xl sm:text-2xl lg:text-3xl text-[#C9A96E] leading-snug drop-shadow-md">{{ slide.title || "L'ÉTOILE Signature Experience" }}</p>
+                      <p class="font-sans text-xs sm:text-sm text-[#E5D9C5] uppercase tracking-widest mt-2 drop-shadow-xs">{{ slide.subtitle || 'White Marble • Dark Wood • Fine Coffee' }}</p>
                     </div>
                   </div>
                 </transition-group>
 
-                <!-- Previous / Next Controls -->
+                <!-- Previous / Next Controls (Always visible on mobile touch, hover on desktop) -->
                 <button 
                   v-if="heroSlides.length > 1"
                   @click.stop="prevSlide" 
-                  class="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 hover:bg-[#C9A96E] text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 shadow-lg backdrop-blur-xs z-20"
+                  class="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 hover:bg-[#C9A96E] text-white flex items-center justify-center transition-all opacity-80 sm:opacity-0 group-hover:opacity-100 shadow-xl backdrop-blur-xs z-20"
                   aria-label="Previous Slide"
                 >
                   ❮
@@ -180,20 +179,20 @@
                 <button 
                   v-if="heroSlides.length > 1"
                   @click.stop="nextSlide" 
-                  class="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 hover:bg-[#C9A96E] text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 shadow-lg backdrop-blur-xs z-20"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 hover:bg-[#C9A96E] text-white flex items-center justify-center transition-all opacity-80 sm:opacity-0 group-hover:opacity-100 shadow-xl backdrop-blur-xs z-20"
                   aria-label="Next Slide"
                 >
                   ❯
                 </button>
 
                 <!-- Indicator Dots -->
-                <div v-if="heroSlides.length > 1" class="absolute bottom-2.5 left-0 right-0 flex justify-center gap-1.5 z-20">
+                <div v-if="heroSlides.length > 1" class="absolute bottom-3 left-0 right-0 flex justify-center gap-2 z-20">
                   <button 
                     v-for="(slide, index) in heroSlides" 
                     :key="'dot_' + index" 
                     @click.stop="goToSlide(index)"
-                    class="h-2 rounded-full transition-all duration-300 cursor-pointer"
-                    :class="currentSlideIndex === index ? 'bg-[#C9A96E] w-6' : 'bg-white/40 hover:bg-white/70 w-2'"
+                    class="h-2.5 rounded-full transition-all duration-300 cursor-pointer"
+                    :class="currentSlideIndex === index ? 'bg-[#C9A96E] w-7' : 'bg-white/50 hover:bg-white/80 w-2.5'"
                     :aria-label="'Go to slide ' + (index + 1)"
                   ></button>
                 </div>
