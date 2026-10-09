@@ -136,10 +136,11 @@
           </div>
 
           <!-- Hero Visual Card / Hero Slider -->
-          <div class="md:col-span-4 block">
+          <div class="md:col-span-4 block w-full">
             <div class="relative p-2 rounded-2xl border border-[#C9A96E]/30 bg-[#2C2C2C]/80 shadow-2xl backdrop-blur-xs">
               <div 
-                class="aspect-4/5 rounded-xl overflow-hidden relative group cursor-pointer"
+                class="w-full relative rounded-xl overflow-hidden group cursor-pointer min-h-[380px] sm:min-h-[440px]"
+                style="aspect-ratio: 4 / 5;"
                 @mouseenter="stopSlider"
                 @mouseleave="startSlider"
               >
@@ -161,8 +162,8 @@
                     
                     <!-- Overlay Caption -->
                     <div class="absolute bottom-6 left-6 right-6 text-center z-10">
-                      <p class="font-display italic text-lg text-[#C9A96E] leading-snug">{{ slide.title || "L'ÉTOILE Signature Experience" }}</p>
-                      <p class="font-sans text-xs text-[#E5D9C5] uppercase tracking-widest mt-1">{{ slide.subtitle || 'White Marble • Dark Wood • Fine Coffee' }}</p>
+                      <p class="font-display italic text-lg sm:text-xl text-[#C9A96E] leading-snug">{{ slide.title || "L'ÉTOILE Signature Experience" }}</p>
+                      <p class="font-sans text-xs text-[#E5D9C5] uppercase tracking-widest mt-1.5">{{ slide.subtitle || 'White Marble • Dark Wood • Fine Coffee' }}</p>
                     </div>
                   </div>
                 </transition-group>
@@ -191,7 +192,7 @@
                     v-for="(slide, index) in heroSlides" 
                     :key="'dot_' + index" 
                     @click.stop="goToSlide(index)"
-                    class="h-2 rounded-full transition-all duration-300"
+                    class="h-2 rounded-full transition-all duration-300 cursor-pointer"
                     :class="currentSlideIndex === index ? 'bg-[#C9A96E] w-6' : 'bg-white/40 hover:bg-white/70 w-2'"
                     :aria-label="'Go to slide ' + (index + 1)"
                   ></button>
@@ -2363,5 +2364,14 @@ onUnmounted(() => {
     transform: scale(1);
     opacity: 1;
   }
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.7s ease-in-out;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>
