@@ -1,13 +1,14 @@
 <template>
   <div class="max-w-4xl">
-    <div class="mb-6 flex items-center justify-between">
+    <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
       <div>
         <h2 class="text-2xl font-bold text-gray-900">Pengaturan Hero Slider</h2>
         <p class="text-sm text-gray-500 mt-1">Kelola gambar slide dan teks yang tampil di bagian utama (Hero Section) Landing Page.</p>
       </div>
       <button 
         @click="addEmptySlide" 
-        class="px-4 py-2.5 rounded-lg bg-[#C9A96E] text-white font-medium text-sm hover:bg-[#B59458] transition-colors flex items-center gap-2 shadow-xs"
+        type="button"
+        class="px-4 py-2.5 rounded-lg bg-[#C9A96E] text-white font-medium text-sm hover:bg-[#B59458] transition-all flex items-center gap-2 shadow-xs cursor-pointer"
         :disabled="loading"
       >
         <span>➕</span> Tambah Slide Baru
@@ -15,7 +16,11 @@
     </div>
 
     <!-- Feedback Message -->
-    <div v-if="message" class="mb-4 p-4 rounded-xl text-sm font-medium transition-all" :class="saved ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'">
+    <div 
+      v-if="message" 
+      class="mb-4 p-4 rounded-xl text-sm font-medium transition-all" 
+      :class="saved ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'"
+    >
       {{ message }}
     </div>
 
@@ -29,7 +34,7 @@
       <!-- Empty state -->
       <div v-else-if="slides.length === 0" class="card py-12 text-center text-gray-500">
         <p class="text-base font-semibold text-gray-700">Belum Ada Slide</p>
-        <p class="text-xs text-gray-400 mt-1">Klik tombol "Tambah Slide Baru" untuk menambahkan gambar slider.</p>
+        <p class="text-xs text-gray-400 mt-1">Klik tombol "Tambah Slide Baru" di atas untuk mengunggah gambar slider.</p>
       </div>
 
       <!-- Slides List -->
@@ -41,19 +46,22 @@
         >
           <div class="flex flex-col md:flex-row gap-5 items-start">
             
-            <!-- Slide Image Preview / Upload -->
-            <div class="w-full md:w-56 shrink-0">
-              <label class="block text-xs font-semibold text-gray-600 mb-1">Gambar Slide #{{ index + 1 }}</label>
-              <div class="aspect-16/9 rounded-lg overflow-hidden border border-gray-200 bg-gray-100 relative group">
+            <!-- Slide Image Preview & File Upload Box -->
+            <div class="w-full md:w-64 shrink-0">
+              <label class="block text-xs font-semibold text-gray-700 mb-1.5">Gambar Slide #{{ index + 1 }}</label>
+              
+              <!-- Image Preview Box -->
+              <div class="aspect-16/9 rounded-lg overflow-hidden border-2 border-dashed border-gray-300 bg-gray-50 relative group flex items-center justify-center">
                 <img 
-                  :src="getSlideImageUrl(slide.image)" 
+                  :src="getSlideImageUrl(slide.previewUrl || slide.image)" 
                   alt="Slide Image" 
                   class="w-full h-full object-cover"
                   @error="handleImageError"
                 />
-                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <label class="px-3 py-1.5 bg-white text-gray-800 text-xs font-semibold rounded-lg cursor-pointer hover:bg-gray-100 shadow-xs">
-                    Ganti Foto
+                
+                <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2 text-center">
+                  <label class="px-3 py-1.5 bg-white text-gray-800 text-xs font-semibold rounded-lg cursor-pointer hover:bg-gray-100 shadow-sm">
+                    📷 Ganti File Gambar
                     <input 
                       type="file" 
                       accept="image/*" 
@@ -63,13 +71,28 @@
                   </label>
                 </div>
               </div>
+
+              <!-- Visible File Upload Button -->
+              <div class="mt-2.5">
+                <label class="block w-full text-center px-3 py-2 bg-[#F9F6F0] border border-[#E5D9C5] rounded-lg text-xs font-semibold text-[#6B2E3E] hover:bg-[#E5D9C5]/50 transition-colors cursor-pointer">
+                  <span v-if="slide.uploading">⏳ Mengunggah...</span>
+                  <span v-else>📁 Upload Gambar dari File</span>
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    class="hidden" 
+                    :disabled="slide.uploading"
+                    @change="(e) => onFileSelected(e, index)"
+                  />
+                </label>
+              </div>
               
               <!-- Direct Image URL Option -->
               <div class="mt-2">
                 <input 
                   type="text" 
                   v-model="slide.image" 
-                  placeholder="Atau masukkan URL Gambar..." 
+                  placeholder="Atau tempel URL gambar..." 
                   class="w-full text-xs px-2.5 py-1.5 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#C9A96E]"
                 />
               </div>
@@ -78,7 +101,7 @@
             <!-- Slide Content Inputs -->
             <div class="flex-1 space-y-3 w-full">
               <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1">Judul Slide (Headline)</label>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Judul Slide (Headline Utama)</label>
                 <input 
                   type="text" 
                   v-model="slide.title" 
@@ -135,7 +158,7 @@
       <div v-if="slides.length > 0" class="flex justify-end pt-4">
         <button 
           type="submit" 
-          class="px-6 py-3 bg-[#6B2E3E] text-white font-semibold text-sm rounded-lg hover:bg-[#582432] transition-colors shadow-md flex items-center gap-2"
+          class="px-6 py-3 bg-[#6B2E3E] text-white font-semibold text-sm rounded-lg hover:bg-[#582432] transition-colors shadow-md flex items-center gap-2 cursor-pointer"
           :disabled="loading"
         >
           <span v-if="loading">⏳ Menyimpan...</span>
@@ -159,7 +182,7 @@ const fetchSlides = async () => {
   loading.value = true
   try {
     const res = await api.get('/settings/hero-slider')
-    slides.value = res.data || []
+    slides.value = (res.data || []).map(s => ({ ...s, uploading: false, previewUrl: '' }))
   } catch (err) {
     console.error('Failed to fetch hero slider slides:', err)
     message.value = 'Gagal memuat data slider'
@@ -173,7 +196,7 @@ const getSlideImageUrl = (imagePath) => {
   if (!imagePath) {
     return 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80'
   }
-  if (imagePath.startsWith('http')) {
+  if (imagePath.startsWith('http') || imagePath.startsWith('blob:') || imagePath.startsWith('data:')) {
     return imagePath
   }
   const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
@@ -189,7 +212,9 @@ const addEmptySlide = () => {
     id: 'slide_' + Date.now(),
     image: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80',
     title: 'L\'ÉTOILE New Atmosphere',
-    subtitle: 'Artisanal Coffee & Gourmet Specialties'
+    subtitle: 'Artisanal Coffee & Gourmet Specialties',
+    uploading: false,
+    previewUrl: ''
   })
 }
 
@@ -224,25 +249,30 @@ const onFileSelected = async (event, index) => {
     return
   }
 
+  // Instant local preview
+  slides.value[index].previewUrl = URL.createObjectURL(file)
+  slides.value[index].uploading = true
+
   const formData = new FormData()
   formData.append('image', file)
 
-  loading.value = true
   try {
     const res = await api.post('/settings/hero-slider/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
     if (res.data && res.data.path) {
       slides.value[index].image = res.data.path
-      message.value = 'Gambar slide berhasil diunggah'
+      slides.value[index].previewUrl = ''
+      message.value = 'Gambar slide berhasil diunggah! Klik "Simpan Seluruh Slider" untuk menyimpan perubahan.'
       saved.value = true
-      setTimeout(() => { message.value = '' }, 3000)
+      setTimeout(() => { message.value = '' }, 4000)
     }
   } catch (err) {
     console.error('Failed to upload slide image:', err)
-    alert('Gagal mengunggah gambar slide')
+    alert('Gagal mengunggah gambar slide: ' + (err.response?.data?.message || err.message))
+    slides.value[index].previewUrl = ''
   } finally {
-    loading.value = false
+    slides.value[index].uploading = false
   }
 }
 
@@ -250,15 +280,23 @@ const saveSlides = async () => {
   loading.value = true
   message.value = ''
   try {
-    const res = await api.post('/settings/hero-slider', { slides: slides.value })
-    slides.value = res.data || []
+    // Sanitize payload
+    const payload = slides.value.map(s => ({
+      id: s.id,
+      image: s.image,
+      title: s.title || '',
+      subtitle: s.subtitle || ''
+    }))
+
+    const res = await api.post('/settings/hero-slider', { slides: payload })
+    slides.value = (res.data || []).map(s => ({ ...s, uploading: false, previewUrl: '' }))
     saved.value = true
-    message.value = 'Semua perubahan hero slider berhasil disimpan!'
-    setTimeout(() => { message.value = '' }, 4000)
+    message.value = 'Semua perubahan hero slider berhasil disimpan ke database!'
+    setTimeout(() => { message.value = '' }, 5000)
   } catch (err) {
     console.error('Failed to save slides:', err)
     saved.value = false
-    message.value = 'Gagal menyimpan perubahan slider.'
+    message.value = 'Gagal menyimpan perubahan slider: ' + (err.response?.data?.message || err.message)
   } finally {
     loading.value = false
   }
