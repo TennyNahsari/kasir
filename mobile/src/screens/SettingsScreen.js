@@ -23,6 +23,7 @@ import {
   Shield,
   TrendingUp,
   Package,
+  Sliders,
 } from 'lucide-react-native';
 
 export default function SettingsScreen({ navigation }) {
@@ -81,7 +82,7 @@ export default function SettingsScreen({ navigation }) {
       </View>
 
       {/* Quick Access Menu Cards */}
-      <Text style={styles.sectionTitle}>Manajemen POS</Text>
+      <Text style={styles.sectionTitle}>Manajemen POS & Landing</Text>
       <View style={styles.card}>
         <TouchableOpacity
           style={styles.menuLinkRow}
@@ -105,6 +106,20 @@ export default function SettingsScreen({ navigation }) {
           <View style={{ flex: 1 }}>
             <Text style={styles.infoValue}>Katalog & Stok Produk</Text>
             <Text style={styles.infoLabel}>Cek sisa stok produk & harga</Text>
+          </View>
+          <ChevronRight size={18} color="#94A3B8" />
+        </TouchableOpacity>
+
+        <View style={styles.divider} />
+
+        <TouchableOpacity
+          style={styles.menuLinkRow}
+          onPress={() => navigation.navigate('Home')}
+        >
+          <Sliders size={20} color="#C9A96E" style={styles.infoIcon} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.infoValue}>Hero Slider Landing Page</Text>
+            <Text style={styles.infoLabel}>Lihat tampilan slider promosi utama</Text>
           </View>
           <ChevronRight size={18} color="#94A3B8" />
         </TouchableOpacity>

@@ -28,6 +28,7 @@ import {
   Clock,
   X,
   ChevronRight,
+  ChevronLeft,
   ShoppingBag,
   Award,
 } from 'lucide-react-native';
@@ -42,6 +43,17 @@ export default function HomeScreen({ navigation }) {
   const [selectedCat, setSelectedCat] = useState(null);
   const [selectedLocId, setSelectedLocId] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // ── Hero Slider States ──
+  const [heroSlides, setHeroSlides] = useState([
+    {
+      id: 'default_1',
+      image: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80',
+      title: "L'ÉTOILE Signature Experience",
+      subtitle: 'White Marble • Dark Wood • Fine Coffee',
+    }
+  ]);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
 
   // ── Pagination States ──
   const [currentMenuPage, setCurrentMenuPage] = useState(1);
@@ -65,10 +77,39 @@ export default function HomeScreen({ navigation }) {
     fetchPublicData();
   }, []);
 
+  // Auto-advance hero slider every 5 seconds
+  useEffect(() => {
+    if (heroSlides.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentSlideIndex((prev) => (prev + 1) % heroSlides.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [heroSlides.length]);
+
+  const getSlideImageUrl = (imagePath) => {
+    if (!imagePath) {
+      return 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80';
+    }
+    if (imagePath.startsWith('http') || imagePath.startsWith('blob:') || imagePath.startsWith('data:')) {
+      return imagePath;
+    }
+    const cleanPath = imagePath.replace(/^\//, '').replace(/^storage\//, '');
+    const baseUrl = (api.defaults.baseURL || 'https://kasir.tazkia.web.id/api').replace(/\/api\/?$/, '');
+    return `${baseUrl}/storage/${cleanPath}`;
+  };
+
+  const nextSlide = () => {
+    setCurrentSlideIndex((prev) => (prev + 1) % heroSlides.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlideIndex((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
+  };
+
   const fetchPublicData = async () => {
     try {
       setLoading(true);
-      const [prodRes, catRes, locRes] = await Promise.all([
+      const [prodRes, catRes, locRes, sliderRes] = await Promise.all([
         api.get('/public/products').catch(async () => {
           try {
             return await api.get('/products?per_page=20');
@@ -90,11 +131,17 @@ export default function HomeScreen({ navigation }) {
             return { data: [] };
           }
         }),
+        api.get('/public/settings/hero-slider').catch(() => ({ data: [] })),
       ]);
 
       const prodData = prodRes.data?.data || prodRes.data || [];
       const catData = catRes.data?.data || catRes.data || [];
       const locData = locRes.data?.data || locRes.data || [];
+      const sliderData = sliderRes.data || [];
+
+      if (Array.isArray(sliderData) && sliderData.length > 0) {
+        setHeroSlides(sliderData);
+      }
 
       const rawCat = Array.isArray(catData) ? catData : [];
       // Filter categories strictly for FNB categories (Makanan-FNB, Minuman-FNB, Snack-FNB)
@@ -246,17 +293,60 @@ export default function HomeScreen({ navigation }) {
 
           <Text style={styles.heroTagline}>{t('landing.heroTagline')}</Text>
 
-          {/* Hero Visual Card */}
+          {/* Hero Visual Card / Dynamic Hero Slider */}
           <View style={styles.heroImageCard}>
-            <Image
-              source={{ uri: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80' }}
-              style={styles.heroImage}
-              resizeMode="cover"
-            />
-            <View style={styles.heroImageOverlay}>
-              <Text style={styles.heroImageTitle}>L'ÉTOILE Signature Experience</Text>
-              <Text style={styles.heroImageSubtitle}>White Marble • Dark Wood • Fine Coffee</Text>
-            </View>
+            {heroSlides.length > 0 && (
+              <>
+                <Image
+                  source={{ uri: getSlideImageUrl(heroSlides[currentSlideIndex]?.image) }}
+                  style={styles.heroImage}
+                  resizeMode="cover"
+                />
+                <View style={styles.heroImageOverlay}>
+                  <Text style={styles.heroImageTitle}>
+                    {heroSlides[currentSlideIndex]?.title || "L'ÉTOILE Signature Experience"}
+                  </Text>
+                  <Text style={styles.heroImageSubtitle}>
+                    {heroSlides[currentSlideIndex]?.subtitle || 'White Marble • Dark Wood • Fine Coffee'}
+                  </Text>
+                </View>
+
+                {/* Slider Prev/Next Touch Buttons */}
+                {heroSlides.length > 1 && (
+                  <>
+                    <TouchableOpacity
+                      style={[styles.sliderArrow, styles.sliderArrowLeft]}
+                      onPress={prevSlide}
+                      activeOpacity={0.7}
+                    >
+                      <ChevronLeft size={18} color="#FFFFFF" />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[styles.sliderArrow, styles.sliderArrowRight]}
+                      onPress={nextSlide}
+                      activeOpacity={0.7}
+                    >
+                      <ChevronRight size={18} color="#FFFFFF" />
+                    </TouchableOpacity>
+
+                    {/* Indicator Dots */}
+                    <View style={styles.sliderDotsContainer}>
+                      {heroSlides.map((_, idx) => (
+                        <TouchableOpacity
+                          key={'dot_' + idx}
+                          onPress={() => setCurrentSlideIndex(idx)}
+                          style={[
+                            styles.sliderDot,
+                            currentSlideIndex === idx ? styles.sliderDotActive : styles.sliderDotInactive,
+                          ]}
+                        />
+                      ))}
+                    </View>
+                  </>
+                )}
+              </>
+            )}
           </View>
 
           {/* Order Search Box */}
@@ -673,9 +763,9 @@ const styles = StyleSheet.create({
   },
   heroImageCard: {
     width: '100%',
-    maxWidth: 360,
-    height: 180,
-    borderRadius: 16,
+    maxWidth: 380,
+    height: 280,
+    borderRadius: 18,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(201, 169, 110, 0.4)',
@@ -686,30 +776,72 @@ const styles = StyleSheet.create({
   heroImage: {
     width: '100%',
     height: '100%',
-    opacity: 0.85,
+    opacity: 0.9,
   },
   heroImageOverlay: {
     position: 'absolute',
-    bottom: 0,
+    bottom: 24,
     left: 0,
     right: 0,
-    backgroundColor: 'rgba(30, 30, 30, 0.75)',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    backgroundColor: 'rgba(30, 30, 30, 0.85)',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
     alignItems: 'center',
   },
   heroImageTitle: {
     fontFamily: 'serif',
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '700',
     color: '#C9A96E',
     fontStyle: 'italic',
+    textAlign: 'center',
   },
   heroImageSubtitle: {
-    fontSize: 10,
+    fontSize: 11,
     color: '#E5D9C5',
     letterSpacing: 0.5,
-    marginTop: 2,
+    marginTop: 3,
+    textAlign: 'center',
+  },
+  sliderArrow: {
+    position: 'absolute',
+    top: '42%',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+  },
+  sliderArrowLeft: {
+    left: 8,
+  },
+  sliderArrowRight: {
+    right: 8,
+  },
+  sliderDotsContainer: {
+    position: 'absolute',
+    bottom: 6,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
+    zIndex: 10,
+  },
+  sliderDot: {
+    height: 6,
+    borderRadius: 3,
+  },
+  sliderDotActive: {
+    width: 20,
+    backgroundColor: '#C9A96E',
+  },
+  sliderDotInactive: {
+    width: 6,
+    backgroundColor: 'rgba(255,255,255,0.4)',
   },
   searchOrderCard: {
     width: '100%',
