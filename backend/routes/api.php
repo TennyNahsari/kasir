@@ -40,6 +40,7 @@ Route::get('/public/table-bookings/search', [TableBookingController::class, 'sea
 Route::get('/public/tables', [TableController::class, 'index']);
 Route::get('/public/settings/whatsapp', [AppSettingController::class, 'whatsapp']);
 Route::get('/public/settings/payment', [AppSettingController::class, 'payment']);
+Route::get('/public/settings/hero-slider', [AppSettingController::class, 'heroSlider']);
 Route::post('/public/orders/{transaction}/payment-proof', [TransactionController::class, 'uploadPaymentProof']);
 
 // Public routes for Asset QR Code (anyone can scan)
@@ -58,6 +59,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/settings/payment', [AppSettingController::class, 'payment']);
     Route::post('/settings/payment', [AppSettingController::class, 'updatePayment']);
     Route::delete('/settings/payment/qris', [AppSettingController::class, 'deleteQrisImage']);
+    Route::get('/settings/hero-slider', [AppSettingController::class, 'heroSlider']);
+    Route::post('/settings/hero-slider', [AppSettingController::class, 'updateHeroSlider']);
+    Route::post('/settings/hero-slider/upload', [AppSettingController::class, 'uploadHeroSlideImage']);
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index']);

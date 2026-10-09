@@ -122,4 +122,82 @@ class AppSettingController extends Controller
 
         return response()->json(['message' => 'QRIS image deleted']);
     }
+
+    public function heroSlider()
+    {
+        $setting = AppSetting::where('key', 'hero_slider_slides')->value('value');
+        $slides = $setting ? json_decode($setting, true) : [];
+
+        if (empty($slides)) {
+            $slides = [
+                [
+                    'id' => 'default_1',
+                    'image' => 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=1200&q=80',
+                    'title' => 'L\'ÉTOILE Signature Experience',
+                    'subtitle' => 'White Marble • Dark Wood • Fine Coffee'
+                ],
+                [
+                    'id' => 'default_2',
+                    'image' => 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=1200&q=80',
+                    'title' => 'Artisanal Coffee & Delicacies',
+                    'subtitle' => 'Freshly Roasted Beans • Handcrafted Sweets'
+                ],
+                [
+                    'id' => 'default_3',
+                    'image' => 'https://images.unsplash.com/photo-1559925393-8be0ec4767c8?auto=format&fit=crop&w=1200&q=80',
+                    'title' => 'Cozy & Premium Atmosphere',
+                    'subtitle' => 'Perfect Spot for Meetings & Relaxation'
+                ]
+            ];
+        }
+
+        return response()->json($slides);
+    }
+
+    public function updateHeroSlider(Request $request)
+    {
+        abort_unless($request->user()?->role === 'owner', 403);
+
+        $validated = $request->validate([
+            'slides' => 'required|array',
+            'slides.*.id' => 'required|string',
+            'slides.*.image' => 'required|string',
+            'slides.*.title' => 'nullable|string|max:255',
+            'slides.*.subtitle' => 'nullable|string|max:255',
+        ]);
+
+        AppSetting::updateOrCreate(
+            ['key' => 'hero_slider_slides'],
+            ['value' => json_encode(array_values($validated['slides']))]
+        );
+
+        return $this->heroSlider();
+    }
+
+    public function uploadHeroSlideImage(Request $request)
+    {
+        abort_unless($request->user()?->role === 'owner', 403);
+
+        $request->validate([
+            'image' => 'required|image|max:5120',
+        ]);
+
+        $directory = public_path('storage/slider');
+        File::ensureDirectoryExists($directory);
+        
+        $file = $request->file('image');
+        $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+        $file->move($directory, $filename);
+        $path = 'slider/' . $filename;
+
+        // Also copy to storage/app/public/slider
+        $storageDir = storage_path('app/public/slider');
+        File::ensureDirectoryExists($storageDir);
+        File::copy($directory . '/' . $filename, $storageDir . '/' . $filename);
+
+        return response()->json([
+            'path' => $path,
+            'url' => asset('storage/' . $path)
+        ]);
+    }
 }

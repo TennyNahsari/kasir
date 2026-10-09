@@ -87,6 +87,12 @@ const router = createRouter({
           name: 'SettingsPayment',
           component: () => import('@/views/PaymentSettings.vue'),
           meta: { roles: ['owner'] }
+        },
+        {
+          path: '/settings/hero-slider',
+          name: 'SettingsHeroSlider',
+          component: () => import('@/views/HeroSliderSettings.vue'),
+          meta: { roles: ['owner'] }
         }
       ]
     }

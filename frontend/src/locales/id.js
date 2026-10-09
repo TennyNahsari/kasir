@@ -52,6 +52,7 @@ export default {
     locations: 'Lokasi',
     contacts: 'Contacts',
     payment: 'Pembayaran',
+    heroSlider: 'Hero Slider',
     logout: 'Keluar',
   },
 

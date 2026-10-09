@@ -135,15 +135,66 @@
             </div>
           </div>
 
-          <!-- Hero Visual Card -->
-          <div class="md:col-span-4 hidden md:block">
+          <!-- Hero Visual Card / Hero Slider -->
+          <div class="md:col-span-4 block">
             <div class="relative p-2 rounded-2xl border border-[#C9A96E]/30 bg-[#2C2C2C]/80 shadow-2xl backdrop-blur-xs">
-              <div class="aspect-4/5 rounded-xl overflow-hidden relative">
-                <img src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80" alt="Cafe Ambience" class="w-full h-full object-cover opacity-90 hover:scale-105 transition-transform duration-700"/>
-                <div class="absolute inset-0 bg-gradient-to-t from-[#1E1E1E] via-transparent to-transparent"></div>
-                <div class="absolute bottom-6 left-6 right-6 text-center">
-                  <p class="font-display italic text-lg text-[#C9A96E]">L'ÉTOILE Signature Experience</p>
-                  <p class="font-sans text-xs text-[#E5D9C5] uppercase tracking-widest mt-1">White Marble • Dark Wood • Fine Coffee</p>
+              <div 
+                class="aspect-4/5 rounded-xl overflow-hidden relative group cursor-pointer"
+                @mouseenter="stopSlider"
+                @mouseleave="startSlider"
+              >
+                <!-- Slides with transition -->
+                <transition-group name="fade">
+                  <div 
+                    v-for="(slide, index) in heroSlides" 
+                    :key="slide.id || index"
+                    v-show="currentSlideIndex === index"
+                    class="absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out"
+                  >
+                    <img 
+                      :src="getSlideImageUrl(slide.image)" 
+                      :alt="slide.title || 'Hero Slide'" 
+                      class="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-700"
+                      @error="handleSlideImageError"
+                    />
+                    <div class="absolute inset-0 bg-gradient-to-t from-[#1E1E1E] via-transparent to-transparent opacity-90"></div>
+                    
+                    <!-- Overlay Caption -->
+                    <div class="absolute bottom-6 left-6 right-6 text-center z-10">
+                      <p class="font-display italic text-lg text-[#C9A96E] leading-snug">{{ slide.title || "L'ÉTOILE Signature Experience" }}</p>
+                      <p class="font-sans text-xs text-[#E5D9C5] uppercase tracking-widest mt-1">{{ slide.subtitle || 'White Marble • Dark Wood • Fine Coffee' }}</p>
+                    </div>
+                  </div>
+                </transition-group>
+
+                <!-- Previous / Next Controls -->
+                <button 
+                  v-if="heroSlides.length > 1"
+                  @click.stop="prevSlide" 
+                  class="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 hover:bg-[#C9A96E] text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 shadow-lg backdrop-blur-xs z-20"
+                  aria-label="Previous Slide"
+                >
+                  ❮
+                </button>
+                <button 
+                  v-if="heroSlides.length > 1"
+                  @click.stop="nextSlide" 
+                  class="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 hover:bg-[#C9A96E] text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 shadow-lg backdrop-blur-xs z-20"
+                  aria-label="Next Slide"
+                >
+                  ❯
+                </button>
+
+                <!-- Indicator Dots -->
+                <div v-if="heroSlides.length > 1" class="absolute bottom-2.5 left-0 right-0 flex justify-center gap-1.5 z-20">
+                  <button 
+                    v-for="(slide, index) in heroSlides" 
+                    :key="'dot_' + index" 
+                    @click.stop="goToSlide(index)"
+                    class="h-2 rounded-full transition-all duration-300"
+                    :class="currentSlideIndex === index ? 'bg-[#C9A96E] w-6' : 'bg-white/40 hover:bg-white/70 w-2'"
+                    :aria-label="'Go to slide ' + (index + 1)"
+                  ></button>
                 </div>
               </div>
             </div>
@@ -1445,7 +1496,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/services/api'
@@ -2202,11 +2253,91 @@ const fetchPaymentSetting = async () => {
   }
 }
 
+// Hero Slider State & Controls
+const heroSlides = ref([
+  {
+    id: 'default_1',
+    image: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80',
+    title: "L'ÉTOILE Signature Experience",
+    subtitle: 'White Marble • Dark Wood • Fine Coffee'
+  },
+  {
+    id: 'default_2',
+    image: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80',
+    title: 'Artisanal Coffee & Delicacies',
+    subtitle: 'Freshly Roasted Beans • Handcrafted Sweets'
+  },
+  {
+    id: 'default_3',
+    image: 'https://images.unsplash.com/photo-1559925393-8be0ec4767c8?auto=format&fit=crop&w=800&q=80',
+    title: 'Cozy & Premium Atmosphere',
+    subtitle: 'Perfect Spot for Meetings & Relaxation'
+  }
+])
+const currentSlideIndex = ref(0)
+let slideTimer = null
+
+const fetchHeroSlides = async () => {
+  try {
+    const res = await api.get('/public/settings/hero-slider')
+    if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+      heroSlides.value = res.data
+    }
+  } catch (err) {
+    console.warn('Failed to load hero slides:', err.message)
+  }
+}
+
+const getSlideImageUrl = (imagePath) => {
+  if (!imagePath) return 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80'
+  if (imagePath.startsWith('http')) return imagePath
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+  return `${baseUrl.replace(/\/api\/?$/, '')}/storage/${imagePath.replace(/^\//, '')}`
+}
+
+const handleSlideImageError = (e) => {
+  e.target.src = 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80'
+}
+
+const nextSlide = () => {
+  if (heroSlides.value.length === 0) return
+  currentSlideIndex.value = (currentSlideIndex.value + 1) % heroSlides.value.length
+}
+
+const prevSlide = () => {
+  if (heroSlides.value.length === 0) return
+  currentSlideIndex.value = (currentSlideIndex.value - 1 + heroSlides.value.length) % heroSlides.value.length
+}
+
+const goToSlide = (index) => {
+  currentSlideIndex.value = index
+}
+
+const startSlider = () => {
+  stopSlider()
+  if (heroSlides.value.length > 1) {
+    slideTimer = setInterval(nextSlide, 5000)
+  }
+}
+
+const stopSlider = () => {
+  if (slideTimer) {
+    clearInterval(slideTimer)
+    slideTimer = null
+  }
+}
+
 onMounted(() => {
   fetchCategories()
   fetchLocations()
   fetchWhatsappSetting()
   fetchPaymentSetting()
+  fetchHeroSlides()
+  startSlider()
+})
+
+onUnmounted(() => {
+  stopSlider()
 })
 </script>
 
